@@ -7,8 +7,10 @@ import { AuthorizationService } from "./common/authorization";
 import { JwtAuthGuard } from "./common/jwt-auth.guard";
 import { PermissionsGuard } from "./common/permissions.guard";
 import { Public } from "./common/public";
+import { DocumentsModule } from "./documents/documents.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ProjectsModule } from "./projects/projects.module";
+import { StorageModule } from "./storage/storage.module";
 import { WorkflowModule } from "./workflow/workflow.module";
 
 @Controller("health")
@@ -29,7 +31,9 @@ class HealthController {
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuditModule,
+    StorageModule,
     AuthModule,
+    DocumentsModule,
     ProjectsModule,
     WorkflowModule,
   ],
