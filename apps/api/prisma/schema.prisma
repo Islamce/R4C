@@ -1,0 +1,222 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+}
+
+enum WorkflowStatus {
+  DRAFT
+  ASSIGNED
+  IN_PROGRESS
+  SUBMITTED
+  UNDER_REVIEW
+  RETURNED
+  APPROVED
+  COMPLETED
+}
+
+enum AuditOutcome {
+  SUCCESS
+  DENIED
+  FAILURE
+}
+
+model Tenant {
+  id          String       @id @default(uuid())
+  code        String       @unique
+  name        String
+  status      TenantStatus @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  memberships TenantMembership[]
+  roles       Role[]
+  projects    Project[]
+  auditEvents AuditEvent[]
+}
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  displayName   String
+  passwordHash  String
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  memberships   TenantMembership[]
+  projectAccess ProjectMember[]
+  refreshTokens RefreshToken[]
+  auditEvents   AuditEvent[] @relation("AuditActor")
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  tenantId    String
+  code        String
+  name        String
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  memberships TenantMembership[]
+  permissions RolePermission[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+}
+
+model Permission {
+  id    String @id @default(uuid())
+  code  String @unique
+  name  String
+  roles RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model TenantMembership {
+  tenantId String
+  userId   String
+  roleId   String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@id([tenantId, userId])
+  @@index([roleId])
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  tenantId    String
+  code        String
+  name        String
+  description String?
+  status      ProjectStatus @default(DRAFT)
+  startDate   DateTime?
+  targetDate  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  members     ProjectMember[]
+  wbsNodes    WbsNode[]
+  workItems   WorkItem[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+}
+
+model ProjectMember {
+  projectId String
+  userId    String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+  @@index([userId])
+}
+
+model WbsNode {
+  id          String    @id @default(uuid())
+  tenantId    String
+  projectId   String
+  parentId    String?
+  code        String
+  name        String
+  sortOrder   Int       @default(0)
+  plannedFrom DateTime?
+  plannedTo   DateTime?
+  weight      Decimal   @default(0) @db.Decimal(8, 4)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent      WbsNode?  @relation("WbsHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children    WbsNode[] @relation("WbsHierarchy")
+  workItems   WorkItem[]
+
+  @@unique([projectId, code])
+  @@index([tenantId, projectId, parentId])
+}
+
+model WorkItem {
+  id             String         @id @default(uuid())
+  tenantId       String
+  projectId      String
+  wbsNodeId      String?
+  title          String
+  description    String?
+  assigneeId     String?
+  workflowStatus WorkflowStatus @default(DRAFT)
+  dueDate        DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  project        Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  wbsNode        WbsNode?       @relation(fields: [wbsNodeId], references: [id], onDelete: SetNull)
+  transitions    WorkflowTransition[]
+
+  @@index([tenantId, projectId, workflowStatus])
+}
+
+model WorkflowTransition {
+  id         String         @id @default(uuid())
+  tenantId   String
+  workItemId String
+  fromStatus WorkflowStatus
+  toStatus   WorkflowStatus
+  actorId    String
+  reason     String?
+  createdAt  DateTime       @default(now())
+  workItem   WorkItem       @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, workItemId, createdAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tenantId  String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, tenantId])
+}
+
+model AuditEvent {
+  id         String       @id @default(uuid())
+  tenantId   String
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  outcome    AuditOutcome @default(SUCCESS)
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime     @default(now())
+  tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  actor      User?        @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, entityType, entityId])
+}

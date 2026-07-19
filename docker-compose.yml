@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: r4c
+      POSTGRES_PASSWORD: r4c_dev
+      POSTGRES_DB: r4c
+    ports: ["5432:5432"]
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U r4c -d r4c"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    ports: ["6379:6379"]
+    volumes: [redis_data:/data]
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: r4c
+      MINIO_ROOT_PASSWORD: change-me-now
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [minio_data:/data]
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
