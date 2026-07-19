@@ -38,6 +38,38 @@ enum AuditOutcome {
   FAILURE
 }
 
+enum DocumentStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  SUPERSEDED
+  ARCHIVED
+}
+
+enum UploadStatus {
+  PENDING
+  UPLOADED
+  FAILED
+}
+
+enum ReviewDecision {
+  PENDING
+  APPROVED
+  RETURNED
+  REJECTED
+}
+
+enum NotificationChannel {
+  EMAIL
+  IN_APP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
 model Tenant {
   id          String       @id @default(uuid())
   code        String       @unique
@@ -48,7 +80,9 @@ model Tenant {
   memberships TenantMembership[]
   roles       Role[]
   projects    Project[]
-  auditEvents AuditEvent[]
+  auditEvents     AuditEvent[]
+  documents       Document[]
+  notifications   NotificationOutbox[]
 }
 
 model User {
@@ -62,7 +96,12 @@ model User {
   memberships   TenantMembership[]
   projectAccess ProjectMember[]
   refreshTokens RefreshToken[]
-  auditEvents   AuditEvent[] @relation("AuditActor")
+  auditEvents         AuditEvent[]          @relation("AuditActor")
+  uploadedVersions    DocumentVersion[]      @relation("VersionUploader")
+  documentComments    DocumentComment[]
+  documentReviews     DocumentReview[]
+  distributions       DocumentDistribution[] @relation("Distributor")
+  notifications       NotificationOutbox[]   @relation("NotificationRecipient")
 }
 
 model Role {
@@ -121,6 +160,7 @@ model Project {
   members     ProjectMember[]
   wbsNodes    WbsNode[]
   workItems   WorkItem[]
+  documents   Document[]
 
   @@unique([tenantId, code])
   @@index([tenantId, status])
@@ -219,4 +259,117 @@ model AuditEvent {
 
   @@index([tenantId, createdAt])
   @@index([tenantId, entityType, entityId])
+}
+
+
+model Document {
+  id               String          @id @default(uuid())
+  tenantId         String
+  projectId        String
+  code             String
+  title            String
+  discipline       String?
+  documentType     String
+  status           DocumentStatus  @default(DRAFT)
+  currentVersionId String?          @unique
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  tenant           Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project          Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  versions         DocumentVersion[] @relation("DocumentVersions")
+  currentVersion   DocumentVersion?  @relation("CurrentDocumentVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, code])
+  @@index([tenantId, projectId, status])
+}
+
+model DocumentVersion {
+  id                String          @id @default(uuid())
+  tenantId          String
+  documentId        String
+  versionNumber     Int
+  revision          String
+  fileName          String
+  mimeType          String
+  sizeBytes         BigInt
+  storageKey        String          @unique
+  checksumSha256    String?
+  storageChecksum   String?
+  uploadStatus      UploadStatus    @default(PENDING)
+  reviewDecision    ReviewDecision  @default(PENDING)
+  uploadedById      String
+  uploadedAt        DateTime?
+  createdAt         DateTime        @default(now())
+  document          Document        @relation("DocumentVersions", fields: [documentId], references: [id], onDelete: Cascade)
+  currentFor        Document?       @relation("CurrentDocumentVersion")
+  uploadedBy        User            @relation("VersionUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+  comments          DocumentComment[]
+  reviews           DocumentReview[]
+  distributions     DocumentDistribution[]
+
+  @@unique([documentId, versionNumber])
+  @@index([tenantId, documentId, createdAt])
+}
+
+model DocumentComment {
+  id          String          @id @default(uuid())
+  tenantId    String
+  versionId   String
+  authorId    String
+  body        String
+  createdAt   DateTime        @default(now())
+  version     DocumentVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  author      User            @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, versionId, createdAt])
+}
+
+model DocumentReview {
+  id          String          @id @default(uuid())
+  tenantId    String
+  versionId   String
+  reviewerId  String
+  decision    ReviewDecision
+  comment     String?
+  decidedAt   DateTime        @default(now())
+  version     DocumentVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  reviewer    User            @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
+
+  @@unique([versionId, reviewerId])
+  @@index([tenantId, decision, decidedAt])
+}
+
+model DocumentDistribution {
+  id              String          @id @default(uuid())
+  tenantId        String
+  versionId       String
+  recipientType   String
+  recipientId     String?
+  recipientName   String
+  purpose         String
+  distributedById String
+  distributedAt   DateTime        @default(now())
+  version         DocumentVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+  distributedBy   User            @relation("Distributor", fields: [distributedById], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, versionId, distributedAt])
+}
+
+model NotificationOutbox {
+  id              String              @id @default(uuid())
+  tenantId        String
+  channel         NotificationChannel
+  eventType       String
+  recipientUserId String?
+  payload         Json
+  status          NotificationStatus  @default(PENDING)
+  attempts        Int                 @default(0)
+  nextAttemptAt   DateTime?
+  sentAt          DateTime?
+  lastError       String?
+  createdAt       DateTime            @default(now())
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  recipient       User?               @relation("NotificationRecipient", fields: [recipientUserId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status, createdAt])
 }
