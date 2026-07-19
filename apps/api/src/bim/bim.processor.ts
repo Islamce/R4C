@@ -202,18 +202,21 @@ export class BimProcessor implements OnModuleInit, OnModuleDestroy {
         select: { id: true, globalId: true },
       });
       const elementIds = new Map(storedElements.map((element) => [element.globalId, element.id]));
-      const properties = extracted.elements.flatMap((element) =>
-        element.properties.map((property) => ({
-          tenantId,
-          elementId: elementIds.get(element.globalId),
-          propertySet: property.propertySet,
-          name: property.name,
-          value: property.value,
-          unit: property.unit,
-        })),
-      ).filter((property): property is Prisma.BimPropertyCreateManyInput =>
-        Boolean(property.elementId),
-      );
+      const properties: Prisma.BimPropertyCreateManyInput[] = [];
+      for (const element of extracted.elements) {
+        const elementId = elementIds.get(element.globalId);
+        if (!elementId) continue;
+        for (const property of element.properties) {
+          properties.push({
+            tenantId,
+            elementId,
+            propertySet: property.propertySet,
+            name: property.name,
+            value: property.value ?? null,
+            unit: property.unit ?? null,
+          });
+        }
+      }
       for (const batch of this.batches(properties, 2000)) {
         await tx.bimProperty.createMany({ data: batch, skipDuplicates: true });
       }
