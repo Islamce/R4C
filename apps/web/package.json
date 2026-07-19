@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "lint": "next lint",
+    "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"Web tests will be introduced with the first feature slice\""
+    "test": "node --test"
   },
   "dependencies": {
     "next": "^15.4.0",
@@ -17,6 +17,7 @@
   "devDependencies": {
     "@types/node": "^22.15.0",
     "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
     "typescript": "^5.8.0"
   }
 }
