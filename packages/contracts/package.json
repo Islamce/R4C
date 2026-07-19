@@ -1,0 +1,12 @@
+{
+  "name": "@r4c/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "lint": "echo \"Contracts lint pending first schema\"",
+    "test": "echo \"Contracts tests pending first schema\"",
+    "typecheck": "tsc --noEmit"
+  }
+}
