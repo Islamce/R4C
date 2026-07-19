@@ -49,7 +49,7 @@ export class WorkflowService {
           workItemId,
           fromStatus: current.workflowStatus,
           toStatus,
-          reason,
+          ...(reason ? { reason } : {}),
         },
       });
       await tx.auditEvent.create({
@@ -59,7 +59,11 @@ export class WorkflowService {
           action: "WORK_ITEM_TRANSITIONED",
           entityType: "WorkItem",
           entityId: workItemId,
-          metadata: { from: current.workflowStatus, to: toStatus, reason },
+          metadata: {
+            from: current.workflowStatus,
+            to: toStatus,
+            ...(reason ? { reason } : {}),
+          },
         },
       });
 
