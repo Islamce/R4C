@@ -10,20 +10,43 @@ permissions:
   contents: read
 
 jobs:
-  repository-baseline:
+  validate:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://r4c:r4c_dev@localhost:5432/r4c
+      JWT_ACCESS_SECRET: ci-only-secret-at-least-32-characters-long
     steps:
       - uses: actions/checkout@v4
+
       - name: Reject committed secrets
         run: |
           if git ls-files | grep -E '(^|/)(\.env|.*\.pem|.*\.key)$'; then
             echo "Potential secret file committed"
             exit 1
           fi
-      - name: Validate required foundation files
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate and validate Prisma client
         run: |
-          test -f README.md
-          test -f docs/architecture.md
-          test -f docs/mvp-scope.md
-          test -f docs/security.md
-          test -f docker-compose.yml
+          pnpm --filter @r4c/api prisma:validate
+          pnpm --filter @r4c/api prisma:generate
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+      - name: Python syntax check
+        run: python -m compileall -q apps/bim-worker/r4c_bim_worker
