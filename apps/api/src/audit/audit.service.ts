@@ -20,12 +20,12 @@ export class AuditService {
     return this.prisma.auditEvent.create({
       data: {
         tenantId: command.tenantId,
-        actorId: command.actorId,
         action: command.action,
         entityType: command.entityType,
-        entityId: command.entityId,
         outcome: command.outcome ?? AuditOutcome.SUCCESS,
-        metadata: command.metadata,
+        ...(command.actorId ? { actorId: command.actorId } : {}),
+        ...(command.entityId ? { entityId: command.entityId } : {}),
+        ...(command.metadata ? { metadata: command.metadata } : {}),
       },
     });
   }
