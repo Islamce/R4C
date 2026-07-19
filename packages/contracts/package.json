@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "lint": "echo \"Contracts lint pending first schema\"",
-    "test": "echo \"Contracts tests pending first schema\"",
+    "lint": "tsc --noEmit",
+    "test": "node --test",
     "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
   }
 }
