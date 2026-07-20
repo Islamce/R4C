@@ -21,6 +21,38 @@ interface VisualState {
   progress: number | null;
 }
 
+interface FourDState {
+  globalId: string;
+  scheduled: boolean;
+  plannedState: "UNSCHEDULED" | "FUTURE" | "ACTIVE" | "PLANNED_COMPLETE";
+  plannedStart: string | null;
+  plannedFinish: string | null;
+  expectedProgress: number | null;
+  actualProgress: number | null;
+  variance: number | null;
+}
+
+interface FourDResponse {
+  schedule: {
+    id: string;
+    name: string;
+    revision: string;
+    dataDate: string;
+    start: string;
+    finish: string;
+  } | null;
+  selectedDate: string | null;
+  summary: {
+    elements: number;
+    scheduled: number;
+    future: number;
+    active: number;
+    plannedComplete: number;
+    behind: number;
+  } | null;
+  elements: FourDState[];
+}
+
 interface WbsNode {
   id: string;
   code: string;
@@ -39,7 +71,10 @@ interface ElementDetail {
   wbsLinks: Array<{ wbsNode: { id: string; code: string; name: string } }>;
 }
 
+type ViewMode = "progress" | "fourD";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+const DAY_MS = 86_400_000;
 
 function progressColor(state?: VisualState) {
   if (!state?.linked) return 0x64748b;
@@ -50,7 +85,18 @@ function progressColor(state?: VisualState) {
   return 0xef4444;
 }
 
-function findGlobalId(object: THREE.Object3D, known: Map<string, VisualState>) {
+function fourDColor(state?: FourDState) {
+  if (!state?.scheduled) return 0x64748b;
+  if (state.plannedState === "FUTURE") return 0x94a3b8;
+  if (state.plannedState === "ACTIVE") {
+    return state.variance !== null && state.variance < -10 ? 0xef4444 : 0xf59e0b;
+  }
+  return state.actualProgress !== null && state.actualProgress >= 100
+    ? 0x22c55e
+    : 0x3b82f6;
+}
+
+function findGlobalId(object: THREE.Object3D, known: Map<string, unknown>) {
   let current: THREE.Object3D | null = object;
   while (current) {
     const candidate =
@@ -65,33 +111,63 @@ function findGlobalId(object: THREE.Object3D, known: Map<string, VisualState>) {
 
 function colorScene(
   scene: THREE.Scene,
-  known: Map<string, VisualState>,
+  progress: Map<string, VisualState>,
+  fourD: Map<string, FourDState>,
+  mode: ViewMode,
   selectedGlobalId: string | null,
 ) {
+  const known = progress.size ? progress : fourD;
   scene.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return;
     const globalId = findGlobalId(object, known);
-    const color = globalId === selectedGlobalId ? 0xfacc15 : progressColor(
-      globalId ? known.get(globalId) : undefined,
-    );
+    const fourDState = globalId ? fourD.get(globalId) : undefined;
+    const isFuture = mode === "fourD" && fourDState?.plannedState === "FUTURE";
+    const color =
+      globalId === selectedGlobalId
+        ? 0xfacc15
+        : mode === "fourD"
+          ? fourDColor(fourDState)
+          : progressColor(globalId ? progress.get(globalId) : undefined);
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     for (const material of materials) {
       if ("color" in material && material.color instanceof THREE.Color) {
         material.color.setHex(color);
       }
+      material.transparent = isFuture;
+      material.opacity = isFuture ? 0.08 : 1;
+      material.depthWrite = !isFuture;
+      material.needsUpdate = true;
     }
   });
+}
+
+function toDateOnly(value: string) {
+  return value.slice(0, 10);
+}
+
+function toDayIndex(value: string) {
+  return Math.floor(new Date(`${toDateOnly(value)}T00:00:00.000Z`).getTime() / DAY_MS);
+}
+
+function fromDayIndex(value: number) {
+  return new Date(value * DAY_MS).toISOString().slice(0, 10);
 }
 
 export function BimViewer({ modelId }: { modelId: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
-  const visualRef = useRef(new Map<string, VisualState>());
+  const progressRef = useRef(new Map<string, VisualState>());
+  const fourDRef = useRef(new Map<string, FourDState>());
+  const modeRef = useRef<ViewMode>("progress");
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [wbsNodes, setWbsNodes] = useState<WbsNode[]>([]);
   const [selectedWbsId, setSelectedWbsId] = useState("");
   const [selected, setSelected] = useState<ElementDetail | null>(null);
   const [progress, setProgress] = useState(0);
+  const [viewMode, setViewMode] = useState<ViewMode>("progress");
+  const [fourD, setFourD] = useState<FourDResponse | null>(null);
+  const [timelineDate, setTimelineDate] = useState("");
+  const [playing, setPlaying] = useState(false);
   const [status, setStatus] = useState("Loading model…");
   const [error, setError] = useState("");
 
@@ -115,10 +191,31 @@ export function BimViewer({ modelId }: { modelId: string }) {
     return response.json() as Promise<T>;
   }
 
+  function repaint(selectedId: string | null = selected?.globalId ?? null) {
+    if (!sceneRef.current) return;
+    colorScene(
+      sceneRef.current,
+      progressRef.current,
+      fourDRef.current,
+      modeRef.current,
+      selectedId,
+    );
+  }
+
   async function refreshVisualState(selectedId: string | null = selected?.globalId ?? null) {
     const visual = await api<VisualState[]>(`/bim-models/${modelId}/visual-state`);
-    visualRef.current = new Map(visual.map((item) => [item.globalId, item]));
-    if (sceneRef.current) colorScene(sceneRef.current, visualRef.current, selectedId);
+    progressRef.current = new Map(visual.map((item) => [item.globalId, item]));
+    repaint(selectedId);
+  }
+
+  async function refreshFourDState(date?: string) {
+    const query = date ? `?date=${encodeURIComponent(date)}` : "";
+    const response = await api<FourDResponse>(`/bim-models/${modelId}/4d-state${query}`);
+    setFourD(response);
+    fourDRef.current = new Map(response.elements.map((item) => [item.globalId, item]));
+    if (response.selectedDate) setTimelineDate(toDateOnly(response.selectedDate));
+    repaint();
+    return response;
   }
 
   async function inspect(globalId: string) {
@@ -126,7 +223,13 @@ export function BimViewer({ modelId }: { modelId: string }) {
       `/bim-models/${modelId}/elements/global/${encodeURIComponent(globalId)}`,
     );
     setSelected(detail);
-    if (sceneRef.current) colorScene(sceneRef.current, visualRef.current, globalId);
+    repaint(globalId);
+  }
+
+  function changeMode(mode: ViewMode) {
+    modeRef.current = mode;
+    setViewMode(mode);
+    repaint();
   }
 
   useEffect(() => {
@@ -139,14 +242,22 @@ export function BimViewer({ modelId }: { modelId: string }) {
       if (!hostRef.current) return;
       try {
         const model = await api<Manifest>(`/bim-models/${modelId}/viewer-manifest`);
-        const [visual, wbs] = await Promise.all([
+        const [visual, wbs, initialFourD] = await Promise.all([
           api<VisualState[]>(`/bim-models/${modelId}/visual-state`),
           api<WbsNode[]>(`/projects/${model.projectId}/wbs`),
+          api<FourDResponse>(`/bim-models/${modelId}/4d-state`),
         ]);
         if (disposed || !hostRef.current) return;
         setManifest(model);
         setWbsNodes(wbs);
-        visualRef.current = new Map(visual.map((item) => [item.globalId, item]));
+        setFourD(initialFourD);
+        if (initialFourD.selectedDate) {
+          setTimelineDate(toDateOnly(initialFourD.selectedDate));
+        }
+        progressRef.current = new Map(visual.map((item) => [item.globalId, item]));
+        fourDRef.current = new Map(
+          initialFourD.elements.map((item) => [item.globalId, item]),
+        );
 
         const host = hostRef.current;
         const scene = new THREE.Scene();
@@ -155,7 +266,10 @@ export function BimViewer({ modelId }: { modelId: string }) {
 
         const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100000);
         camera.position.set(30, 30, 30);
-        renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer = new THREE.WebGLRenderer({
+          antialias: true,
+          powerPreference: "high-performance",
+        });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         host.replaceChildren(renderer.domElement);
@@ -178,7 +292,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
             : object.material.clone();
         });
         scene.add(gltf.scene);
-        colorScene(scene, visualRef.current, null);
+        colorScene(scene, progressRef.current, fourDRef.current, "progress", null);
 
         const box = new THREE.Box3().setFromObject(gltf.scene);
         const sphere = box.getBoundingSphere(new THREE.Sphere());
@@ -199,7 +313,8 @@ export function BimViewer({ modelId }: { modelId: string }) {
           pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
           raycaster.setFromCamera(pointer, camera);
           const hit = raycaster.intersectObjects(gltf.scene.children, true)[0];
-          const globalId = hit ? findGlobalId(hit.object, visualRef.current) : null;
+          const known = progressRef.current.size ? progressRef.current : fourDRef.current;
+          const globalId = hit ? findGlobalId(hit.object, known) : null;
           if (globalId) void inspect(globalId);
         });
 
@@ -239,6 +354,24 @@ export function BimViewer({ modelId }: { modelId: string }) {
     };
   }, [modelId]);
 
+  useEffect(() => {
+    if (!playing || !fourD?.schedule) return;
+    const finish = toDayIndex(fourD.schedule.finish);
+    const timer = window.setInterval(() => {
+      setTimelineDate((current) => {
+        const nextIndex = toDayIndex(current) + 1;
+        if (nextIndex > finish) {
+          setPlaying(false);
+          return current;
+        }
+        const next = fromDayIndex(nextIndex);
+        void refreshFourDState(next);
+        return next;
+      });
+    }, 700);
+    return () => window.clearInterval(timer);
+  }, [playing, fourD?.schedule]);
+
   async function linkSelected() {
     if (!selected || !selectedWbsId) return;
     try {
@@ -252,6 +385,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
       });
       await inspect(selected.globalId);
       await refreshVisualState(selected.globalId);
+      if (timelineDate) await refreshFourDState(timelineDate);
       setStatus("Element linked to WBS");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Linking failed");
@@ -271,6 +405,12 @@ export function BimViewer({ modelId }: { modelId: string }) {
     }
   }
 
+  const selectedFourD = selected ? fourDRef.current.get(selected.globalId) : undefined;
+  const schedule = fourD?.schedule;
+  const rangeMin = schedule ? toDayIndex(schedule.start) : 0;
+  const rangeMax = schedule ? toDayIndex(schedule.finish) : 0;
+  const rangeValue = timelineDate ? toDayIndex(timelineDate) : rangeMin;
+
   return (
     <main className={styles.shell}>
       <header className={styles.header}>
@@ -279,17 +419,89 @@ export function BimViewer({ modelId }: { modelId: string }) {
           <h1>{manifest?.name ?? "BIM Model"}</h1>
           <p>{manifest?.schema ?? "IFC"} · {status}</p>
         </div>
-        <div className={styles.legend}>
-          <span><i className={styles.unlinked} />Unlinked</span>
-          <span><i className={styles.notReported} />Linked</span>
-          <span><i className={styles.behind} />0–24%</span>
-          <span><i className={styles.active} />25–74%</span>
-          <span><i className={styles.near} />75–99%</span>
-          <span><i className={styles.complete} />100%</span>
+        <div>
+          <div className={styles.modeSwitch} aria-label="Viewer coloring mode">
+            <button
+              className={viewMode === "progress" ? styles.modeActive : ""}
+              onClick={() => changeMode("progress")}
+            >
+              Progress
+            </button>
+            <button
+              className={viewMode === "fourD" ? styles.modeActive : ""}
+              disabled={!schedule}
+              onClick={() => changeMode("fourD")}
+            >
+              4D plan
+            </button>
+          </div>
+          <div className={styles.legend}>
+            {viewMode === "progress" ? (
+              <>
+                <span><i className={styles.unlinked} />Unlinked</span>
+                <span><i className={styles.notReported} />Linked</span>
+                <span><i className={styles.behind} />0–24%</span>
+                <span><i className={styles.active} />25–74%</span>
+                <span><i className={styles.near} />75–99%</span>
+                <span><i className={styles.complete} />100%</span>
+              </>
+            ) : (
+              <>
+                <span><i className={styles.unlinked} />Unscheduled</span>
+                <span><i className={styles.future} />Future</span>
+                <span><i className={styles.active} />Active</span>
+                <span><i className={styles.behind} />Behind</span>
+                <span><i className={styles.near} />Planned complete</span>
+                <span><i className={styles.complete} />Actual complete</span>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
       {error && <div className={styles.error}>{error}</div>}
+
+      {schedule && (
+        <section className={styles.timeline}>
+          <div className={styles.timelineTitle}>
+            <strong>{schedule.name}</strong>
+            <span>Revision {schedule.revision} · Data date {toDateOnly(schedule.dataDate)}</span>
+          </div>
+          <div className={styles.timelineControls}>
+            <button
+              className={styles.playButton}
+              onClick={() => {
+                changeMode("fourD");
+                setPlaying((current) => !current);
+              }}
+            >
+              {playing ? "Pause" : "Play"}
+            </button>
+            <input
+              aria-label="4D playback date"
+              type="range"
+              min={rangeMin}
+              max={rangeMax}
+              value={Math.min(Math.max(rangeValue, rangeMin), rangeMax)}
+              onChange={(event) => {
+                const next = fromDayIndex(Number(event.target.value));
+                setTimelineDate(next);
+                changeMode("fourD");
+                void refreshFourDState(next);
+              }}
+            />
+            <time>{timelineDate}</time>
+          </div>
+          {fourD.summary && (
+            <div className={styles.metrics}>
+              <span><strong>{fourD.summary.scheduled}</strong> scheduled</span>
+              <span><strong>{fourD.summary.active}</strong> active</span>
+              <span><strong>{fourD.summary.plannedComplete}</strong> planned complete</span>
+              <span><strong>{fourD.summary.behind}</strong> behind</span>
+            </div>
+          )}
+        </section>
+      )}
 
       <section className={styles.workspace}>
         <aside className={styles.panel}>
@@ -323,7 +535,9 @@ export function BimViewer({ modelId }: { modelId: string }) {
           <button disabled={!selectedWbsId} onClick={() => void submitProgress()}>
             Submit for approval
           </button>
-          <p className={styles.hint}>Approved progress controls the model colors.</p>
+          <p className={styles.hint}>
+            Approved progress supplies actual 4D variance; schedule revisions remain immutable.
+          </p>
         </aside>
 
         <div ref={hostRef} className={styles.viewer} aria-label="Interactive BIM model" />
@@ -338,6 +552,40 @@ export function BimViewer({ modelId }: { modelId: string }) {
                 <dt>Name</dt><dd>{selected.name ?? "—"}</dd>
                 <dt>Tag</dt><dd>{selected.tag ?? "—"}</dd>
               </dl>
+              {selectedFourD && (
+                <>
+                  <h3>4D status</h3>
+                  <dl>
+                    <dt>State</dt><dd>{selectedFourD.plannedState}</dd>
+                    <dt>Planned</dt>
+                    <dd>
+                      {selectedFourD.plannedStart
+                        ? `${toDateOnly(selectedFourD.plannedStart)} → ${toDateOnly(
+                            selectedFourD.plannedFinish!,
+                          )}`
+                        : "Unscheduled"}
+                    </dd>
+                    <dt>Expected</dt>
+                    <dd>
+                      {selectedFourD.expectedProgress === null
+                        ? "—"
+                        : `${selectedFourD.expectedProgress}%`}
+                    </dd>
+                    <dt>Actual</dt>
+                    <dd>
+                      {selectedFourD.actualProgress === null
+                        ? "Not approved"
+                        : `${selectedFourD.actualProgress}%`}
+                    </dd>
+                    <dt>Variance</dt>
+                    <dd>
+                      {selectedFourD.variance === null
+                        ? "—"
+                        : `${selectedFourD.variance > 0 ? "+" : ""}${selectedFourD.variance}%`}
+                    </dd>
+                  </dl>
+                </>
+              )}
               <h3>WBS links</h3>
               {selected.wbsLinks.length ? selected.wbsLinks.map((link) => (
                 <p key={link.wbsNode.id}>{link.wbsNode.code} — {link.wbsNode.name}</p>
