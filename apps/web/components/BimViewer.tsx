@@ -95,6 +95,32 @@ interface FiveDResponse {
   elements: FiveDState[];
 }
 
+interface MaterialElementState {
+  globalId: string;
+  readinessState: "NO_REQUIREMENT" | "SHORTAGE" | "ORDERED" | "AVAILABLE" | "ISSUED";
+  materials: Array<{
+    materialId: string;
+    code: string;
+    status: "SHORTAGE" | "ORDERED" | "AVAILABLE" | "ISSUED";
+    required: string;
+    stock: string;
+    gap: string;
+    unit: string;
+  }>;
+}
+
+interface MaterialStateResponse {
+  takeoff: { id: string; name: string; revision: string } | null;
+  summary: {
+    materials: number;
+    shortage: number;
+    ordered: number;
+    available: number;
+    issued: number;
+  } | null;
+  elements: MaterialElementState[];
+}
+
 interface WbsNode {
   id: string;
   code: string;
@@ -113,7 +139,7 @@ interface ElementDetail {
   wbsLinks: Array<{ wbsNode: { id: string; code: string; name: string } }>;
 }
 
-type ViewMode = "progress" | "fourD" | "fiveD";
+type ViewMode = "progress" | "fourD" | "fiveD" | "materials";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 const DAY_MS = 86_400_000;
@@ -150,6 +176,14 @@ function fiveDColor(state?: FiveDState) {
   return 0x22c55e;
 }
 
+function materialColor(state?: MaterialElementState) {
+  if (!state || state.readinessState === "NO_REQUIREMENT") return 0x64748b;
+  if (state.readinessState === "SHORTAGE") return 0xef4444;
+  if (state.readinessState === "ORDERED") return 0xf59e0b;
+  if (state.readinessState === "AVAILABLE") return 0x3b82f6;
+  return 0x22c55e;
+}
+
 function findGlobalId(object: THREE.Object3D, known: Map<string, unknown>) {
   let current: THREE.Object3D | null = object;
   while (current) {
@@ -168,22 +202,26 @@ function colorScene(
   progress: Map<string, VisualState>,
   fourD: Map<string, FourDState>,
   fiveD: Map<string, FiveDState>,
+  materials: Map<string, MaterialElementState>,
   mode: ViewMode,
   selectedGlobalId: string | null,
 ) {
-  const known = progress.size ? progress : fourD;
+  const known = progress.size ? progress : fourD.size ? fourD : materials;
   scene.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return;
     const globalId = findGlobalId(object, known);
     const fourDState = globalId ? fourD.get(globalId) : undefined;
     const fiveDState = globalId ? fiveD.get(globalId) : undefined;
+    const materialState = globalId ? materials.get(globalId) : undefined;
     const isFuture = mode === "fourD" && fourDState?.plannedState === "FUTURE";
     const color =
       globalId === selectedGlobalId
         ? 0xfacc15
-        : mode === "fiveD"
-          ? fiveDColor(fiveDState)
-          : mode === "fourD"
+        : mode === "materials"
+          ? materialColor(materialState)
+          : mode === "fiveD"
+            ? fiveDColor(fiveDState)
+            : mode === "fourD"
             ? fourDColor(fourDState)
             : progressColor(globalId ? progress.get(globalId) : undefined);
     const materials = Array.isArray(object.material) ? object.material : [object.material];
@@ -225,6 +263,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
   const progressRef = useRef(new Map<string, VisualState>());
   const fourDRef = useRef(new Map<string, FourDState>());
   const fiveDRef = useRef(new Map<string, FiveDState>());
+  const materialRef = useRef(new Map<string, MaterialElementState>());
   const modeRef = useRef<ViewMode>("progress");
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [wbsNodes, setWbsNodes] = useState<WbsNode[]>([]);
@@ -234,6 +273,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
   const [viewMode, setViewMode] = useState<ViewMode>("progress");
   const [fourD, setFourD] = useState<FourDResponse | null>(null);
   const [fiveD, setFiveD] = useState<FiveDResponse | null>(null);
+  const [materialState, setMaterialState] = useState<MaterialStateResponse | null>(null);
   const [timelineDate, setTimelineDate] = useState("");
   const [playing, setPlaying] = useState(false);
   const [status, setStatus] = useState("Loading model…");
@@ -266,6 +306,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
       progressRef.current,
       fourDRef.current,
       fiveDRef.current,
+      materialRef.current,
       modeRef.current,
       selectedId,
     );
@@ -292,6 +333,18 @@ export function BimViewer({ modelId }: { modelId: string }) {
     const response = await api<FiveDResponse>(`/bim-models/${modelId}/5d-state${query}`);
     setFiveD(response);
     fiveDRef.current = new Map(response.elements.map((item) => [item.globalId, item]));
+    repaint();
+    return response;
+  }
+
+  async function refreshMaterialState() {
+    const response = await api<MaterialStateResponse>(
+      `/bim-models/${modelId}/material-state`,
+    );
+    setMaterialState(response);
+    materialRef.current = new Map(
+      response.elements.map((item) => [item.globalId, item]),
+    );
     repaint();
     return response;
   }
@@ -328,16 +381,20 @@ export function BimViewer({ modelId }: { modelId: string }) {
         const initialCostDate = initialFourD.selectedDate
           ? toDateOnly(initialFourD.selectedDate)
           : undefined;
-        const initialFiveD = await api<FiveDResponse>(
-          `/bim-models/${modelId}/5d-state${
+        const [initialFiveD, initialMaterialState] = await Promise.all([
+          api<FiveDResponse>(
+            `/bim-models/${modelId}/5d-state${
             initialCostDate ? `?date=${encodeURIComponent(initialCostDate)}` : ""
-          }`,
-        );
+            }`,
+          ),
+          api<MaterialStateResponse>(`/bim-models/${modelId}/material-state`),
+        ]);
         if (disposed || !hostRef.current) return;
         setManifest(model);
         setWbsNodes(wbs);
         setFourD(initialFourD);
         setFiveD(initialFiveD);
+        setMaterialState(initialMaterialState);
         if (initialFourD.selectedDate) {
           setTimelineDate(toDateOnly(initialFourD.selectedDate));
         }
@@ -347,6 +404,9 @@ export function BimViewer({ modelId }: { modelId: string }) {
         );
         fiveDRef.current = new Map(
           initialFiveD.elements.map((item) => [item.globalId, item]),
+        );
+        materialRef.current = new Map(
+          initialMaterialState.elements.map((item) => [item.globalId, item]),
         );
 
         const host = hostRef.current;
@@ -387,6 +447,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
           progressRef.current,
           fourDRef.current,
           fiveDRef.current,
+          materialRef.current,
           "progress",
           null,
         );
@@ -410,7 +471,11 @@ export function BimViewer({ modelId }: { modelId: string }) {
           pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
           raycaster.setFromCamera(pointer, camera);
           const hit = raycaster.intersectObjects(gltf.scene.children, true)[0];
-          const known = progressRef.current.size ? progressRef.current : fourDRef.current;
+          const known = progressRef.current.size
+            ? progressRef.current
+            : fourDRef.current.size
+              ? fourDRef.current
+              : materialRef.current;
           const globalId = hit ? findGlobalId(hit.object, known) : null;
           if (globalId) void inspect(globalId);
         });
@@ -487,6 +552,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
         await Promise.all([
           refreshFourDState(timelineDate),
           refreshFiveDState(timelineDate),
+          refreshMaterialState(),
         ]);
       }
       setStatus("Element linked to WBS");
@@ -510,6 +576,9 @@ export function BimViewer({ modelId }: { modelId: string }) {
 
   const selectedFourD = selected ? fourDRef.current.get(selected.globalId) : undefined;
   const selectedFiveD = selected ? fiveDRef.current.get(selected.globalId) : undefined;
+  const selectedMaterial = selected
+    ? materialRef.current.get(selected.globalId)
+    : undefined;
   const schedule = fourD?.schedule;
   const rangeMin = schedule ? toDayIndex(schedule.start) : 0;
   const rangeMax = schedule ? toDayIndex(schedule.finish) : 0;
@@ -545,6 +614,13 @@ export function BimViewer({ modelId }: { modelId: string }) {
             >
               5D cost
             </button>
+            <button
+              className={viewMode === "materials" ? styles.modeActive : ""}
+              disabled={!materialState?.takeoff}
+              onClick={() => changeMode("materials")}
+            >
+              Materials
+            </button>
           </div>
           <div className={styles.legend}>
             {viewMode === "progress" ? (
@@ -565,13 +641,21 @@ export function BimViewer({ modelId }: { modelId: string }) {
                 <span><i className={styles.near} />Planned complete</span>
                 <span><i className={styles.complete} />Actual complete</span>
               </>
-            ) : (
+            ) : viewMode === "fiveD" ? (
               <>
                 <span><i className={styles.unlinked} />Unbudgeted</span>
                 <span><i className={styles.behind} />Unbudgeted cost</span>
                 <span><i className={styles.complete} />Controlled</span>
                 <span><i className={styles.active} />Overcommitted</span>
                 <span><i className={styles.behind} />Cost overrun</span>
+              </>
+            ) : (
+              <>
+                <span><i className={styles.unlinked} />No requirement</span>
+                <span><i className={styles.behind} />Shortage</span>
+                <span><i className={styles.active} />Ordered</span>
+                <span><i className={styles.near} />Available</span>
+                <span><i className={styles.complete} />Issued</span>
               </>
             )}
           </div>
@@ -612,7 +696,15 @@ export function BimViewer({ modelId }: { modelId: string }) {
             />
             <time>{timelineDate}</time>
           </div>
-          {viewMode === "fiveD" && fiveD?.summary && fiveD.budget ? (
+          {viewMode === "materials" && materialState?.summary ? (
+            <div className={styles.metrics}>
+              <span><strong>{materialState.summary.materials}</strong> materials</span>
+              <span><strong>{materialState.summary.shortage}</strong> shortage</span>
+              <span><strong>{materialState.summary.ordered}</strong> ordered</span>
+              <span><strong>{materialState.summary.available}</strong> available</span>
+              <span><strong>{materialState.summary.issued}</strong> issued</span>
+            </div>
+          ) : viewMode === "fiveD" && fiveD?.summary && fiveD.budget ? (
             <div className={styles.metrics}>
               <span>
                 <strong>{formatMoney(fiveD.summary.budgetAtCompletion, fiveD.budget.currency)}</strong>
@@ -739,6 +831,20 @@ export function BimViewer({ modelId }: { modelId: string }) {
                     <dt>Variance</dt>
                     <dd>{formatMoney(selectedFiveD.costVariance, selectedFiveD.currency)}</dd>
                   </dl>
+                </>
+              )}
+              {selectedMaterial && (
+                <>
+                  <h3>Material readiness</h3>
+                  <dl>
+                    <dt>State</dt><dd>{selectedMaterial.readinessState}</dd>
+                  </dl>
+                  {selectedMaterial.materials.map((item) => (
+                    <p key={item.materialId}>
+                      {item.code} · {item.status} · required {item.required} {item.unit}
+                      {" · "}stock {item.stock} · gap {item.gap}
+                    </p>
+                  ))}
                 </>
               )}
               <h3>WBS links</h3>
