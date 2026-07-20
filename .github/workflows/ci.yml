@@ -11,6 +11,20 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: r4c
+          POSTGRES_PASSWORD: r4c_dev
+          POSTGRES_DB: r4c
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U r4c -d r4c"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       DATABASE_URL: postgresql://r4c:r4c_dev@localhost:5432/r4c
       JWT_ACCESS_SECRET: ci-only-secret-at-least-32-characters-long
@@ -33,18 +47,26 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Generate and validate Prisma client
         run: |
           pnpm --filter @r4c/api prisma:validate
           pnpm --filter @r4c/api prisma:generate
 
+      - name: Rehearse database schema deployment
+        run: |
+          pnpm --filter @r4c/api exec prisma db push --force-reset --skip-generate
+          pnpm --filter @r4c/api exec prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+
       - name: Typecheck
         run: pnpm typecheck
 
       - name: Build
         run: pnpm build
+
+      - name: Run API security contracts
+        run: pnpm --filter @r4c/api test
 
       - uses: actions/setup-python@v5
         with:
