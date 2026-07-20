@@ -13,6 +13,7 @@ import { DocumentsModule } from "./documents/documents.module";
 import { HseModule } from "./hse/hse.module";
 import { MaterialsModule } from "./materials/materials.module";
 import { PrismaModule } from "./prisma/prisma.module";
+import { PrismaService } from "./prisma/prisma.service";
 import { ProgressModule } from "./progress/progress.module";
 import { QualityModule } from "./quality/quality.module";
 import { ProjectsModule } from "./projects/projects.module";
@@ -23,12 +24,33 @@ import { WorkflowModule } from "./workflow/workflow.module";
 
 @Controller("health")
 class HealthController {
+  constructor(private readonly prisma: PrismaService) {}
+
   @Public()
   @Get()
   getHealth() {
     return {
       service: "r4c-api",
       status: "ok",
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Public()
+  @Get("ready")
+  async getReadiness() {
+    const startedAt = Date.now();
+    await this.prisma.$queryRaw`SELECT 1`;
+    return {
+      service: "r4c-api",
+      status: "ready",
+      dependencies: {
+        database: {
+          status: "ok",
+          latencyMs: Date.now() - startedAt,
+        },
+      },
+      uptimeSeconds: Math.floor(process.uptime()),
       timestamp: new Date().toISOString(),
     };
   }
