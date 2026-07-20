@@ -1,0 +1,49 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: Asia/Riyadh
+    open-pull-requests-limit: 10
+    groups:
+      javascript-security-and-maintenance:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pip
+    directory: /apps/bim-worker
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:15"
+      timezone: Asia/Riyadh
+    open-pull-requests-limit: 10
+    groups:
+      python-security-and-maintenance:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directory: /apps/bim-worker
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:30"
+      timezone: Asia/Riyadh
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:45"
+      timezone: Asia/Riyadh
+    open-pull-requests-limit: 10
+    groups:
+      workflow-actions:
+        patterns:
+          - "*"
