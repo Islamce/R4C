@@ -165,6 +165,53 @@ enum MaterialMovementType {
   ADJUSTMENT
 }
 
+enum QualityPlanStatus {
+  DRAFT
+  PUBLISHED
+  SUPERSEDED
+}
+
+enum QualityInspectionStatus {
+  SCHEDULED
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum QualityInspectionResult {
+  PASS
+  FAIL
+  CONDITIONAL
+  NOT_APPLICABLE
+}
+
+enum QualityFindingType {
+  NCR
+  PUNCH
+  OBSERVATION
+}
+
+enum QualityFindingSeverity {
+  MINOR
+  MAJOR
+  CRITICAL
+}
+
+enum QualityFindingStatus {
+  OPEN
+  ACTIONED
+  READY_FOR_VERIFICATION
+  CLOSED
+  VOID
+}
+
+enum QualityActionStatus {
+  OPEN
+  COMPLETED
+  VERIFIED
+}
+
 model Tenant {
   id          String       @id @default(uuid())
   code        String       @unique
@@ -206,6 +253,15 @@ model User {
   materialTakeoffsCreated  MaterialTakeoff[]   @relation("MaterialTakeoffCreator")
   procurementOrdersCreated ProcurementOrder[]  @relation("ProcurementOrderCreator")
   materialMovementsCreated MaterialMovement[]  @relation("MaterialMovementCreator")
+  qualityPlansCreated      QualityPlan[]       @relation("QualityPlanCreator")
+  inspectionsPerformed    QualityInspection[] @relation("InspectionPerformer")
+  inspectionsReviewed     QualityInspection[] @relation("InspectionReviewer")
+  qualityFindingsRaised   QualityFinding[]    @relation("FindingRaiser")
+  qualityFindingsClosed   QualityFinding[]    @relation("FindingCloser")
+  qualityActionsAssigned  QualityAction[]     @relation("QualityActionAssignee")
+  qualityActionsCompleted QualityAction[]     @relation("QualityActionCompleter")
+  qualityActionsVerified  QualityAction[]     @relation("QualityActionVerifier")
+  qualityEvidenceAdded    QualityEvidence[]   @relation("QualityEvidenceAdder")
 }
 
 model Role {
@@ -279,6 +335,11 @@ model Project {
   procurementOrders ProcurementOrder[]
   inventoryLocations InventoryLocation[]
   materialMovements MaterialMovement[]
+  qualityPlans      QualityPlan[] @relation("ProjectQualityPlans")
+  activeQualityPlanId String?     @unique
+  activeQualityPlan QualityPlan?  @relation("ActiveQualityPlan", fields: [activeQualityPlanId], references: [id], onDelete: SetNull)
+  qualityInspections QualityInspection[]
+  qualityFindings    QualityFinding[]
 
   @@unique([tenantId, code])
   @@index([tenantId, status])
@@ -317,6 +378,9 @@ model WbsNode {
   materialTakeoffLines MaterialTakeoffLine[]
   procurementLines    ProcurementOrderLine[]
   materialMovements   MaterialMovement[]
+  qualityCheckpoints   QualityCheckpoint[]
+  qualityInspections   QualityInspection[]
+  qualityFindings      QualityFinding[]
 
   @@unique([projectId, code])
   @@index([tenantId, projectId, parentId])
@@ -433,6 +497,7 @@ model DocumentVersion {
   reviews           DocumentReview[]
   distributions     DocumentDistribution[]
   bimModel          BimModel?
+  qualityEvidence   QualityEvidence[]
 
   @@unique([documentId, versionNumber])
   @@index([tenantId, documentId, createdAt])
@@ -577,6 +642,8 @@ model BimElement {
   properties    BimProperty[]
   wbsLinks      BimWbsLink[]
   materialTakeoffLines MaterialTakeoffLine[]
+  qualityInspections QualityInspection[]
+  qualityFindings    QualityFinding[]
 
   @@unique([bimModelId, globalId])
   @@index([tenantId, bimModelId, ifcType])
@@ -929,4 +996,162 @@ model MaterialMovement {
   @@index([tenantId, projectId, materialId, occurredAt])
   @@index([locationId, materialId, occurredAt])
   @@index([procurementOrderLineId])
+}
+
+
+model QualityPlan {
+  id          String            @id @default(uuid())
+  tenantId    String
+  projectId   String
+  revision    String
+  name        String
+  status      QualityPlanStatus @default(DRAFT)
+  createdById String
+  publishedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  project     Project           @relation("ProjectQualityPlans", fields: [projectId], references: [id], onDelete: Cascade)
+  activeFor   Project?          @relation("ActiveQualityPlan")
+  createdBy   User              @relation("QualityPlanCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  checkpoints QualityCheckpoint[]
+
+  @@unique([projectId, revision])
+  @@index([tenantId, projectId, status])
+}
+
+model QualityCheckpoint {
+  id                 String      @id @default(uuid())
+  tenantId           String
+  qualityPlanId      String
+  wbsNodeId          String?
+  code               String
+  title              String
+  inspectionType     String
+  acceptanceCriteria String
+  holdPoint          Boolean     @default(false)
+  ifcType            String?
+  sortOrder          Int         @default(0)
+  qualityPlan        QualityPlan @relation(fields: [qualityPlanId], references: [id], onDelete: Cascade)
+  wbsNode            WbsNode?    @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  inspections        QualityInspection[]
+
+  @@unique([qualityPlanId, code])
+  @@index([tenantId, qualityPlanId, sortOrder])
+  @@index([wbsNodeId])
+}
+
+model QualityInspection {
+  id                 String                  @id @default(uuid())
+  tenantId           String
+  projectId          String
+  checkpointId       String
+  wbsNodeId          String
+  bimElementId       String?
+  externalId         String
+  scheduledFor       DateTime
+  status             QualityInspectionStatus @default(SCHEDULED)
+  result             QualityInspectionResult?
+  notes              String?
+  inspectedById      String
+  reviewedById       String?
+  submittedAt        DateTime?
+  reviewedAt         DateTime?
+  reviewComment      String?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  project            Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  checkpoint         QualityCheckpoint       @relation(fields: [checkpointId], references: [id], onDelete: Restrict)
+  wbsNode            WbsNode                 @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  bimElement         BimElement?             @relation(fields: [bimElementId], references: [id], onDelete: SetNull)
+  inspectedBy        User                    @relation("InspectionPerformer", fields: [inspectedById], references: [id], onDelete: Restrict)
+  reviewedBy         User?                   @relation("InspectionReviewer", fields: [reviewedById], references: [id], onDelete: Restrict)
+  findings           QualityFinding[]
+  evidence           QualityEvidence[]
+
+  @@unique([projectId, externalId])
+  @@index([tenantId, projectId, status, scheduledFor])
+  @@index([checkpointId, status])
+  @@index([wbsNodeId])
+  @@index([bimElementId])
+}
+
+model QualityFinding {
+  id            String                 @id @default(uuid())
+  tenantId      String
+  projectId     String
+  inspectionId  String?
+  wbsNodeId     String
+  bimElementId  String?
+  externalId    String
+  type          QualityFindingType
+  severity      QualityFindingSeverity
+  status        QualityFindingStatus   @default(OPEN)
+  title         String
+  description   String
+  dueAt         DateTime?
+  raisedById    String
+  closedById    String?
+  closedAt      DateTime?
+  closureNote   String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  project       Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  inspection    QualityInspection?     @relation(fields: [inspectionId], references: [id], onDelete: SetNull)
+  wbsNode       WbsNode                @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  bimElement    BimElement?            @relation(fields: [bimElementId], references: [id], onDelete: SetNull)
+  raisedBy      User                   @relation("FindingRaiser", fields: [raisedById], references: [id], onDelete: Restrict)
+  closedBy      User?                  @relation("FindingCloser", fields: [closedById], references: [id], onDelete: Restrict)
+  actions       QualityAction[]
+  evidence      QualityEvidence[]
+
+  @@unique([projectId, externalId])
+  @@index([tenantId, projectId, status, severity])
+  @@index([inspectionId])
+  @@index([wbsNodeId, status])
+  @@index([bimElementId, status])
+}
+
+model QualityAction {
+  id            String              @id @default(uuid())
+  tenantId      String
+  findingId     String
+  description   String
+  assignedToId  String
+  dueAt         DateTime
+  status        QualityActionStatus @default(OPEN)
+  completedById String?
+  completedAt   DateTime?
+  completionNote String?
+  verifiedById  String?
+  verifiedAt    DateTime?
+  verificationNote String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  finding       QualityFinding      @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  assignedTo    User                @relation("QualityActionAssignee", fields: [assignedToId], references: [id], onDelete: Restrict)
+  completedBy   User?               @relation("QualityActionCompleter", fields: [completedById], references: [id], onDelete: Restrict)
+  verifiedBy    User?               @relation("QualityActionVerifier", fields: [verifiedById], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, findingId, status])
+  @@index([assignedToId, status, dueAt])
+}
+
+model QualityEvidence {
+  id                String           @id @default(uuid())
+  tenantId          String
+  inspectionId      String?
+  findingId         String?
+  documentVersionId String
+  addedById         String
+  note              String?
+  createdAt         DateTime         @default(now())
+  inspection        QualityInspection? @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  finding           QualityFinding?    @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  documentVersion   DocumentVersion    @relation(fields: [documentVersionId], references: [id], onDelete: Restrict)
+  addedBy           User               @relation("QualityEvidenceAdder", fields: [addedById], references: [id], onDelete: Restrict)
+
+  @@unique([inspectionId, documentVersionId])
+  @@unique([findingId, documentVersionId])
+  @@index([tenantId, inspectionId])
+  @@index([tenantId, findingId])
 }
