@@ -70,6 +70,32 @@ enum NotificationStatus {
   FAILED
 }
 
+enum BimModelStatus {
+  PENDING
+  QUEUED
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum BimJobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  DEAD_LETTER
+}
+
+enum BimSpatialType {
+  PROJECT
+  SITE
+  BUILDING
+  STOREY
+  SPACE
+  ZONE
+  OTHER
+}
+
 model Tenant {
   id          String       @id @default(uuid())
   code        String       @unique
@@ -102,6 +128,7 @@ model User {
   documentReviews     DocumentReview[]
   distributions       DocumentDistribution[] @relation("Distributor")
   notifications       NotificationOutbox[]   @relation("NotificationRecipient")
+  bimLinks            BimWbsLink[]           @relation("BimLinkActor")
 }
 
 model Role {
@@ -161,6 +188,7 @@ model Project {
   wbsNodes    WbsNode[]
   workItems   WorkItem[]
   documents   Document[]
+  bimModels   BimModel[]
 
   @@unique([tenantId, code])
   @@index([tenantId, status])
@@ -191,6 +219,7 @@ model WbsNode {
   parent      WbsNode?  @relation("WbsHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children    WbsNode[] @relation("WbsHierarchy")
   workItems   WorkItem[]
+  bimLinks    BimWbsLink[]
 
   @@unique([projectId, code])
   @@index([tenantId, projectId, parentId])
@@ -306,6 +335,7 @@ model DocumentVersion {
   comments          DocumentComment[]
   reviews           DocumentReview[]
   distributions     DocumentDistribution[]
+  bimModel          BimModel?
 
   @@unique([documentId, versionNumber])
   @@index([tenantId, documentId, createdAt])
@@ -372,4 +402,114 @@ model NotificationOutbox {
   recipient       User?               @relation("NotificationRecipient", fields: [recipientUserId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, status, createdAt])
+}
+
+
+model BimModel {
+  id                String          @id @default(uuid())
+  tenantId          String
+  projectId         String
+  documentVersionId String          @unique
+  name              String
+  ifcSchema         String?
+  status            BimModelStatus  @default(PENDING)
+  elementCount      Int             @default(0)
+  spatialNodeCount  Int             @default(0)
+  lastError         String?
+  processedAt       DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  project           Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  documentVersion   DocumentVersion @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
+  jobs              BimProcessingJob[]
+  spatialNodes      BimSpatialNode[]
+  elements          BimElement[]
+
+  @@index([tenantId, projectId, status])
+}
+
+model BimProcessingJob {
+  id          String       @id @default(uuid())
+  tenantId    String
+  bimModelId  String
+  status      BimJobStatus @default(QUEUED)
+  attempt     Int          @default(0)
+  maxAttempts Int          @default(3)
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  lastError   String?
+  createdAt   DateTime     @default(now())
+  bimModel    BimModel     @relation(fields: [bimModelId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status, createdAt])
+  @@index([bimModelId, createdAt])
+}
+
+model BimSpatialNode {
+  id          String         @id @default(uuid())
+  tenantId    String
+  bimModelId  String
+  parentId    String?
+  sourceKey   String
+  globalId    String?
+  spatialType BimSpatialType
+  name        String
+  sortOrder   Int            @default(0)
+  bimModel    BimModel       @relation(fields: [bimModelId], references: [id], onDelete: Cascade)
+  parent      BimSpatialNode? @relation("BimSpatialHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    BimSpatialNode[] @relation("BimSpatialHierarchy")
+  elements    BimElement[]
+
+  @@unique([bimModelId, sourceKey])
+  @@index([tenantId, bimModelId, parentId])
+}
+
+model BimElement {
+  id            String          @id @default(uuid())
+  tenantId      String
+  bimModelId    String
+  spatialNodeId String?
+  globalId      String
+  ifcType       String
+  name          String?
+  tag           String?
+  predefinedType String?
+  bimModel      BimModel        @relation(fields: [bimModelId], references: [id], onDelete: Cascade)
+  spatialNode   BimSpatialNode? @relation(fields: [spatialNodeId], references: [id], onDelete: SetNull)
+  properties    BimProperty[]
+  wbsLinks      BimWbsLink[]
+
+  @@unique([bimModelId, globalId])
+  @@index([tenantId, bimModelId, ifcType])
+  @@index([spatialNodeId])
+}
+
+model BimProperty {
+  id         String     @id @default(uuid())
+  tenantId   String
+  elementId  String
+  propertySet String
+  name       String
+  value      String?
+  unit       String?
+  element    BimElement @relation(fields: [elementId], references: [id], onDelete: Cascade)
+
+  @@unique([elementId, propertySet, name])
+  @@index([tenantId, propertySet, name])
+}
+
+model BimWbsLink {
+  id          String     @id @default(uuid())
+  tenantId    String
+  elementId   String
+  wbsNodeId   String
+  linkedById  String
+  weight      Decimal    @default(1) @db.Decimal(8, 4)
+  createdAt   DateTime   @default(now())
+  element     BimElement @relation(fields: [elementId], references: [id], onDelete: Cascade)
+  wbsNode     WbsNode    @relation(fields: [wbsNodeId], references: [id], onDelete: Cascade)
+  linkedBy    User       @relation("BimLinkActor", fields: [linkedById], references: [id], onDelete: Restrict)
+
+  @@unique([elementId, wbsNodeId])
+  @@index([tenantId, wbsNodeId])
 }

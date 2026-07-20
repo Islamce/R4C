@@ -3,6 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { AuditModule } from "./audit/audit.module";
 import { AuthModule } from "./auth/auth.module";
+import { BimModule } from "./bim/bim.module";
 import { AuthorizationService } from "./common/authorization";
 import { JwtAuthGuard } from "./common/jwt-auth.guard";
 import { PermissionsGuard } from "./common/permissions.guard";
@@ -34,6 +35,7 @@ class HealthController {
     StorageModule,
     AuthModule,
     DocumentsModule,
+    BimModule,
     ProjectsModule,
     WorkflowModule,
   ],
