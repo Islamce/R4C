@@ -193,7 +193,12 @@ test(
     let apiLogs = "";
     const apiProcess = spawn(process.execPath, ["dist/main.js"], {
       cwd: process.cwd(),
-      env: {\n        ...process.env,\n        API_PORT: String(port),\n        BIM_WORKER_URL: process.env.BIM_WORKER_URL ?? "http://127.0.0.1:65535",\n        BIM_WORKER_TOKEN: process.env.BIM_WORKER_TOKEN ?? "ci-worker-token",\n      },
+      env: {
+        ...process.env,
+        API_PORT: String(port),
+        BIM_WORKER_URL: process.env.BIM_WORKER_URL ?? "http://127.0.0.1:65535",
+        BIM_WORKER_TOKEN: process.env.BIM_WORKER_TOKEN ?? "ci-worker-token",
+      },
       stdio: ["ignore", "pipe", "pipe"],
     });
     apiProcess.stdout.on("data", (chunk) => {
