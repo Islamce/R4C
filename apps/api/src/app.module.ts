@@ -12,6 +12,7 @@ import { DocumentsModule } from "./documents/documents.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ProgressModule } from "./progress/progress.module";
 import { ProjectsModule } from "./projects/projects.module";
+import { ScheduleModule } from "./schedule/schedule.module";
 import { StorageModule } from "./storage/storage.module";
 import { WorkflowModule } from "./workflow/workflow.module";
 
@@ -39,6 +40,7 @@ class HealthController {
     BimModule,
     ProjectsModule,
     ProgressModule,
+    ScheduleModule,
     WorkflowModule,
   ],
   controllers: [HealthController],
