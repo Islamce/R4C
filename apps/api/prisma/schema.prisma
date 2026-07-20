@@ -122,6 +122,17 @@ enum ScheduleDependencyType {
   START_TO_FINISH
 }
 
+enum BudgetStatus {
+  DRAFT
+  PUBLISHED
+  SUPERSEDED
+}
+
+enum CostEntryType {
+  COMMITMENT
+  ACTUAL
+}
+
 model Tenant {
   id          String       @id @default(uuid())
   code        String       @unique
@@ -158,6 +169,8 @@ model User {
   progressReports     WbsProgressUpdate[]     @relation("ProgressReporter")
   progressReviews     WbsProgressUpdate[]     @relation("ProgressReviewer")
   schedulesCreated    ProjectSchedule[]        @relation("ScheduleCreator")
+  budgetsCreated      ProjectBudget[]          @relation("BudgetCreator")
+  costEntriesCreated  CostLedgerEntry[]        @relation("CostEntryCreator")
 }
 
 model Role {
@@ -221,6 +234,10 @@ model Project {
   schedules        ProjectSchedule[] @relation("ProjectSchedules")
   activeScheduleId String?            @unique
   activeSchedule   ProjectSchedule?   @relation("ActiveProjectSchedule", fields: [activeScheduleId], references: [id], onDelete: SetNull)
+  budgets          ProjectBudget[]     @relation("ProjectBudgets")
+  activeBudgetId   String?             @unique
+  activeBudget     ProjectBudget?      @relation("ActiveProjectBudget", fields: [activeBudgetId], references: [id], onDelete: SetNull)
+  costEntries      CostLedgerEntry[]
 
   @@unique([tenantId, code])
   @@index([tenantId, status])
@@ -254,6 +271,8 @@ model WbsNode {
   bimLinks           BimWbsLink[]
   progressUpdates    WbsProgressUpdate[]
   scheduleActivities ScheduleActivity[]
+  budgetLines        BudgetLine[]
+  costEntries        CostLedgerEntry[]
 
   @@unique([projectId, code])
   @@index([tenantId, projectId, parentId])
@@ -646,4 +665,70 @@ model ScheduleDependency {
   @@unique([scheduleId, predecessorActivityId, successorActivityId, type])
   @@index([tenantId, scheduleId])
   @@index([successorActivityId])
+}
+
+
+model ProjectBudget {
+  id          String       @id @default(uuid())
+  tenantId    String
+  projectId   String
+  revision    String
+  name        String
+  currency    String       @db.Char(3)
+  status      BudgetStatus @default(DRAFT)
+  createdById String
+  publishedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  project     Project      @relation("ProjectBudgets", fields: [projectId], references: [id], onDelete: Cascade)
+  activeFor   Project?     @relation("ActiveProjectBudget")
+  createdBy   User         @relation("BudgetCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  lines       BudgetLine[]
+
+  @@unique([projectId, revision])
+  @@index([tenantId, projectId, status])
+}
+
+model BudgetLine {
+  id           String        @id @default(uuid())
+  tenantId     String
+  budgetId     String
+  wbsNodeId    String
+  costCode     String
+  description  String
+  quantity     Decimal       @db.Decimal(18, 4)
+  unit         String
+  unitRate     Decimal       @db.Decimal(18, 4)
+  budgetAmount Decimal       @db.Decimal(18, 2)
+  createdAt    DateTime      @default(now())
+  budget       ProjectBudget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  wbsNode      WbsNode       @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  costEntries  CostLedgerEntry[]
+
+  @@unique([budgetId, costCode, wbsNodeId])
+  @@index([tenantId, budgetId, wbsNodeId])
+}
+
+model CostLedgerEntry {
+  id           String        @id @default(uuid())
+  tenantId     String
+  projectId    String
+  wbsNodeId    String
+  budgetLineId String?
+  entryType    CostEntryType
+  externalId   String
+  description  String
+  amount       Decimal       @db.Decimal(18, 2)
+  currency     String        @db.Char(3)
+  occurredAt   DateTime
+  createdById  String
+  createdAt    DateTime      @default(now())
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  wbsNode      WbsNode       @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  budgetLine   BudgetLine?   @relation(fields: [budgetLineId], references: [id], onDelete: Restrict)
+  createdBy    User          @relation("CostEntryCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([projectId, entryType, externalId])
+  @@index([tenantId, projectId, entryType, occurredAt])
+  @@index([wbsNodeId, occurredAt])
 }
