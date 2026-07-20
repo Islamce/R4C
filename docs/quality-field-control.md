@@ -66,7 +66,7 @@ Provision these permission codes before rollout:
 
 ## Rollout sequence
 
-1. Apply the Prisma migration after Phase 7 reaches `main`.
+1. Apply the Phase 8 Prisma migration before enabling quality endpoints.
 2. Provision the permission codes and least-privilege quality roles.
 3. Map project members to inspector, reviewer, action owner, and verifier duties.
 4. Create and publish the first inspection-plan revision.
