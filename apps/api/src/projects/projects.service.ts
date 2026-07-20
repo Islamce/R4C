@@ -18,6 +18,22 @@ export class ProjectsService {
     });
   }
 
+  async wbsTree(tenantId: string, projectId: string) {
+    await this.requireProject(tenantId, projectId);
+    return this.prisma.wbsNode.findMany({
+      where: { tenantId, projectId },
+      orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
+      include: {
+        _count: { select: { children: true, workItems: true, bimLinks: true } },
+        progressUpdates: {
+          where: { status: "APPROVED" },
+          orderBy: { reportedAt: "desc" },
+          take: 1,
+        },
+      },
+    });
+  }
+
   async create(tenantId: string, actorId: string, command: CreateProjectDto) {
     const project = await this.prisma.project.create({
       data: {
