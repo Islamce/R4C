@@ -232,13 +232,19 @@ export class ScheduleService {
       return { schedule: null, selectedDate: null, summary: null, elements: [] };
     }
 
-    const selectedDate = requestedDate
+    const requested = requestedDate
       ? this.parseDateOnly(requestedDate)
       : new Date(schedule.dataDate);
     const starts = schedule.activities.map((activity) => activity.plannedStart.getTime());
     const finishes = schedule.activities.map((activity) => activity.plannedFinish.getTime());
     const scheduleStart = new Date(Math.min(...starts));
     const scheduleFinish = new Date(Math.max(...finishes));
+    const selectedDate = new Date(
+      Math.min(
+        scheduleFinish.getTime(),
+        Math.max(scheduleStart.getTime(), requested.getTime()),
+      ),
+    );
 
     const elements = await this.prisma.bimElement.findMany({
       where: { tenantId, bimModelId },
@@ -381,6 +387,7 @@ export class ScheduleService {
 
     const known = new Set(ids);
     const graph = new Map(ids.map((id) => [id, [] as string[]]));
+    const indegree = new Map(ids.map((id) => [id, 0]));
     const dependencyKeys = new Set<string>();
     for (const dependency of command.dependencies) {
       const predecessor = dependency.predecessorExternalId.trim();
@@ -397,19 +404,23 @@ export class ScheduleService {
       }
       dependencyKeys.add(key);
       graph.get(predecessor)!.push(successor);
+      indegree.set(successor, indegree.get(successor)! + 1);
     }
 
-    const visiting = new Set<string>();
-    const visited = new Set<string>();
-    const visit = (id: string) => {
-      if (visiting.has(id)) throw new BadRequestException("Schedule dependencies contain a cycle");
-      if (visited.has(id)) return;
-      visiting.add(id);
-      for (const successor of graph.get(id) ?? []) visit(successor);
-      visiting.delete(id);
-      visited.add(id);
-    };
-    for (const id of ids) visit(id);
+    const ready = ids.filter((id) => indegree.get(id) === 0);
+    let visited = 0;
+    for (let index = 0; index < ready.length; index += 1) {
+      const id = ready[index]!;
+      visited += 1;
+      for (const successor of graph.get(id) ?? []) {
+        const remaining = indegree.get(successor)! - 1;
+        indegree.set(successor, remaining);
+        if (remaining === 0) ready.push(successor);
+      }
+    }
+    if (visited !== ids.length) {
+      throw new BadRequestException("Schedule dependencies contain a cycle");
+    }
   }
 
   private expectedAt(date: Date, start: Date, finish: Date) {
@@ -425,7 +436,12 @@ export class ScheduleService {
       throw new BadRequestException("4D date must use YYYY-MM-DD");
     }
     const date = new Date(`${value}T00:00:00.000Z`);
-    if (Number.isNaN(date.getTime())) throw new BadRequestException("Invalid 4D date");
+    if (
+      Number.isNaN(date.getTime()) ||
+      date.toISOString().slice(0, 10) !== value
+    ) {
+      throw new BadRequestException("Invalid 4D date");
+    }
     return date;
   }
 
