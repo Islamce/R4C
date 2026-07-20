@@ -212,6 +212,55 @@ enum QualityActionStatus {
   VERIFIED
 }
 
+enum SafetyPermitType {
+  HOT_WORK
+  CONFINED_SPACE
+  EXCAVATION
+  LIFTING
+  ELECTRICAL
+  WORK_AT_HEIGHT
+  GENERAL
+}
+
+enum SafetyPermitStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  ACTIVE
+  SUSPENDED
+  CLOSED
+  CANCELLED
+}
+
+enum SafetyEventType {
+  HAZARD
+  OBSERVATION
+  NEAR_MISS
+  INCIDENT
+}
+
+enum SafetySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SafetyEventStatus {
+  OPEN
+  UNDER_INVESTIGATION
+  ACTIONED
+  READY_FOR_CLOSURE
+  CLOSED
+  VOID
+}
+
+enum SafetyActionStatus {
+  OPEN
+  COMPLETED
+  VERIFIED
+}
+
 model Tenant {
   id          String       @id @default(uuid())
   code        String       @unique
@@ -262,6 +311,17 @@ model User {
   qualityActionsCompleted QualityAction[]     @relation("QualityActionCompleter")
   qualityActionsVerified  QualityAction[]     @relation("QualityActionVerifier")
   qualityEvidenceAdded    QualityEvidence[]   @relation("QualityEvidenceAdder")
+  safetyPermitsRequested   SafetyPermit[]      @relation("SafetyPermitRequester")
+  safetyPermitsReviewed    SafetyPermit[]      @relation("SafetyPermitReviewer")
+  safetyPermitsActivated   SafetyPermit[]      @relation("SafetyPermitActivator")
+  safetyPermitsClosed      SafetyPermit[]      @relation("SafetyPermitCloser")
+  safetyEventsReported     SafetyEvent[]       @relation("SafetyEventReporter")
+  safetyEventsInvestigated SafetyEvent[]       @relation("SafetyEventInvestigator")
+  safetyEventsClosed       SafetyEvent[]       @relation("SafetyEventCloser")
+  safetyActionsAssigned    SafetyAction[]      @relation("SafetyActionAssignee")
+  safetyActionsCompleted   SafetyAction[]      @relation("SafetyActionCompleter")
+  safetyActionsVerified    SafetyAction[]      @relation("SafetyActionVerifier")
+  safetyEvidenceAdded      SafetyEvidence[]    @relation("SafetyEvidenceAdder")
 }
 
 model Role {
@@ -340,6 +400,8 @@ model Project {
   activeQualityPlan QualityPlan?  @relation("ActiveQualityPlan", fields: [activeQualityPlanId], references: [id], onDelete: SetNull)
   qualityInspections QualityInspection[]
   qualityFindings    QualityFinding[]
+  safetyPermits      SafetyPermit[]
+  safetyEvents       SafetyEvent[]
 
   @@unique([tenantId, code])
   @@index([tenantId, status])
@@ -381,6 +443,8 @@ model WbsNode {
   qualityCheckpoints   QualityCheckpoint[]
   qualityInspections   QualityInspection[]
   qualityFindings      QualityFinding[]
+  safetyPermits        SafetyPermit[]
+  safetyEvents         SafetyEvent[]
 
   @@unique([projectId, code])
   @@index([tenantId, projectId, parentId])
@@ -498,6 +562,7 @@ model DocumentVersion {
   distributions     DocumentDistribution[]
   bimModel          BimModel?
   qualityEvidence   QualityEvidence[]
+  safetyEvidence    SafetyEvidence[]
 
   @@unique([documentId, versionNumber])
   @@index([tenantId, documentId, createdAt])
@@ -644,6 +709,8 @@ model BimElement {
   materialTakeoffLines MaterialTakeoffLine[]
   qualityInspections QualityInspection[]
   qualityFindings    QualityFinding[]
+  safetyPermits     SafetyPermit[]
+  safetyEvents      SafetyEvent[]
 
   @@unique([bimModelId, globalId])
   @@index([tenantId, bimModelId, ifcType])
@@ -1154,4 +1221,133 @@ model QualityEvidence {
   @@unique([findingId, documentVersionId])
   @@index([tenantId, inspectionId])
   @@index([tenantId, findingId])
+}
+
+
+model SafetyPermit {
+  id            String             @id @default(uuid())
+  tenantId      String
+  projectId     String
+  wbsNodeId     String
+  bimElementId  String?
+  externalId    String
+  type          SafetyPermitType
+  status        SafetyPermitStatus @default(DRAFT)
+  title         String
+  description   String
+  riskAssessment String
+  controls      String
+  validFrom     DateTime
+  validUntil    DateTime
+  requestedById String
+  reviewedById  String?
+  activatedById String?
+  closedById    String?
+  submittedAt   DateTime?
+  reviewedAt    DateTime?
+  activatedAt   DateTime?
+  suspendedAt   DateTime?
+  closedAt      DateTime?
+  reviewComment String?
+  closeNote     String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  project       Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  wbsNode       WbsNode            @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  bimElement    BimElement?        @relation(fields: [bimElementId], references: [id], onDelete: SetNull)
+  requestedBy   User               @relation("SafetyPermitRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  reviewedBy    User?              @relation("SafetyPermitReviewer", fields: [reviewedById], references: [id], onDelete: Restrict)
+  activatedBy   User?              @relation("SafetyPermitActivator", fields: [activatedById], references: [id], onDelete: Restrict)
+  closedBy      User?              @relation("SafetyPermitCloser", fields: [closedById], references: [id], onDelete: Restrict)
+  evidence      SafetyEvidence[]
+
+  @@unique([projectId, externalId])
+  @@index([tenantId, projectId, status, validUntil])
+  @@index([wbsNodeId, status])
+  @@index([bimElementId, status])
+}
+
+model SafetyEvent {
+  id               String            @id @default(uuid())
+  tenantId         String
+  projectId        String
+  wbsNodeId        String
+  bimElementId     String?
+  externalId       String
+  type             SafetyEventType
+  severity         SafetySeverity
+  status           SafetyEventStatus @default(OPEN)
+  title            String
+  description      String
+  occurredAt       DateTime
+  dueAt            DateTime?
+  reportedById     String
+  investigatedById String?
+  closedById       String?
+  investigationAt  DateTime?
+  rootCause        String?
+  immediateActions String?
+  closedAt         DateTime?
+  closureNote      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  project          Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  wbsNode          WbsNode           @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  bimElement       BimElement?       @relation(fields: [bimElementId], references: [id], onDelete: SetNull)
+  reportedBy       User              @relation("SafetyEventReporter", fields: [reportedById], references: [id], onDelete: Restrict)
+  investigatedBy   User?             @relation("SafetyEventInvestigator", fields: [investigatedById], references: [id], onDelete: Restrict)
+  closedBy         User?             @relation("SafetyEventCloser", fields: [closedById], references: [id], onDelete: Restrict)
+  actions          SafetyAction[]
+  evidence         SafetyEvidence[]
+
+  @@unique([projectId, externalId])
+  @@index([tenantId, projectId, status, severity])
+  @@index([wbsNodeId, status])
+  @@index([bimElementId, status])
+  @@index([occurredAt])
+}
+
+model SafetyAction {
+  id               String             @id @default(uuid())
+  tenantId         String
+  safetyEventId    String
+  description      String
+  assignedToId     String
+  dueAt            DateTime
+  status           SafetyActionStatus @default(OPEN)
+  completedById    String?
+  completedAt      DateTime?
+  completionNote   String?
+  verifiedById     String?
+  verifiedAt       DateTime?
+  verificationNote String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  safetyEvent      SafetyEvent        @relation(fields: [safetyEventId], references: [id], onDelete: Cascade)
+  assignedTo       User               @relation("SafetyActionAssignee", fields: [assignedToId], references: [id], onDelete: Restrict)
+  completedBy      User?              @relation("SafetyActionCompleter", fields: [completedById], references: [id], onDelete: Restrict)
+  verifiedBy       User?              @relation("SafetyActionVerifier", fields: [verifiedById], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, safetyEventId, status])
+  @@index([assignedToId, status, dueAt])
+}
+
+model SafetyEvidence {
+  id                String           @id @default(uuid())
+  tenantId          String
+  safetyPermitId    String?
+  safetyEventId     String?
+  documentVersionId String
+  addedById         String
+  note              String?
+  createdAt         DateTime         @default(now())
+  safetyPermit      SafetyPermit?    @relation(fields: [safetyPermitId], references: [id], onDelete: Cascade)
+  safetyEvent       SafetyEvent?     @relation(fields: [safetyEventId], references: [id], onDelete: Cascade)
+  documentVersion   DocumentVersion  @relation(fields: [documentVersionId], references: [id], onDelete: Restrict)
+  addedBy           User             @relation("SafetyEvidenceAdder", fields: [addedById], references: [id], onDelete: Restrict)
+
+  @@unique([safetyPermitId, documentVersionId])
+  @@unique([safetyEventId, documentVersionId])
+  @@index([tenantId, safetyPermitId])
+  @@index([tenantId, safetyEventId])
 }
