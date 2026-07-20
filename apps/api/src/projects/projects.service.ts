@@ -18,6 +18,22 @@ export class ProjectsService {
     });
   }
 
+  async wbsTree(tenantId: string, projectId: string) {
+    await this.requireProject(tenantId, projectId);
+    return this.prisma.wbsNode.findMany({
+      where: { tenantId, projectId },
+      orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
+      include: {
+        _count: { select: { children: true, workItems: true, bimLinks: true } },
+        progressUpdates: {
+          where: { status: "APPROVED" },
+          orderBy: { reportedAt: "desc" },
+          take: 1,
+        },
+      },
+    });
+  }
+
   async create(tenantId: string, actorId: string, command: CreateProjectDto) {
     const project = await this.prisma.project.create({
       data: {
@@ -46,8 +62,7 @@ export class ProjectsService {
     actorId: string,
     command: CreateWbsNodeDto,
   ) {
-    const project = await this.prisma.project.findFirst({ where: { id: projectId, tenantId } });
-    if (!project) throw new NotFoundException("Project not found");
+    await this.requireProject(tenantId, projectId);
 
     if (command.parentId) {
       const parent = await this.prisma.wbsNode.findFirst({
@@ -74,5 +89,13 @@ export class ProjectsService {
       metadata: { projectId, code: node.code },
     });
     return node;
+  }
+
+  private async requireProject(tenantId: string, projectId: string) {
+    const project = await this.prisma.project.findFirst({
+      where: { id: projectId, tenantId },
+    });
+    if (!project) throw new NotFoundException("Project not found");
+    return project;
   }
 }

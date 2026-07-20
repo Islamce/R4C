@@ -3,12 +3,16 @@ import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { AuditModule } from "./audit/audit.module";
 import { AuthModule } from "./auth/auth.module";
+import { BimModule } from "./bim/bim.module";
 import { AuthorizationService } from "./common/authorization";
 import { JwtAuthGuard } from "./common/jwt-auth.guard";
 import { PermissionsGuard } from "./common/permissions.guard";
 import { Public } from "./common/public";
+import { DocumentsModule } from "./documents/documents.module";
 import { PrismaModule } from "./prisma/prisma.module";
+import { ProgressModule } from "./progress/progress.module";
 import { ProjectsModule } from "./projects/projects.module";
+import { StorageModule } from "./storage/storage.module";
 import { WorkflowModule } from "./workflow/workflow.module";
 
 @Controller("health")
@@ -29,8 +33,12 @@ class HealthController {
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuditModule,
+    StorageModule,
     AuthModule,
+    DocumentsModule,
+    BimModule,
     ProjectsModule,
+    ProgressModule,
     WorkflowModule,
   ],
   controllers: [HealthController],
