@@ -55,7 +55,12 @@ interface FourDResponse {
 
 interface FiveDState {
   globalId: string;
-  costState: "UNBUDGETED" | "CONTROLLED" | "OVERCOMMITTED" | "OVERRUN";
+  costState:
+    | "UNBUDGETED"
+    | "UNBUDGETED_COST"
+    | "CONTROLLED"
+    | "OVERCOMMITTED"
+    | "OVERRUN";
   currency: string;
   budget: number;
   earnedValue: number;
@@ -135,7 +140,12 @@ function fourDColor(state?: FourDState) {
 
 function fiveDColor(state?: FiveDState) {
   if (!state || state.costState === "UNBUDGETED") return 0x64748b;
-  if (state.costState === "OVERRUN") return 0xef4444;
+  if (
+    state.costState === "OVERRUN" ||
+    state.costState === "UNBUDGETED_COST"
+  ) {
+    return 0xef4444;
+  }
   if (state.costState === "OVERCOMMITTED") return 0xf59e0b;
   return 0x22c55e;
 }
@@ -558,6 +568,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
             ) : (
               <>
                 <span><i className={styles.unlinked} />Unbudgeted</span>
+                <span><i className={styles.behind} />Unbudgeted cost</span>
                 <span><i className={styles.complete} />Controlled</span>
                 <span><i className={styles.active} />Overcommitted</span>
                 <span><i className={styles.behind} />Cost overrun</span>
