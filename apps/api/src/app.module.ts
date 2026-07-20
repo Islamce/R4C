@@ -10,6 +10,7 @@ import { PermissionsGuard } from "./common/permissions.guard";
 import { Public } from "./common/public";
 import { CostModule } from "./cost/cost.module";
 import { DocumentsModule } from "./documents/documents.module";
+import { MaterialsModule } from "./materials/materials.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ProgressModule } from "./progress/progress.module";
 import { ProjectsModule } from "./projects/projects.module";
@@ -39,6 +40,7 @@ class HealthController {
     AuthModule,
     CostModule,
     DocumentsModule,
+    MaterialsModule,
     BimModule,
     ProjectsModule,
     ProgressModule,

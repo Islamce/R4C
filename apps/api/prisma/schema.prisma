@@ -133,6 +133,38 @@ enum CostEntryType {
   ACTUAL
 }
 
+enum MaterialStatus {
+  ACTIVE
+  BLOCKED
+  ARCHIVED
+}
+
+enum MaterialTakeoffStatus {
+  DRAFT
+  PUBLISHED
+  SUPERSEDED
+}
+
+enum MaterialTakeoffSource {
+  MANUAL
+  BIM
+  SAP
+}
+
+enum ProcurementOrderStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum MaterialMovementType {
+  RECEIPT
+  ISSUE
+  TRANSFER_IN
+  TRANSFER_OUT
+  ADJUSTMENT
+}
+
 model Tenant {
   id          String       @id @default(uuid())
   code        String       @unique
@@ -170,7 +202,10 @@ model User {
   progressReviews     WbsProgressUpdate[]     @relation("ProgressReviewer")
   schedulesCreated    ProjectSchedule[]        @relation("ScheduleCreator")
   budgetsCreated      ProjectBudget[]          @relation("BudgetCreator")
-  costEntriesCreated  CostLedgerEntry[]        @relation("CostEntryCreator")
+  costEntriesCreated       CostLedgerEntry[]   @relation("CostEntryCreator")
+  materialTakeoffsCreated  MaterialTakeoff[]   @relation("MaterialTakeoffCreator")
+  procurementOrdersCreated ProcurementOrder[]  @relation("ProcurementOrderCreator")
+  materialMovementsCreated MaterialMovement[]  @relation("MaterialMovementCreator")
 }
 
 model Role {
@@ -238,6 +273,12 @@ model Project {
   activeBudgetId   String?             @unique
   activeBudget     ProjectBudget?      @relation("ActiveProjectBudget", fields: [activeBudgetId], references: [id], onDelete: SetNull)
   costEntries      CostLedgerEntry[]
+  materialTakeoffs MaterialTakeoff[] @relation("ProjectMaterialTakeoffs")
+  activeMaterialTakeoffId String?     @unique
+  activeMaterialTakeoff MaterialTakeoff? @relation("ActiveMaterialTakeoff", fields: [activeMaterialTakeoffId], references: [id], onDelete: SetNull)
+  procurementOrders ProcurementOrder[]
+  inventoryLocations InventoryLocation[]
+  materialMovements MaterialMovement[]
 
   @@unique([tenantId, code])
   @@index([tenantId, status])
@@ -273,6 +314,9 @@ model WbsNode {
   scheduleActivities ScheduleActivity[]
   budgetLines        BudgetLine[]
   costEntries        CostLedgerEntry[]
+  materialTakeoffLines MaterialTakeoffLine[]
+  procurementLines    ProcurementOrderLine[]
+  materialMovements   MaterialMovement[]
 
   @@unique([projectId, code])
   @@index([tenantId, projectId, parentId])
@@ -532,6 +576,7 @@ model BimElement {
   spatialNode   BimSpatialNode? @relation(fields: [spatialNodeId], references: [id], onDelete: SetNull)
   properties    BimProperty[]
   wbsLinks      BimWbsLink[]
+  materialTakeoffLines MaterialTakeoffLine[]
 
   @@unique([bimModelId, globalId])
   @@index([tenantId, bimModelId, ifcType])
@@ -704,6 +749,7 @@ model BudgetLine {
   budget       ProjectBudget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
   wbsNode      WbsNode       @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
   costEntries  CostLedgerEntry[]
+  procurementLines ProcurementOrderLine[]
 
   @@unique([budgetId, costCode, wbsNodeId])
   @@index([tenantId, budgetId, wbsNodeId])
@@ -727,8 +773,160 @@ model CostLedgerEntry {
   wbsNode      WbsNode       @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
   budgetLine   BudgetLine?   @relation(fields: [budgetLineId], references: [id], onDelete: Restrict)
   createdBy    User          @relation("CostEntryCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  procurementOrderLine ProcurementOrderLine?
 
   @@unique([projectId, entryType, externalId])
   @@index([tenantId, projectId, entryType, occurredAt])
   @@index([wbsNodeId, occurredAt])
+}
+
+
+model Material {
+  id          String         @id @default(uuid())
+  tenantId    String
+  code        String
+  description String
+  baseUnit    String
+  category    String?
+  specification String?
+  status      MaterialStatus @default(ACTIVE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  takeoffLines MaterialTakeoffLine[]
+  procurementLines ProcurementOrderLine[]
+  movements   MaterialMovement[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status, description])
+}
+
+model MaterialTakeoff {
+  id          String                @id @default(uuid())
+  tenantId    String
+  projectId   String
+  revision    String
+  name        String
+  status      MaterialTakeoffStatus @default(DRAFT)
+  createdById String
+  publishedAt DateTime?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  project     Project               @relation("ProjectMaterialTakeoffs", fields: [projectId], references: [id], onDelete: Cascade)
+  activeFor   Project?              @relation("ActiveMaterialTakeoff")
+  createdBy   User                  @relation("MaterialTakeoffCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  lines       MaterialTakeoffLine[]
+
+  @@unique([projectId, revision])
+  @@index([tenantId, projectId, status])
+}
+
+model MaterialTakeoffLine {
+  id               String                @id @default(uuid())
+  tenantId         String
+  takeoffId        String
+  materialId       String
+  wbsNodeId        String
+  bimElementId     String?
+  source           MaterialTakeoffSource @default(MANUAL)
+  sourceReference  String?
+  quantity         Decimal               @db.Decimal(18, 4)
+  wastePercent     Decimal               @default(0) @db.Decimal(7, 4)
+  requiredQuantity Decimal               @db.Decimal(18, 4)
+  requiredOn       DateTime?
+  takeoff           MaterialTakeoff      @relation(fields: [takeoffId], references: [id], onDelete: Cascade)
+  material          Material             @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  wbsNode           WbsNode              @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  bimElement        BimElement?           @relation(fields: [bimElementId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, takeoffId, materialId])
+  @@index([wbsNodeId, requiredOn])
+  @@index([bimElementId])
+}
+
+model ProcurementOrder {
+  id          String                 @id @default(uuid())
+  tenantId    String
+  projectId   String
+  externalId  String
+  vendorCode  String?
+  vendorName  String
+  currency    String                 @db.Char(3)
+  status      ProcurementOrderStatus @default(OPEN)
+  placedAt    DateTime
+  createdById String
+  createdAt   DateTime               @default(now())
+  project     Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy   User                   @relation("ProcurementOrderCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  lines       ProcurementOrderLine[]
+
+  @@unique([projectId, externalId])
+  @@index([tenantId, projectId, status, placedAt])
+}
+
+model ProcurementOrderLine {
+  id                String           @id @default(uuid())
+  tenantId          String
+  procurementOrderId String
+  lineNumber        Int
+  materialId        String
+  wbsNodeId         String
+  budgetLineId      String?
+  costLedgerEntryId String?          @unique
+  orderedQuantity   Decimal          @db.Decimal(18, 4)
+  unitPrice         Decimal          @db.Decimal(18, 4)
+  lineAmount        Decimal          @db.Decimal(18, 2)
+  promisedOn        DateTime?
+  procurementOrder  ProcurementOrder @relation(fields: [procurementOrderId], references: [id], onDelete: Cascade)
+  material          Material         @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  wbsNode            WbsNode          @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  budgetLine         BudgetLine?      @relation(fields: [budgetLineId], references: [id], onDelete: Restrict)
+  costLedgerEntry    CostLedgerEntry? @relation(fields: [costLedgerEntryId], references: [id], onDelete: Restrict)
+  movements          MaterialMovement[]
+
+  @@unique([procurementOrderId, lineNumber])
+  @@index([tenantId, materialId, promisedOn])
+  @@index([wbsNodeId])
+}
+
+model InventoryLocation {
+  id          String   @id @default(uuid())
+  tenantId    String
+  projectId   String
+  code        String
+  name        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  movements   MaterialMovement[]
+
+  @@unique([projectId, code])
+  @@index([tenantId, projectId, isActive])
+}
+
+model MaterialMovement {
+  id                    String               @id @default(uuid())
+  tenantId              String
+  projectId             String
+  locationId            String
+  materialId            String
+  wbsNodeId             String?
+  procurementOrderLineId String?
+  movementType          MaterialMovementType
+  externalId            String
+  quantityDelta         Decimal              @db.Decimal(18, 4)
+  occurredAt            DateTime
+  note                  String?
+  createdById           String
+  createdAt             DateTime             @default(now())
+  project               Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  location              InventoryLocation    @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  material              Material             @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  wbsNode               WbsNode?              @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  procurementOrderLine  ProcurementOrderLine? @relation(fields: [procurementOrderLineId], references: [id], onDelete: Restrict)
+  createdBy             User                 @relation("MaterialMovementCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([projectId, externalId])
+  @@index([tenantId, projectId, materialId, occurredAt])
+  @@index([locationId, materialId, occurredAt])
+  @@index([procurementOrderLineId])
 }
