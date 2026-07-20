@@ -8,6 +8,7 @@
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "node --test test/*.test.mjs",
+    "test:e2e": "node --test test/http-e2e.mjs",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate"
   },
