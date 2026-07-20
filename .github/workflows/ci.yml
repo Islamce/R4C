@@ -46,15 +46,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: Bootstrap dependency lockfile
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Capture generated lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: pnpm-lock
-          path: pnpm-lock.yaml
-          if-no-files-found: error
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Generate and validate Prisma client
         run: |
