@@ -261,6 +261,41 @@ enum SafetyActionStatus {
   VERIFIED
 }
 
+enum CommissioningPlanStatus {
+  DRAFT
+  PUBLISHED
+  SUPERSEDED
+}
+
+enum CommissioningTestStatus {
+  SCHEDULED
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum CommissioningTestResult {
+  PASS
+  FAIL
+  CONDITIONAL
+  NOT_APPLICABLE
+}
+
+enum HandoverPackageStatus {
+  DRAFT
+  SUBMITTED
+  ACCEPTED
+  RETURNED
+}
+
+enum HandoverRequirementStatus {
+  MISSING
+  PROVIDED
+  ACCEPTED
+  REJECTED
+}
+
 model Tenant {
   id          String       @id @default(uuid())
   code        String       @unique
@@ -322,6 +357,13 @@ model User {
   safetyActionsCompleted   SafetyAction[]      @relation("SafetyActionCompleter")
   safetyActionsVerified    SafetyAction[]      @relation("SafetyActionVerifier")
   safetyEvidenceAdded      SafetyEvidence[]    @relation("SafetyEvidenceAdder")
+  commissioningPlansCreated CommissioningPlan[] @relation("CommissioningPlanCreator")
+  commissioningTestsPerformed CommissioningTest[] @relation("CommissioningTestPerformer")
+  commissioningTestsReviewed  CommissioningTest[] @relation("CommissioningTestReviewer")
+  commissioningEvidenceAdded  CommissioningEvidence[] @relation("CommissioningEvidenceAdder")
+  handoverPackagesCreated      HandoverPackage[] @relation("HandoverPackageCreator")
+  handoverPackagesReviewed     HandoverPackage[] @relation("HandoverPackageReviewer")
+  handoverRequirementsProvided HandoverRequirement[] @relation("HandoverRequirementProvider")
 }
 
 model Role {
@@ -402,6 +444,11 @@ model Project {
   qualityFindings    QualityFinding[]
   safetyPermits      SafetyPermit[]
   safetyEvents       SafetyEvent[]
+  commissioningPlans CommissioningPlan[] @relation("ProjectCommissioningPlans")
+  activeCommissioningPlanId String? @unique
+  activeCommissioningPlan CommissioningPlan? @relation("ActiveCommissioningPlan", fields: [activeCommissioningPlanId], references: [id], onDelete: SetNull)
+  commissioningTests CommissioningTest[]
+  handoverPackages  HandoverPackage[]
 
   @@unique([tenantId, code])
   @@index([tenantId, status])
@@ -445,6 +492,9 @@ model WbsNode {
   qualityFindings      QualityFinding[]
   safetyPermits        SafetyPermit[]
   safetyEvents         SafetyEvent[]
+  commissioningCheckpoints CommissioningCheckpoint[]
+  commissioningTests CommissioningTest[]
+  handoverPackages    HandoverPackage[]
 
   @@unique([projectId, code])
   @@index([tenantId, projectId, parentId])
@@ -563,6 +613,8 @@ model DocumentVersion {
   bimModel          BimModel?
   qualityEvidence   QualityEvidence[]
   safetyEvidence    SafetyEvidence[]
+  commissioningEvidence CommissioningEvidence[]
+  handoverRequirements HandoverRequirement[]
 
   @@unique([documentId, versionNumber])
   @@index([tenantId, documentId, createdAt])
@@ -711,6 +763,8 @@ model BimElement {
   qualityFindings    QualityFinding[]
   safetyPermits     SafetyPermit[]
   safetyEvents      SafetyEvent[]
+  commissioningTests CommissioningTest[]
+  handoverPackages   HandoverPackage[]
 
   @@unique([bimModelId, globalId])
   @@index([tenantId, bimModelId, ifcType])
@@ -1350,4 +1404,149 @@ model SafetyEvidence {
   @@unique([safetyEventId, documentVersionId])
   @@index([tenantId, safetyPermitId])
   @@index([tenantId, safetyEventId])
+}
+
+
+model CommissioningPlan {
+  id          String                  @id @default(uuid())
+  tenantId    String
+  projectId   String
+  revision    String
+  name        String
+  status      CommissioningPlanStatus @default(DRAFT)
+  createdById String
+  publishedAt DateTime?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  project     Project                 @relation("ProjectCommissioningPlans", fields: [projectId], references: [id], onDelete: Cascade)
+  activeFor   Project?                @relation("ActiveCommissioningPlan")
+  createdBy   User                    @relation("CommissioningPlanCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  checkpoints CommissioningCheckpoint[]
+
+  @@unique([projectId, revision])
+  @@index([tenantId, projectId, status])
+}
+
+model CommissioningCheckpoint {
+  id                 String            @id @default(uuid())
+  tenantId           String
+  commissioningPlanId String
+  wbsNodeId          String?
+  code               String
+  title              String
+  system             String
+  acceptanceCriteria String
+  holdPoint          Boolean           @default(false)
+  ifcType            String?
+  sortOrder          Int               @default(0)
+  commissioningPlan  CommissioningPlan @relation(fields: [commissioningPlanId], references: [id], onDelete: Cascade)
+  wbsNode            WbsNode?          @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  tests              CommissioningTest[]
+
+  @@unique([commissioningPlanId, code])
+  @@index([tenantId, commissioningPlanId, sortOrder])
+  @@index([wbsNodeId])
+}
+
+model CommissioningTest {
+  id                 String                  @id @default(uuid())
+  tenantId           String
+  projectId          String
+  checkpointId       String
+  wbsNodeId          String
+  bimElementId       String?
+  externalId         String
+  scheduledFor       DateTime
+  status             CommissioningTestStatus @default(SCHEDULED)
+  result             CommissioningTestResult?
+  readings           Json?
+  notes              String?
+  performedById      String
+  reviewedById       String?
+  submittedAt        DateTime?
+  reviewedAt         DateTime?
+  reviewComment      String?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  project            Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  checkpoint         CommissioningCheckpoint @relation(fields: [checkpointId], references: [id], onDelete: Restrict)
+  wbsNode            WbsNode                 @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  bimElement         BimElement?             @relation(fields: [bimElementId], references: [id], onDelete: SetNull)
+  performedBy        User                    @relation("CommissioningTestPerformer", fields: [performedById], references: [id], onDelete: Restrict)
+  reviewedBy         User?                   @relation("CommissioningTestReviewer", fields: [reviewedById], references: [id], onDelete: Restrict)
+  evidence           CommissioningEvidence[]
+
+  @@unique([projectId, externalId])
+  @@index([tenantId, projectId, status, scheduledFor])
+  @@index([checkpointId, status])
+  @@index([wbsNodeId, status])
+  @@index([bimElementId, status])
+}
+
+model CommissioningEvidence {
+  id                String            @id @default(uuid())
+  tenantId          String
+  commissioningTestId String
+  documentVersionId String
+  addedById         String
+  note              String?
+  createdAt         DateTime          @default(now())
+  commissioningTest CommissioningTest @relation(fields: [commissioningTestId], references: [id], onDelete: Cascade)
+  documentVersion   DocumentVersion   @relation(fields: [documentVersionId], references: [id], onDelete: Restrict)
+  addedBy           User              @relation("CommissioningEvidenceAdder", fields: [addedById], references: [id], onDelete: Restrict)
+
+  @@unique([commissioningTestId, documentVersionId])
+  @@index([tenantId, commissioningTestId])
+}
+
+model HandoverPackage {
+  id             String                @id @default(uuid())
+  tenantId       String
+  projectId      String
+  wbsNodeId      String
+  bimElementId   String?
+  externalId     String
+  name           String
+  system         String
+  status         HandoverPackageStatus @default(DRAFT)
+  createdById    String
+  reviewedById   String?
+  submittedAt    DateTime?
+  reviewedAt     DateTime?
+  reviewComment  String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  project        Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  wbsNode        WbsNode               @relation(fields: [wbsNodeId], references: [id], onDelete: Restrict)
+  bimElement     BimElement?           @relation(fields: [bimElementId], references: [id], onDelete: SetNull)
+  createdBy      User                  @relation("HandoverPackageCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  reviewedBy     User?                 @relation("HandoverPackageReviewer", fields: [reviewedById], references: [id], onDelete: Restrict)
+  requirements   HandoverRequirement[]
+
+  @@unique([projectId, externalId])
+  @@index([tenantId, projectId, status])
+  @@index([wbsNodeId, status])
+  @@index([bimElementId, status])
+}
+
+model HandoverRequirement {
+  id                String                    @id @default(uuid())
+  tenantId          String
+  handoverPackageId String
+  code              String
+  title             String
+  documentType      String
+  status            HandoverRequirementStatus @default(MISSING)
+  documentVersionId String?
+  providedById      String?
+  providedAt        DateTime?
+  note              String?
+  sortOrder         Int                       @default(0)
+  handoverPackage   HandoverPackage           @relation(fields: [handoverPackageId], references: [id], onDelete: Cascade)
+  documentVersion   DocumentVersion?          @relation(fields: [documentVersionId], references: [id], onDelete: Restrict)
+  providedBy        User?                     @relation("HandoverRequirementProvider", fields: [providedById], references: [id], onDelete: Restrict)
+
+  @@unique([handoverPackageId, code])
+  @@index([tenantId, handoverPackageId, status])
+  @@index([documentVersionId])
 }

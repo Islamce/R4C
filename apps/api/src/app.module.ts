@@ -18,6 +18,7 @@ import { QualityModule } from "./quality/quality.module";
 import { ProjectsModule } from "./projects/projects.module";
 import { ScheduleModule } from "./schedule/schedule.module";
 import { StorageModule } from "./storage/storage.module";
+import { TurnoverModule } from "./turnover/turnover.module";
 import { WorkflowModule } from "./workflow/workflow.module";
 
 @Controller("health")
@@ -39,6 +40,7 @@ class HealthController {
     PrismaModule,
     AuditModule,
     StorageModule,
+    TurnoverModule,
     AuthModule,
     CostModule,
     DocumentsModule,

@@ -182,6 +182,41 @@ interface SafetyStateResponse {
   elements: SafetyElementState[];
 }
 
+interface TurnoverElementState {
+  globalId: string;
+  turnoverState:
+    | "NOT_STARTED"
+    | "COMMISSIONING"
+    | "BLOCKED"
+    | "READY_FOR_HANDOVER"
+    | "HANDED_OVER";
+  latestTest: {
+    id: string;
+    externalId: string;
+    status: string;
+    result: string | null;
+    scheduledFor: string;
+  } | null;
+  packages: Array<{
+    id: string;
+    externalId: string;
+    status: string;
+    system: string;
+  }>;
+}
+
+interface TurnoverStateResponse {
+  summary: {
+    elements: number;
+    notStarted: number;
+    commissioning: number;
+    blocked: number;
+    readyForHandover: number;
+    handedOver: number;
+  };
+  elements: TurnoverElementState[];
+}
+
 interface WbsNode {
   id: string;
   code: string;
@@ -200,7 +235,7 @@ interface ElementDetail {
   wbsLinks: Array<{ wbsNode: { id: string; code: string; name: string } }>;
 }
 
-type ViewMode = "progress" | "fourD" | "fiveD" | "materials" | "quality" | "safety";
+type ViewMode = "progress" | "fourD" | "fiveD" | "materials" | "quality" | "safety" | "turnover";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 const DAY_MS = 86_400_000;
@@ -261,6 +296,14 @@ function safetyColor(state?: SafetyElementState) {
   return 0xef4444;
 }
 
+function turnoverColor(state?: TurnoverElementState) {
+  if (!state || state.turnoverState === "NOT_STARTED") return 0x64748b;
+  if (state.turnoverState === "COMMISSIONING") return 0xf59e0b;
+  if (state.turnoverState === "BLOCKED") return 0xef4444;
+  if (state.turnoverState === "READY_FOR_HANDOVER") return 0x3b82f6;
+  return 0x22c55e;
+}
+
 function findGlobalId(object: THREE.Object3D, known: Map<string, unknown>) {
   let current: THREE.Object3D | null = object;
   while (current) {
@@ -282,6 +325,7 @@ function colorScene(
   materials: Map<string, MaterialElementState>,
   quality: Map<string, QualityElementState>,
   safety: Map<string, SafetyElementState>,
+  turnover: Map<string, TurnoverElementState>,
   mode: ViewMode,
   selectedGlobalId: string | null,
 ) {
@@ -293,7 +337,9 @@ function colorScene(
         ? materials
         : quality.size
           ? quality
-          : safety;
+          : safety.size
+            ? safety
+            : turnover;
   scene.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return;
     const globalId = findGlobalId(object, known);
@@ -302,13 +348,16 @@ function colorScene(
     const materialState = globalId ? materials.get(globalId) : undefined;
     const qualityState = globalId ? quality.get(globalId) : undefined;
     const safetyState = globalId ? safety.get(globalId) : undefined;
+    const turnoverState = globalId ? turnover.get(globalId) : undefined;
     const isFuture = mode === "fourD" && fourDState?.plannedState === "FUTURE";
     const color =
       globalId === selectedGlobalId
         ? 0xfacc15
-        : mode === "safety"
-          ? safetyColor(safetyState)
-          : mode === "quality"
+        : mode === "turnover"
+          ? turnoverColor(turnoverState)
+          : mode === "safety"
+            ? safetyColor(safetyState)
+            : mode === "quality"
             ? qualityColor(qualityState)
             : mode === "materials"
             ? materialColor(materialState)
@@ -361,6 +410,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
   const materialRef = useRef(new Map<string, MaterialElementState>());
   const qualityRef = useRef(new Map<string, QualityElementState>());
   const safetyRef = useRef(new Map<string, SafetyElementState>());
+  const turnoverRef = useRef(new Map<string, TurnoverElementState>());
   const modeRef = useRef<ViewMode>("progress");
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [wbsNodes, setWbsNodes] = useState<WbsNode[]>([]);
@@ -373,6 +423,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
   const [materialState, setMaterialState] = useState<MaterialStateResponse | null>(null);
   const [qualityState, setQualityState] = useState<QualityStateResponse | null>(null);
   const [safetyState, setSafetyState] = useState<SafetyStateResponse | null>(null);
+  const [turnoverState, setTurnoverState] = useState<TurnoverStateResponse | null>(null);
   const [timelineDate, setTimelineDate] = useState("");
   const [playing, setPlaying] = useState(false);
   const [status, setStatus] = useState("Loading model…");
@@ -408,6 +459,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
       materialRef.current,
       qualityRef.current,
       safetyRef.current,
+      turnoverRef.current,
       modeRef.current,
       selectedId,
     );
@@ -474,6 +526,18 @@ export function BimViewer({ modelId }: { modelId: string }) {
     return response;
   }
 
+  async function refreshTurnoverState() {
+    const response = await api<TurnoverStateResponse>(
+      `/bim-models/${modelId}/turnover-state`,
+    );
+    setTurnoverState(response);
+    turnoverRef.current = new Map(
+      response.elements.map((item) => [item.globalId, item]),
+    );
+    repaint();
+    return response;
+  }
+
   async function inspect(globalId: string) {
     const detail = await api<ElementDetail>(
       `/bim-models/${modelId}/elements/global/${encodeURIComponent(globalId)}`,
@@ -511,6 +575,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
           initialMaterialState,
           initialQualityState,
           initialSafetyState,
+          initialTurnoverState,
         ] = await Promise.all([
           api<FiveDResponse>(
             `/bim-models/${modelId}/5d-state${
@@ -520,6 +585,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
           api<MaterialStateResponse>(`/bim-models/${modelId}/material-state`),
           api<QualityStateResponse>(`/bim-models/${modelId}/quality-state`),
           api<SafetyStateResponse>(`/bim-models/${modelId}/safety-state`),
+          api<TurnoverStateResponse>(`/bim-models/${modelId}/turnover-state`),
         ]);
         if (disposed || !hostRef.current) return;
         setManifest(model);
@@ -529,6 +595,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
         setMaterialState(initialMaterialState);
         setQualityState(initialQualityState);
         setSafetyState(initialSafetyState);
+        setTurnoverState(initialTurnoverState);
         if (initialFourD.selectedDate) {
           setTimelineDate(toDateOnly(initialFourD.selectedDate));
         }
@@ -547,6 +614,9 @@ export function BimViewer({ modelId }: { modelId: string }) {
         );
         safetyRef.current = new Map(
           initialSafetyState.elements.map((item) => [item.globalId, item]),
+        );
+        turnoverRef.current = new Map(
+          initialTurnoverState.elements.map((item) => [item.globalId, item]),
         );
 
         const host = hostRef.current;
@@ -590,6 +660,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
           materialRef.current,
           qualityRef.current,
           safetyRef.current,
+          turnoverRef.current,
           "progress",
           null,
         );
@@ -621,7 +692,9 @@ export function BimViewer({ modelId }: { modelId: string }) {
                 ? materialRef.current
                 : qualityRef.current.size
                   ? qualityRef.current
-                  : safetyRef.current;
+                  : safetyRef.current.size
+                    ? safetyRef.current
+                    : turnoverRef.current;
           const globalId = hit ? findGlobalId(hit.object, known) : null;
           if (globalId) void inspect(globalId);
         });
@@ -704,6 +777,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
         refreshMaterialState(),
         refreshQualityState(),
         refreshSafetyState(),
+        refreshTurnoverState(),
       ]);
       setStatus("Element linked to WBS");
     } catch (cause) {
@@ -734,6 +808,9 @@ export function BimViewer({ modelId }: { modelId: string }) {
     : undefined;
   const selectedSafety = selected
     ? safetyRef.current.get(selected.globalId)
+    : undefined;
+  const selectedTurnover = selected
+    ? turnoverRef.current.get(selected.globalId)
     : undefined;
   const schedule = fourD?.schedule;
   const rangeMin = schedule ? toDayIndex(schedule.start) : 0;
@@ -789,6 +866,12 @@ export function BimViewer({ modelId }: { modelId: string }) {
             >
               HSE
             </button>
+            <button
+              className={viewMode === "turnover" ? styles.modeActive : ""}
+              onClick={() => changeMode("turnover")}
+            >
+              Turnover
+            </button>
           </div>
           <div className={styles.legend}>
             {viewMode === "progress" ? (
@@ -832,13 +915,21 @@ export function BimViewer({ modelId }: { modelId: string }) {
                 <span><i className={styles.active} />Major</span>
                 <span><i className={styles.behind} />Critical</span>
               </>
-            ) : (
+            ) : viewMode === "safety" ? (
               <>
                 <span><i className={styles.complete} />Clear</span>
                 <span><i className={styles.near} />Permit controlled</span>
                 <span><i className={styles.notReported} />Low</span>
                 <span><i className={styles.active} />Medium</span>
                 <span><i className={styles.behind} />High / critical</span>
+              </>
+            ) : (
+              <>
+                <span><i className={styles.unlinked} />Not started</span>
+                <span><i className={styles.active} />Commissioning</span>
+                <span><i className={styles.behind} />Blocked</span>
+                <span><i className={styles.near} />Ready for handover</span>
+                <span><i className={styles.complete} />Handed over</span>
               </>
             )}
           </div>
@@ -879,7 +970,15 @@ export function BimViewer({ modelId }: { modelId: string }) {
             />
             <time>{timelineDate}</time>
           </div>
-          {viewMode === "safety" && safetyState ? (
+          {viewMode === "turnover" && turnoverState ? (
+            <div className={styles.metrics}>
+              <span><strong>{turnoverState.summary.notStarted}</strong> not started</span>
+              <span><strong>{turnoverState.summary.commissioning}</strong> commissioning</span>
+              <span><strong>{turnoverState.summary.blocked}</strong> blocked</span>
+              <span><strong>{turnoverState.summary.readyForHandover}</strong> ready</span>
+              <span><strong>{turnoverState.summary.handedOver}</strong> handed over</span>
+            </div>
+          ) : viewMode === "safety" && safetyState ? (
             <div className={styles.metrics}>
               <span><strong>{safetyState.summary.openEvents}</strong> open events</span>
               <span><strong>{safetyState.summary.activePermits}</strong> active permits</span>
@@ -1076,6 +1175,26 @@ export function BimViewer({ modelId }: { modelId: string }) {
                   {selectedSafety.permits.map((item) => (
                     <p key={item.id}>
                       {item.externalId} · {item.type} · {item.status}
+                    </p>
+                  ))}
+                </>
+              )}
+              {selectedTurnover && (
+                <>
+                  <h3>Turnover status</h3>
+                  <dl>
+                    <dt>State</dt><dd>{selectedTurnover.turnoverState}</dd>
+                    <dt>Latest test</dt>
+                    <dd>
+                      {selectedTurnover.latestTest
+                        ? `${selectedTurnover.latestTest.externalId} · ${selectedTurnover.latestTest.status} · ${selectedTurnover.latestTest.result ?? "—"}`
+                        : "Not scheduled"}
+                    </dd>
+                    <dt>Packages</dt><dd>{selectedTurnover.packages.length}</dd>
+                  </dl>
+                  {selectedTurnover.packages.map((item) => (
+                    <p key={item.id}>
+                      {item.externalId} · {item.system} · {item.status}
                     </p>
                   ))}
                 </>
