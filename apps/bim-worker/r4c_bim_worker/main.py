@@ -81,7 +81,12 @@ def process_ifc(
         with tempfile.NamedTemporaryFile(suffix=".glb", delete=False) as temp_glb:
             glb_path = Path(temp_glb.name)
         geometry = generate_glb(ifc_path, glb_path, settings.bim_max_elements)
-        checksum = hashlib.sha256(glb_path.read_bytes()).hexdigest()
+
+        digest = hashlib.sha256()
+        with glb_path.open("rb") as artifact:
+            for chunk in iter(lambda: artifact.read(1024 * 1024), b""):
+                digest.update(chunk)
+        checksum = digest.hexdigest()
 
         with glb_path.open("rb") as artifact:
             upload = httpx.put(
