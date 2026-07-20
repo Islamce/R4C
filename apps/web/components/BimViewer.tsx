@@ -53,6 +53,48 @@ interface FourDResponse {
   elements: FourDState[];
 }
 
+interface FiveDState {
+  globalId: string;
+  costState:
+    | "UNBUDGETED"
+    | "UNBUDGETED_COST"
+    | "CONTROLLED"
+    | "OVERCOMMITTED"
+    | "OVERRUN";
+  currency: string;
+  budget: number;
+  earnedValue: number;
+  actualCost: number;
+  commitments: number;
+  costVariance: number;
+}
+
+interface FiveDResponse {
+  budget: {
+    id: string;
+    name: string;
+    revision: string;
+    currency: string;
+  } | null;
+  asOf: string;
+  summary: {
+    budgetAtCompletion: string;
+    plannedValue: string;
+    earnedValue: string;
+    actualCost: string;
+    commitments: string;
+    forecastExposure: string;
+    costVariance: string;
+    scheduleVariance: string;
+    cpi: number | null;
+    spi: number | null;
+    estimateAtCompletion: string | null;
+    estimateToComplete: string | null;
+    varianceAtCompletion: string | null;
+  } | null;
+  elements: FiveDState[];
+}
+
 interface WbsNode {
   id: string;
   code: string;
@@ -71,7 +113,7 @@ interface ElementDetail {
   wbsLinks: Array<{ wbsNode: { id: string; code: string; name: string } }>;
 }
 
-type ViewMode = "progress" | "fourD";
+type ViewMode = "progress" | "fourD" | "fiveD";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 const DAY_MS = 86_400_000;
@@ -96,6 +138,18 @@ function fourDColor(state?: FourDState) {
     : 0x3b82f6;
 }
 
+function fiveDColor(state?: FiveDState) {
+  if (!state || state.costState === "UNBUDGETED") return 0x64748b;
+  if (
+    state.costState === "OVERRUN" ||
+    state.costState === "UNBUDGETED_COST"
+  ) {
+    return 0xef4444;
+  }
+  if (state.costState === "OVERCOMMITTED") return 0xf59e0b;
+  return 0x22c55e;
+}
+
 function findGlobalId(object: THREE.Object3D, known: Map<string, unknown>) {
   let current: THREE.Object3D | null = object;
   while (current) {
@@ -113,6 +167,7 @@ function colorScene(
   scene: THREE.Scene,
   progress: Map<string, VisualState>,
   fourD: Map<string, FourDState>,
+  fiveD: Map<string, FiveDState>,
   mode: ViewMode,
   selectedGlobalId: string | null,
 ) {
@@ -121,13 +176,16 @@ function colorScene(
     if (!(object instanceof THREE.Mesh)) return;
     const globalId = findGlobalId(object, known);
     const fourDState = globalId ? fourD.get(globalId) : undefined;
+    const fiveDState = globalId ? fiveD.get(globalId) : undefined;
     const isFuture = mode === "fourD" && fourDState?.plannedState === "FUTURE";
     const color =
       globalId === selectedGlobalId
         ? 0xfacc15
-        : mode === "fourD"
-          ? fourDColor(fourDState)
-          : progressColor(globalId ? progress.get(globalId) : undefined);
+        : mode === "fiveD"
+          ? fiveDColor(fiveDState)
+          : mode === "fourD"
+            ? fourDColor(fourDState)
+            : progressColor(globalId ? progress.get(globalId) : undefined);
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     for (const material of materials) {
       if ("color" in material && material.color instanceof THREE.Color) {
@@ -153,11 +211,20 @@ function fromDayIndex(value: number) {
   return new Date(value * DAY_MS).toISOString().slice(0, 10);
 }
 
+function formatMoney(value: string | number | null, currency: string) {
+  if (value === null) return "—";
+  return `${currency} ${Number(value).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
 export function BimViewer({ modelId }: { modelId: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const progressRef = useRef(new Map<string, VisualState>());
   const fourDRef = useRef(new Map<string, FourDState>());
+  const fiveDRef = useRef(new Map<string, FiveDState>());
   const modeRef = useRef<ViewMode>("progress");
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [wbsNodes, setWbsNodes] = useState<WbsNode[]>([]);
@@ -166,6 +233,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
   const [progress, setProgress] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>("progress");
   const [fourD, setFourD] = useState<FourDResponse | null>(null);
+  const [fiveD, setFiveD] = useState<FiveDResponse | null>(null);
   const [timelineDate, setTimelineDate] = useState("");
   const [playing, setPlaying] = useState(false);
   const [status, setStatus] = useState("Loading model…");
@@ -197,6 +265,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
       sceneRef.current,
       progressRef.current,
       fourDRef.current,
+      fiveDRef.current,
       modeRef.current,
       selectedId,
     );
@@ -214,6 +283,15 @@ export function BimViewer({ modelId }: { modelId: string }) {
     setFourD(response);
     fourDRef.current = new Map(response.elements.map((item) => [item.globalId, item]));
     if (response.selectedDate) setTimelineDate(toDateOnly(response.selectedDate));
+    repaint();
+    return response;
+  }
+
+  async function refreshFiveDState(date?: string) {
+    const query = date ? `?date=${encodeURIComponent(date)}` : "";
+    const response = await api<FiveDResponse>(`/bim-models/${modelId}/5d-state${query}`);
+    setFiveD(response);
+    fiveDRef.current = new Map(response.elements.map((item) => [item.globalId, item]));
     repaint();
     return response;
   }
@@ -247,16 +325,28 @@ export function BimViewer({ modelId }: { modelId: string }) {
           api<WbsNode[]>(`/projects/${model.projectId}/wbs`),
           api<FourDResponse>(`/bim-models/${modelId}/4d-state`),
         ]);
+        const initialCostDate = initialFourD.selectedDate
+          ? toDateOnly(initialFourD.selectedDate)
+          : undefined;
+        const initialFiveD = await api<FiveDResponse>(
+          `/bim-models/${modelId}/5d-state${
+            initialCostDate ? `?date=${encodeURIComponent(initialCostDate)}` : ""
+          }`,
+        );
         if (disposed || !hostRef.current) return;
         setManifest(model);
         setWbsNodes(wbs);
         setFourD(initialFourD);
+        setFiveD(initialFiveD);
         if (initialFourD.selectedDate) {
           setTimelineDate(toDateOnly(initialFourD.selectedDate));
         }
         progressRef.current = new Map(visual.map((item) => [item.globalId, item]));
         fourDRef.current = new Map(
           initialFourD.elements.map((item) => [item.globalId, item]),
+        );
+        fiveDRef.current = new Map(
+          initialFiveD.elements.map((item) => [item.globalId, item]),
         );
 
         const host = hostRef.current;
@@ -292,7 +382,14 @@ export function BimViewer({ modelId }: { modelId: string }) {
             : object.material.clone();
         });
         scene.add(gltf.scene);
-        colorScene(scene, progressRef.current, fourDRef.current, "progress", null);
+        colorScene(
+          scene,
+          progressRef.current,
+          fourDRef.current,
+          fiveDRef.current,
+          "progress",
+          null,
+        );
 
         const box = new THREE.Box3().setFromObject(gltf.scene);
         const sphere = box.getBoundingSphere(new THREE.Sphere());
@@ -366,6 +463,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
         }
         const next = fromDayIndex(nextIndex);
         void refreshFourDState(next);
+        void refreshFiveDState(next);
         return next;
       });
     }, 700);
@@ -385,7 +483,12 @@ export function BimViewer({ modelId }: { modelId: string }) {
       });
       await inspect(selected.globalId);
       await refreshVisualState(selected.globalId);
-      if (timelineDate) await refreshFourDState(timelineDate);
+      if (timelineDate) {
+        await Promise.all([
+          refreshFourDState(timelineDate),
+          refreshFiveDState(timelineDate),
+        ]);
+      }
       setStatus("Element linked to WBS");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Linking failed");
@@ -406,6 +509,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
   }
 
   const selectedFourD = selected ? fourDRef.current.get(selected.globalId) : undefined;
+  const selectedFiveD = selected ? fiveDRef.current.get(selected.globalId) : undefined;
   const schedule = fourD?.schedule;
   const rangeMin = schedule ? toDayIndex(schedule.start) : 0;
   const rangeMax = schedule ? toDayIndex(schedule.finish) : 0;
@@ -434,6 +538,13 @@ export function BimViewer({ modelId }: { modelId: string }) {
             >
               4D plan
             </button>
+            <button
+              className={viewMode === "fiveD" ? styles.modeActive : ""}
+              disabled={!fiveD?.budget}
+              onClick={() => changeMode("fiveD")}
+            >
+              5D cost
+            </button>
           </div>
           <div className={styles.legend}>
             {viewMode === "progress" ? (
@@ -445,7 +556,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
                 <span><i className={styles.near} />75–99%</span>
                 <span><i className={styles.complete} />100%</span>
               </>
-            ) : (
+            ) : viewMode === "fourD" ? (
               <>
                 <span><i className={styles.unlinked} />Unscheduled</span>
                 <span><i className={styles.future} />Future</span>
@@ -453,6 +564,14 @@ export function BimViewer({ modelId }: { modelId: string }) {
                 <span><i className={styles.behind} />Behind</span>
                 <span><i className={styles.near} />Planned complete</span>
                 <span><i className={styles.complete} />Actual complete</span>
+              </>
+            ) : (
+              <>
+                <span><i className={styles.unlinked} />Unbudgeted</span>
+                <span><i className={styles.behind} />Unbudgeted cost</span>
+                <span><i className={styles.complete} />Controlled</span>
+                <span><i className={styles.active} />Overcommitted</span>
+                <span><i className={styles.behind} />Cost overrun</span>
               </>
             )}
           </div>
@@ -488,18 +607,36 @@ export function BimViewer({ modelId }: { modelId: string }) {
                 setTimelineDate(next);
                 changeMode("fourD");
                 void refreshFourDState(next);
+                void refreshFiveDState(next);
               }}
             />
             <time>{timelineDate}</time>
           </div>
-          {fourD.summary && (
+          {viewMode === "fiveD" && fiveD?.summary && fiveD.budget ? (
+            <div className={styles.metrics}>
+              <span>
+                <strong>{formatMoney(fiveD.summary.budgetAtCompletion, fiveD.budget.currency)}</strong>
+                BAC
+              </span>
+              <span>
+                <strong>{formatMoney(fiveD.summary.earnedValue, fiveD.budget.currency)}</strong>
+                EV
+              </span>
+              <span>
+                <strong>{formatMoney(fiveD.summary.actualCost, fiveD.budget.currency)}</strong>
+                AC
+              </span>
+              <span><strong>{fiveD.summary.cpi ?? "—"}</strong>CPI</span>
+              <span><strong>{fiveD.summary.spi ?? "—"}</strong>SPI</span>
+            </div>
+          ) : fourD.summary ? (
             <div className={styles.metrics}>
               <span><strong>{fourD.summary.scheduled}</strong> scheduled</span>
               <span><strong>{fourD.summary.active}</strong> active</span>
               <span><strong>{fourD.summary.plannedComplete}</strong> planned complete</span>
               <span><strong>{fourD.summary.behind}</strong> behind</span>
             </div>
-          )}
+          ) : null}
         </section>
       )}
 
@@ -583,6 +720,24 @@ export function BimViewer({ modelId }: { modelId: string }) {
                         ? "—"
                         : `${selectedFourD.variance > 0 ? "+" : ""}${selectedFourD.variance}%`}
                     </dd>
+                  </dl>
+                </>
+              )}
+              {selectedFiveD && fiveD?.budget && (
+                <>
+                  <h3>5D cost</h3>
+                  <dl>
+                    <dt>State</dt><dd>{selectedFiveD.costState}</dd>
+                    <dt>Budget</dt>
+                    <dd>{formatMoney(selectedFiveD.budget, selectedFiveD.currency)}</dd>
+                    <dt>Earned</dt>
+                    <dd>{formatMoney(selectedFiveD.earnedValue, selectedFiveD.currency)}</dd>
+                    <dt>Actual</dt>
+                    <dd>{formatMoney(selectedFiveD.actualCost, selectedFiveD.currency)}</dd>
+                    <dt>Committed</dt>
+                    <dd>{formatMoney(selectedFiveD.commitments, selectedFiveD.currency)}</dd>
+                    <dt>Variance</dt>
+                    <dd>{formatMoney(selectedFiveD.costVariance, selectedFiveD.currency)}</dd>
                   </dl>
                 </>
               )}
