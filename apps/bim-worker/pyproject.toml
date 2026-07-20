@@ -8,6 +8,8 @@ dependencies = [
   "uvicorn[standard]>=0.35,<1",
   "ifcopenshell>=0.8,<1",
   "httpx>=0.28,<1",
+  "numpy>=2,<3",
+  "trimesh>=4.7,<5",
   "pydantic-settings>=2.10,<3"
 ]
 
