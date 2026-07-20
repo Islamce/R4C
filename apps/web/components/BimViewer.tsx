@@ -147,6 +147,41 @@ interface QualityStateResponse {
   elements: QualityElementState[];
 }
 
+interface SafetyElementState {
+  globalId: string;
+  safetyState: "CLEAR" | "CONTROLLED" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  events: Array<{
+    id: string;
+    externalId: string;
+    type: "HAZARD" | "OBSERVATION" | "NEAR_MISS" | "INCIDENT";
+    severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+    status: string;
+    title: string;
+  }>;
+  permits: Array<{
+    id: string;
+    externalId: string;
+    type: string;
+    status: "ACTIVE" | "SUSPENDED";
+    validUntil: string;
+  }>;
+}
+
+interface SafetyStateResponse {
+  summary: {
+    elements: number;
+    clear: number;
+    controlled: number;
+    low: number;
+    medium: number;
+    high: number;
+    critical: number;
+    openEvents: number;
+    activePermits: number;
+  };
+  elements: SafetyElementState[];
+}
+
 interface WbsNode {
   id: string;
   code: string;
@@ -165,7 +200,7 @@ interface ElementDetail {
   wbsLinks: Array<{ wbsNode: { id: string; code: string; name: string } }>;
 }
 
-type ViewMode = "progress" | "fourD" | "fiveD" | "materials" | "quality";
+type ViewMode = "progress" | "fourD" | "fiveD" | "materials" | "quality" | "safety";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 const DAY_MS = 86_400_000;
@@ -217,6 +252,15 @@ function qualityColor(state?: QualityElementState) {
   return 0xef4444;
 }
 
+function safetyColor(state?: SafetyElementState) {
+  if (!state || state.safetyState === "CLEAR") return 0x22c55e;
+  if (state.safetyState === "CONTROLLED") return 0x3b82f6;
+  if (state.safetyState === "LOW") return 0x8b5cf6;
+  if (state.safetyState === "MEDIUM") return 0xf59e0b;
+  if (state.safetyState === "HIGH") return 0xf97316;
+  return 0xef4444;
+}
+
 function findGlobalId(object: THREE.Object3D, known: Map<string, unknown>) {
   let current: THREE.Object3D | null = object;
   while (current) {
@@ -237,6 +281,7 @@ function colorScene(
   fiveD: Map<string, FiveDState>,
   materials: Map<string, MaterialElementState>,
   quality: Map<string, QualityElementState>,
+  safety: Map<string, SafetyElementState>,
   mode: ViewMode,
   selectedGlobalId: string | null,
 ) {
@@ -246,7 +291,9 @@ function colorScene(
       ? fourD
       : materials.size
         ? materials
-        : quality;
+        : quality.size
+          ? quality
+          : safety;
   scene.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return;
     const globalId = findGlobalId(object, known);
@@ -254,13 +301,16 @@ function colorScene(
     const fiveDState = globalId ? fiveD.get(globalId) : undefined;
     const materialState = globalId ? materials.get(globalId) : undefined;
     const qualityState = globalId ? quality.get(globalId) : undefined;
+    const safetyState = globalId ? safety.get(globalId) : undefined;
     const isFuture = mode === "fourD" && fourDState?.plannedState === "FUTURE";
     const color =
       globalId === selectedGlobalId
         ? 0xfacc15
-        : mode === "quality"
-          ? qualityColor(qualityState)
-          : mode === "materials"
+        : mode === "safety"
+          ? safetyColor(safetyState)
+          : mode === "quality"
+            ? qualityColor(qualityState)
+            : mode === "materials"
             ? materialColor(materialState)
             : mode === "fiveD"
             ? fiveDColor(fiveDState)
@@ -310,6 +360,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
   const fiveDRef = useRef(new Map<string, FiveDState>());
   const materialRef = useRef(new Map<string, MaterialElementState>());
   const qualityRef = useRef(new Map<string, QualityElementState>());
+  const safetyRef = useRef(new Map<string, SafetyElementState>());
   const modeRef = useRef<ViewMode>("progress");
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [wbsNodes, setWbsNodes] = useState<WbsNode[]>([]);
@@ -321,6 +372,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
   const [fiveD, setFiveD] = useState<FiveDResponse | null>(null);
   const [materialState, setMaterialState] = useState<MaterialStateResponse | null>(null);
   const [qualityState, setQualityState] = useState<QualityStateResponse | null>(null);
+  const [safetyState, setSafetyState] = useState<SafetyStateResponse | null>(null);
   const [timelineDate, setTimelineDate] = useState("");
   const [playing, setPlaying] = useState(false);
   const [status, setStatus] = useState("Loading model…");
@@ -355,6 +407,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
       fiveDRef.current,
       materialRef.current,
       qualityRef.current,
+      safetyRef.current,
       modeRef.current,
       selectedId,
     );
@@ -409,6 +462,18 @@ export function BimViewer({ modelId }: { modelId: string }) {
     return response;
   }
 
+  async function refreshSafetyState() {
+    const response = await api<SafetyStateResponse>(
+      `/bim-models/${modelId}/safety-state`,
+    );
+    setSafetyState(response);
+    safetyRef.current = new Map(
+      response.elements.map((item) => [item.globalId, item]),
+    );
+    repaint();
+    return response;
+  }
+
   async function inspect(globalId: string) {
     const detail = await api<ElementDetail>(
       `/bim-models/${modelId}/elements/global/${encodeURIComponent(globalId)}`,
@@ -441,7 +506,12 @@ export function BimViewer({ modelId }: { modelId: string }) {
         const initialCostDate = initialFourD.selectedDate
           ? toDateOnly(initialFourD.selectedDate)
           : undefined;
-        const [initialFiveD, initialMaterialState, initialQualityState] = await Promise.all([
+        const [
+          initialFiveD,
+          initialMaterialState,
+          initialQualityState,
+          initialSafetyState,
+        ] = await Promise.all([
           api<FiveDResponse>(
             `/bim-models/${modelId}/5d-state${
             initialCostDate ? `?date=${encodeURIComponent(initialCostDate)}` : ""
@@ -449,6 +519,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
           ),
           api<MaterialStateResponse>(`/bim-models/${modelId}/material-state`),
           api<QualityStateResponse>(`/bim-models/${modelId}/quality-state`),
+          api<SafetyStateResponse>(`/bim-models/${modelId}/safety-state`),
         ]);
         if (disposed || !hostRef.current) return;
         setManifest(model);
@@ -457,6 +528,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
         setFiveD(initialFiveD);
         setMaterialState(initialMaterialState);
         setQualityState(initialQualityState);
+        setSafetyState(initialSafetyState);
         if (initialFourD.selectedDate) {
           setTimelineDate(toDateOnly(initialFourD.selectedDate));
         }
@@ -472,6 +544,9 @@ export function BimViewer({ modelId }: { modelId: string }) {
         );
         qualityRef.current = new Map(
           initialQualityState.elements.map((item) => [item.globalId, item]),
+        );
+        safetyRef.current = new Map(
+          initialSafetyState.elements.map((item) => [item.globalId, item]),
         );
 
         const host = hostRef.current;
@@ -514,6 +589,7 @@ export function BimViewer({ modelId }: { modelId: string }) {
           fiveDRef.current,
           materialRef.current,
           qualityRef.current,
+          safetyRef.current,
           "progress",
           null,
         );
@@ -543,7 +619,9 @@ export function BimViewer({ modelId }: { modelId: string }) {
               ? fourDRef.current
               : materialRef.current.size
                 ? materialRef.current
-                : qualityRef.current;
+                : qualityRef.current.size
+                  ? qualityRef.current
+                  : safetyRef.current;
           const globalId = hit ? findGlobalId(hit.object, known) : null;
           if (globalId) void inspect(globalId);
         });
@@ -622,7 +700,11 @@ export function BimViewer({ modelId }: { modelId: string }) {
           refreshFiveDState(timelineDate),
         ]);
       }
-      await Promise.all([refreshMaterialState(), refreshQualityState()]);
+      await Promise.all([
+        refreshMaterialState(),
+        refreshQualityState(),
+        refreshSafetyState(),
+      ]);
       setStatus("Element linked to WBS");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Linking failed");
@@ -649,6 +731,9 @@ export function BimViewer({ modelId }: { modelId: string }) {
     : undefined;
   const selectedQuality = selected
     ? qualityRef.current.get(selected.globalId)
+    : undefined;
+  const selectedSafety = selected
+    ? safetyRef.current.get(selected.globalId)
     : undefined;
   const schedule = fourD?.schedule;
   const rangeMin = schedule ? toDayIndex(schedule.start) : 0;
@@ -698,6 +783,12 @@ export function BimViewer({ modelId }: { modelId: string }) {
             >
               Quality
             </button>
+            <button
+              className={viewMode === "safety" ? styles.modeActive : ""}
+              onClick={() => changeMode("safety")}
+            >
+              HSE
+            </button>
           </div>
           <div className={styles.legend}>
             {viewMode === "progress" ? (
@@ -734,12 +825,20 @@ export function BimViewer({ modelId }: { modelId: string }) {
                 <span><i className={styles.near} />Available</span>
                 <span><i className={styles.complete} />Issued</span>
               </>
-            ) : (
+            ) : viewMode === "quality" ? (
               <>
                 <span><i className={styles.complete} />Clear</span>
                 <span><i className={styles.near} />Minor</span>
                 <span><i className={styles.active} />Major</span>
                 <span><i className={styles.behind} />Critical</span>
+              </>
+            ) : (
+              <>
+                <span><i className={styles.complete} />Clear</span>
+                <span><i className={styles.near} />Permit controlled</span>
+                <span><i className={styles.notReported} />Low</span>
+                <span><i className={styles.active} />Medium</span>
+                <span><i className={styles.behind} />High / critical</span>
               </>
             )}
           </div>
@@ -780,7 +879,15 @@ export function BimViewer({ modelId }: { modelId: string }) {
             />
             <time>{timelineDate}</time>
           </div>
-          {viewMode === "quality" && qualityState ? (
+          {viewMode === "safety" && safetyState ? (
+            <div className={styles.metrics}>
+              <span><strong>{safetyState.summary.openEvents}</strong> open events</span>
+              <span><strong>{safetyState.summary.activePermits}</strong> active permits</span>
+              <span><strong>{safetyState.summary.critical}</strong> critical elements</span>
+              <span><strong>{safetyState.summary.high}</strong> high elements</span>
+              <span><strong>{safetyState.summary.controlled}</strong> controlled</span>
+            </div>
+          ) : viewMode === "quality" && qualityState ? (
             <div className={styles.metrics}>
               <span><strong>{qualityState.summary.openFindings}</strong> open findings</span>
               <span><strong>{qualityState.summary.critical}</strong> critical elements</span>
@@ -949,6 +1056,26 @@ export function BimViewer({ modelId }: { modelId: string }) {
                   {selectedQuality.findings.map((item) => (
                     <p key={item.id}>
                       {item.externalId} · {item.type} · {item.severity} · {item.title}
+                    </p>
+                  ))}
+                </>
+              )}
+              {selectedSafety && (
+                <>
+                  <h3>HSE status</h3>
+                  <dl>
+                    <dt>State</dt><dd>{selectedSafety.safetyState}</dd>
+                    <dt>Open events</dt><dd>{selectedSafety.events.length}</dd>
+                    <dt>Permits</dt><dd>{selectedSafety.permits.length}</dd>
+                  </dl>
+                  {selectedSafety.events.map((item) => (
+                    <p key={item.id}>
+                      {item.externalId} · {item.type} · {item.severity} · {item.title}
+                    </p>
+                  ))}
+                  {selectedSafety.permits.map((item) => (
+                    <p key={item.id}>
+                      {item.externalId} · {item.type} · {item.status}
                     </p>
                   ))}
                 </>
