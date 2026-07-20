@@ -49,7 +49,7 @@ For the selected date:
 - cost variance = EV − AC
 - schedule variance = EV − PV
 
-Commitments and actuals are reported separately. Forecast exposure uses the greater of commitment or actual cost per WBS, avoiding automatic double counting when an invoice consumes an existing commitment.
+Commitments and actuals are reported separately. Forecast exposure uses the greater of commitment or actual cost per WBS, avoiding automatic double counting when an invoice consumes an existing commitment. Ledger entries on WBS nodes without a budget line remain included in project AC and exposure as explicit unbudgeted cost.
 
 ## BIM allocation
 
@@ -57,7 +57,8 @@ Each WBS cost metric is distributed across its BIM links by relative link weight
 
 5D colors are:
 
-- grey — unbudgeted
+- grey — unbudgeted with no posted exposure
+- red — unbudgeted commitments or actual cost
 - green — controlled
 - amber — commitments exceed budget
 - red — actual cost exceeds earned value beyond the configured 5%/one-currency-unit tolerance
