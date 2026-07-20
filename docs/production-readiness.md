@@ -1,6 +1,6 @@
 # Production readiness and release controls
 
-Phase 11 turns the existing compile-only gate into an executable release rehearsal.
+Phase 11 turned the compile-only gate into an executable release rehearsal. Phase 12 extends it through the authenticated HTTP boundary and real PostgreSQL, Redis, and S3-compatible services.
 
 ## CI release gate
 
@@ -31,7 +31,24 @@ The contract suite verifies:
 - tenant-owned Prisma models declare `tenantId`;
 - sensitive domain controllers protect every route with `@RequirePermissions`.
 
-These are architecture guardrails. They complement, but do not replace, future service integration and browser end-to-end tests.
+These are architecture guardrails. They complement the runtime integration suite and do not replace future browser end-to-end tests.
+
+## Runtime integration
+
+The Phase 12 suite boots the compiled NestJS API and proves:
+
+- public health and database-backed readiness endpoints;
+- unauthenticated requests are rejected;
+- request validation rejects unexpected fields;
+- invalid credentials are rejected;
+- permission failures return forbidden responses;
+- a tenant-scoped token cannot access another tenant's project;
+- authenticated project creation persists to PostgreSQL and records an audit event;
+- document upload and download preserve bytes through presigned MinIO URLs;
+- upload confirmation verifies object metadata;
+- an authenticated IFC processing request persists its processing record and reaches the BullMQ Redis queue.
+
+CI creates isolated tenant, role, permission, user, project, document, and BIM records for each run. No production credentials or shared environments are used.
 
 ## Health endpoints
 
