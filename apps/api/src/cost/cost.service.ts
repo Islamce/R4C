@@ -8,7 +8,7 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateBudgetDto, CreateCostEntryDto } from "./cost.dto";
 
-interface WbsCostMetric {
+export interface WbsCostMetric {
   wbsNodeId: string;
   code: string;
   name: string;
