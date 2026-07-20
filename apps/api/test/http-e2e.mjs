@@ -370,7 +370,10 @@ test(
         const persisted = await prisma.bimProcessingJob.findUnique({
           where: { id: processing.body.processingJobId },
         });
-        assert.ok(\n          ["QUEUED", "RUNNING", "FAILED"].includes(persisted?.status),\n          `Unexpected BIM job lifecycle state: ${persisted?.status}`,\n        );
+        assert.ok(
+          ["QUEUED", "RUNNING", "FAILED"].includes(persisted?.status),
+          `Unexpected BIM job lifecycle state: ${persisted?.status}`,
+        );
         assert.equal(persisted?.tenantId, tenantA.id);
       });
     } catch (error) {
