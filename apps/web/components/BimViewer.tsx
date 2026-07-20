@@ -224,8 +224,10 @@ function colorScene(
             : mode === "fourD"
             ? fourDColor(fourDState)
             : progressColor(globalId ? progress.get(globalId) : undefined);
-    const materials = Array.isArray(object.material) ? object.material : [object.material];
-    for (const material of materials) {
+    const meshMaterials = Array.isArray(object.material)
+      ? object.material
+      : [object.material];
+    for (const material of meshMaterials) {
       if ("color" in material && material.color instanceof THREE.Color) {
         material.color.setHex(color);
       }
