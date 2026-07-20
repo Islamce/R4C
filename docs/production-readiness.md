@@ -1,6 +1,6 @@
 # Production readiness and release controls
 
-Phase 11 turned the compile-only gate into an executable release rehearsal. Phase 12 extends it through the authenticated HTTP boundary and real PostgreSQL, Redis, and S3-compatible services.
+Phase 11 turned the compile-only gate into an executable release rehearsal. Phase 12 extended it through the authenticated HTTP boundary and real PostgreSQL, Redis, and S3-compatible services. Phase 13 adds a blocking software-supply-chain security gate.
 
 ## CI release gate
 
@@ -95,6 +95,12 @@ Before production acceptance:
 - validate row counts and critical tenant/project records;
 - run Prisma drift comparison against the restored database;
 - document elapsed restore time and any manual steps.
+
+## Supply-chain security
+
+The dedicated security workflow scans production JavaScript dependencies, resolved Python dependencies, repository secrets and misconfiguration, and the built BIM worker image. It also emits a CycloneDX SBOM and schedules grouped Dependabot updates.
+
+See `docs/software-supply-chain-security.md` for blocking thresholds, evidence, and exception governance.
 
 ## Remaining production gates
 
