@@ -1,4 +1,3 @@
-import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
   IsArray,
@@ -9,7 +8,6 @@ import {
   IsString,
   IsUUID,
   Length,
-  ValidateNested,
 } from "class-validator";
 import {
   SafetyEventType,
