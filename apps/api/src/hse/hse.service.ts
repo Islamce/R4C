@@ -11,6 +11,7 @@ import {
   SafetyPermitStatus,
   SafetySeverity,
 } from "@prisma/client";
+import { actorsAreIndependent, safetyInvestigationRequired } from "../common/domain-policies";
 import { PrismaService } from "../prisma/prisma.service";
 import {
   CloseSafetyEventDto,
@@ -155,7 +156,7 @@ export class HseService {
     command: ReviewSafetyPermitDto,
   ) {
     const permit = await this.requirePermit(tenantId, projectId, permitId);
-    if (permit.requestedById === actorId) {
+    if (!actorsAreIndependent(permit.requestedById, actorId)) {
       throw new ForbiddenException("Permit requester and reviewer must be different users");
     }
     if (permit.status !== "SUBMITTED") {
@@ -269,7 +270,7 @@ export class HseService {
     if (permit.status !== "ACTIVE" && permit.status !== "SUSPENDED") {
       throw new ConflictException("Only an active or suspended permit can be closed");
     }
-    if (permit.requestedById === actorId) {
+    if (!actorsAreIndependent(permit.requestedById, actorId)) {
       throw new ForbiddenException("Permit requester and closer must be different users");
     }
     const changed = await this.prisma.safetyPermit.updateMany({
@@ -385,7 +386,7 @@ export class HseService {
     command: InvestigateSafetyEventDto,
   ) {
     const event = await this.requireEvent(tenantId, projectId, eventId);
-    if (event.reportedById === actorId) {
+    if (!actorsAreIndependent(event.reportedById, actorId)) {
       throw new ForbiddenException("Event reporter and investigator must be different users");
     }
     if (event.status !== "OPEN" && event.status !== "UNDER_INVESTIGATION") {
@@ -504,7 +505,7 @@ export class HseService {
     if (action.status !== "COMPLETED") {
       throw new ConflictException("Only a completed action can be verified");
     }
-    if (action.completedById === actorId) {
+    if (!actorsAreIndependent(action.completedById!, actorId)) {
       throw new ForbiddenException("Action completer and verifier must be different users");
     }
 
@@ -573,14 +574,13 @@ export class HseService {
       include: { actions: { select: { status: true } } },
     });
     if (!event) throw new NotFoundException("Safety event not found");
-    if (event.reportedById === actorId) {
+    if (!actorsAreIndependent(event.reportedById, actorId)) {
       throw new ForbiddenException("Event reporter and closer must be different users");
     }
-    const investigationRequired =
-      event.type === "INCIDENT" ||
-      event.type === "NEAR_MISS" ||
-      event.severity === "HIGH" ||
-      event.severity === "CRITICAL";
+    const investigationRequired = safetyInvestigationRequired(
+      event.type,
+      event.severity,
+    );
     if (investigationRequired && !event.rootCause) {
       throw new ConflictException("This event requires a completed investigation");
     }

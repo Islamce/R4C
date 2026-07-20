@@ -10,6 +10,11 @@ import {
   HandoverPackageStatus,
   Prisma,
 } from "@prisma/client";
+import {
+  actorsAreIndependent,
+  canAcceptCommissioningResult,
+  resolveTurnoverState,
+} from "../common/domain-policies";
 import { PrismaService } from "../prisma/prisma.service";
 import {
   CreateCommissioningPlanDto,
@@ -338,17 +343,13 @@ export class TurnoverService {
     command: ReviewCommissioningTestDto,
   ) {
     const test = await this.requireTest(tenantId, projectId, testId);
-    if (test.performedById === actorId) {
+    if (!actorsAreIndependent(test.performedById, actorId)) {
       throw new ForbiddenException("Test performer and reviewer must be different users");
     }
     if (test.status !== "SUBMITTED") {
       throw new ConflictException("Only a submitted test can be reviewed");
     }
-    if (
-      command.accept &&
-      test.result !== "PASS" &&
-      test.result !== "NOT_APPLICABLE"
-    ) {
+    if (command.accept && !canAcceptCommissioningResult(test.result)) {
       throw new ConflictException("Failed or conditional tests cannot be accepted");
     }
     const status = command.accept ? "ACCEPTED" : "REJECTED";
@@ -559,7 +560,7 @@ export class TurnoverService {
       include: { requirements: true },
     });
     if (!pack) throw new NotFoundException("Handover package not found");
-    if (pack.createdById === actorId) {
+    if (!actorsAreIndependent(pack.createdById, actorId)) {
       throw new ForbiddenException("Package creator and reviewer must be different users");
     }
     if (pack.status !== "SUBMITTED") {
@@ -770,27 +771,13 @@ export class TurnoverService {
         directPackages.get(element.id) ??
         element.wbsLinks.flatMap((link) => wbsPackages.get(link.wbsNodeId) ?? []);
       const latest = applicableTests[0];
-      let turnoverState:
-        | "NOT_STARTED"
-        | "COMMISSIONING"
-        | "BLOCKED"
-        | "READY_FOR_HANDOVER"
-        | "HANDED_OVER" = "NOT_STARTED";
-      if (latest) {
-        if (
-          latest.status === "REJECTED" ||
-          latest.result === "FAIL" ||
-          latest.result === "CONDITIONAL"
-        ) {
-          turnoverState = "BLOCKED";
-        } else if (latest.status === "SCHEDULED" || latest.status === "SUBMITTED") {
-          turnoverState = "COMMISSIONING";
-        } else if (latest.status === "ACCEPTED" && latest.result === "PASS") {
-          turnoverState = applicablePackages.some((item) => item.status === "ACCEPTED")
-            ? "HANDED_OVER"
-            : "READY_FOR_HANDOVER";
-        }
-      }
+      const turnoverState = resolveTurnoverState({
+        testStatus: latest?.status,
+        testResult: latest?.result,
+        acceptedPackage: applicablePackages.some(
+          (item) => item.status === "ACCEPTED",
+        ),
+      });
       return {
         globalId: element.globalId,
         turnoverState,
