@@ -62,8 +62,7 @@ export class ProjectsService {
     actorId: string,
     command: CreateWbsNodeDto,
   ) {
-    const project = await this.prisma.project.findFirst({ where: { id: projectId, tenantId } });
-    if (!project) throw new NotFoundException("Project not found");
+    await this.requireProject(tenantId, projectId);
 
     if (command.parentId) {
       const parent = await this.prisma.wbsNode.findFirst({
@@ -90,5 +89,13 @@ export class ProjectsService {
       metadata: { projectId, code: node.code },
     });
     return node;
+  }
+
+  private async requireProject(tenantId: string, projectId: string) {
+    const project = await this.prisma.project.findFirst({
+      where: { id: projectId, tenantId },
+    });
+    if (!project) throw new NotFoundException("Project not found");
+    return project;
   }
 }
