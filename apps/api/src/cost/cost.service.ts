@@ -424,6 +424,19 @@ export class CostService {
       rows.push(line);
       lineGroups.set(line.wbsNodeId, rows);
     }
+    const unbudgetedWbsIds = [...ledgerByWbs.keys()].filter(
+      (wbsNodeId) => !lineGroups.has(wbsNodeId),
+    );
+    const unbudgetedWbs = unbudgetedWbsIds.length
+      ? await this.prisma.wbsNode.findMany({
+          where: {
+            id: { in: unbudgetedWbsIds },
+            tenantId,
+            projectId,
+          },
+          select: { id: true, code: true, name: true },
+        })
+      : [];
 
     let bac = new Prisma.Decimal(0);
     let pv = new Prisma.Decimal(0);
@@ -474,6 +487,31 @@ export class CostService {
         actualCost: this.money(ledger.actual),
         costVariance: this.money(costVariance),
         scheduleVariance: this.money(scheduleVariance),
+        forecastExposure: this.money(forecastExposure),
+      });
+    }
+
+    for (const node of unbudgetedWbs) {
+      const ledger = ledgerByWbs.get(node.id)!;
+      const forecastExposure = ledger.actual.greaterThan(ledger.committed)
+        ? ledger.actual
+        : ledger.committed;
+      ac = ac.plus(ledger.actual);
+      committed = committed.plus(ledger.committed);
+      exposure = exposure.plus(forecastExposure);
+      wbs.push({
+        wbsNodeId: node.id,
+        code: node.code,
+        name: node.name,
+        budget: "0.00",
+        plannedProgress: 0,
+        actualProgress: 0,
+        plannedValue: "0.00",
+        earnedValue: "0.00",
+        committed: this.money(ledger.committed),
+        actualCost: this.money(ledger.actual),
+        costVariance: this.money(ledger.actual.negated()),
+        scheduleVariance: "0.00",
         forecastExposure: this.money(forecastExposure),
       });
     }
@@ -566,7 +604,9 @@ export class CostService {
       const overrunThreshold = Math.max(budget * 0.05, 1);
       const costState =
         budget <= 0
-          ? "UNBUDGETED"
+          ? actualCost !== 0 || commitments !== 0
+            ? "UNBUDGETED_COST"
+            : "UNBUDGETED"
           : costVariance < -overrunThreshold
             ? "OVERRUN"
             : commitments > budget
