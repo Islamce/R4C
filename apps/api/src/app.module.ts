@@ -8,6 +8,7 @@ import { AuthorizationService } from "./common/authorization";
 import { JwtAuthGuard } from "./common/jwt-auth.guard";
 import { PermissionsGuard } from "./common/permissions.guard";
 import { Public } from "./common/public";
+import { CostModule } from "./cost/cost.module";
 import { DocumentsModule } from "./documents/documents.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ProgressModule } from "./progress/progress.module";
@@ -36,6 +37,7 @@ class HealthController {
     AuditModule,
     StorageModule,
     AuthModule,
+    CostModule,
     DocumentsModule,
     BimModule,
     ProjectsModule,
