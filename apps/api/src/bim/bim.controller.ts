@@ -50,6 +50,34 @@ export class BimController {
     return this.bim.elements(user.tenantId, bimModelId, page, limit, ifcType);
   }
 
+  @Get("bim-models/:bimModelId/viewer-manifest")
+  @RequirePermissions("bim:read")
+  viewerManifest(
+    @CurrentUser() user: AuthContext,
+    @Param("bimModelId") bimModelId: string,
+  ) {
+    return this.bim.viewerManifest(user.tenantId, bimModelId);
+  }
+
+  @Get("bim-models/:bimModelId/visual-state")
+  @RequirePermissions("bim:read")
+  visualState(
+    @CurrentUser() user: AuthContext,
+    @Param("bimModelId") bimModelId: string,
+  ) {
+    return this.bim.visualState(user.tenantId, bimModelId);
+  }
+
+  @Get("bim-models/:bimModelId/elements/global/:globalId")
+  @RequirePermissions("bim:read")
+  elementByGlobalId(
+    @CurrentUser() user: AuthContext,
+    @Param("bimModelId") bimModelId: string,
+    @Param("globalId") globalId: string,
+  ) {
+    return this.bim.elementByGlobalId(user.tenantId, bimModelId, globalId);
+  }
+
   @Post("bim-models/:bimModelId/wbs-links")
   @RequirePermissions("bim:link")
   link(
