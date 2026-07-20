@@ -96,6 +96,19 @@ enum BimSpatialType {
   OTHER
 }
 
+enum BimArtifactStatus {
+  PENDING
+  UPLOADED
+  FAILED
+}
+
+enum ProgressStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
 model Tenant {
   id          String       @id @default(uuid())
   code        String       @unique
@@ -129,6 +142,8 @@ model User {
   distributions       DocumentDistribution[] @relation("Distributor")
   notifications       NotificationOutbox[]   @relation("NotificationRecipient")
   bimLinks            BimWbsLink[]           @relation("BimLinkActor")
+  progressReports     WbsProgressUpdate[]     @relation("ProgressReporter")
+  progressReviews     WbsProgressUpdate[]     @relation("ProgressReviewer")
 }
 
 model Role {
@@ -219,7 +234,8 @@ model WbsNode {
   parent      WbsNode?  @relation("WbsHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children    WbsNode[] @relation("WbsHierarchy")
   workItems   WorkItem[]
-  bimLinks    BimWbsLink[]
+  bimLinks        BimWbsLink[]
+  progressUpdates WbsProgressUpdate[]
 
   @@unique([projectId, code])
   @@index([tenantId, projectId, parentId])
@@ -424,6 +440,7 @@ model BimModel {
   jobs              BimProcessingJob[]
   spatialNodes      BimSpatialNode[]
   elements          BimElement[]
+  geometryArtifact  BimGeometryArtifact?
 
   @@index([tenantId, projectId, status])
 }
@@ -512,4 +529,42 @@ model BimWbsLink {
 
   @@unique([elementId, wbsNodeId])
   @@index([tenantId, wbsNodeId])
+}
+
+
+model BimGeometryArtifact {
+  id           String            @id @default(uuid())
+  tenantId     String
+  bimModelId   String            @unique
+  format       String            @default("GLB")
+  storageKey   String            @unique
+  mimeType     String            @default("model/gltf-binary")
+  sizeBytes    BigInt
+  checksumSha256 String?
+  storageEtag  String?
+  status       BimArtifactStatus @default(PENDING)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  bimModel     BimModel          @relation(fields: [bimModelId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+}
+
+model WbsProgressUpdate {
+  id           String         @id @default(uuid())
+  tenantId     String
+  wbsNodeId    String
+  percent      Decimal        @db.Decimal(5, 2)
+  note         String?
+  status       ProgressStatus @default(SUBMITTED)
+  reportedById String
+  reviewedById String?
+  reportedAt   DateTime       @default(now())
+  reviewedAt   DateTime?
+  reviewComment String?
+  wbsNode      WbsNode        @relation(fields: [wbsNodeId], references: [id], onDelete: Cascade)
+  reportedBy   User           @relation("ProgressReporter", fields: [reportedById], references: [id], onDelete: Restrict)
+  reviewedBy   User?          @relation("ProgressReviewer", fields: [reviewedById], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, wbsNodeId, status, reportedAt])
 }

@@ -6,6 +6,7 @@ import {
 import { BimModelStatus, UploadStatus } from "@prisma/client";
 import { extname } from "node:path";
 import { PrismaService } from "../prisma/prisma.service";
+import { ObjectStorageService } from "../storage/object-storage.service";
 import { LinkBimElementsDto } from "./bim.dto";
 import { BimQueueService } from "./bim-queue.service";
 
@@ -14,6 +15,7 @@ export class BimService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly queue: BimQueueService,
+    private readonly storage: ObjectStorageService,
   ) {}
 
   async requestProcessing(tenantId: string, actorId: string, documentVersionId: string) {
@@ -194,6 +196,109 @@ export class BimService {
       return links;
     });
     return { linked: result.count, wbsNodeId: command.wbsNodeId };
+  }
+
+  async viewerManifest(tenantId: string, bimModelId: string) {
+    const model = await this.prisma.bimModel.findFirst({
+      where: { id: bimModelId, tenantId },
+      include: { geometryArtifact: true },
+    });
+    if (!model) throw new NotFoundException("BIM model not found");
+    if (model.status !== BimModelStatus.READY || !model.geometryArtifact) {
+      throw new ConflictException("BIM geometry is not ready");
+    }
+    const geometryUrl = await this.storage.createDownloadUrl(
+      model.geometryArtifact.storageKey,
+      `${model.name.replace(/[^a-zA-Z0-9._-]/g, "_")}.glb`,
+    );
+    return {
+      id: model.id,
+      projectId: model.projectId,
+      name: model.name,
+      schema: model.ifcSchema,
+      elementCount: model.elementCount,
+      geometry: {
+        format: model.geometryArtifact.format,
+        mimeType: model.geometryArtifact.mimeType,
+        sizeBytes: model.geometryArtifact.sizeBytes.toString(),
+        url: geometryUrl,
+        expiresInSeconds: 300,
+      },
+    };
+  }
+
+  async elementByGlobalId(tenantId: string, bimModelId: string, globalId: string) {
+    const element = await this.prisma.bimElement.findFirst({
+      where: { tenantId, bimModelId, globalId },
+      include: {
+        properties: { orderBy: [{ propertySet: "asc" }, { name: "asc" }] },
+        spatialNode: { select: { id: true, name: true, spatialType: true } },
+        wbsLinks: {
+          include: {
+            wbsNode: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+                progressUpdates: {
+                  where: { status: "APPROVED" },
+                  orderBy: { reportedAt: "desc" },
+                  take: 1,
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!element) throw new NotFoundException("BIM element not found");
+    return element;
+  }
+
+  async visualState(tenantId: string, bimModelId: string) {
+    await this.requireModel(tenantId, bimModelId);
+    const elements = await this.prisma.bimElement.findMany({
+      where: { tenantId, bimModelId },
+      select: {
+        globalId: true,
+        wbsLinks: {
+          select: {
+            weight: true,
+            wbsNode: {
+              select: {
+                progressUpdates: {
+                  where: { status: "APPROVED" },
+                  orderBy: { reportedAt: "desc" },
+                  take: 1,
+                  select: { percent: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    return elements.map((element) => {
+      const reported = element.wbsLinks.filter(
+        (link) => link.wbsNode.progressUpdates.length > 0,
+      );
+      const totalWeight = reported.reduce((sum, link) => sum + Number(link.weight), 0);
+      const progress =
+        totalWeight > 0
+          ? reported.reduce(
+              (sum, link) =>
+                sum +
+                Number(link.weight) *
+                  Number(link.wbsNode.progressUpdates[0]?.percent ?? 0),
+              0,
+            ) / totalWeight
+          : null;
+      return {
+        globalId: element.globalId,
+        linked: element.wbsLinks.length > 0,
+        progress: progress === null ? null : Math.round(progress * 100) / 100,
+      };
+    });
   }
 
   private async requireModel(tenantId: string, bimModelId: string) {

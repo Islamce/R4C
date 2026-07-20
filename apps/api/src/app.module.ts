@@ -10,6 +10,7 @@ import { PermissionsGuard } from "./common/permissions.guard";
 import { Public } from "./common/public";
 import { DocumentsModule } from "./documents/documents.module";
 import { PrismaModule } from "./prisma/prisma.module";
+import { ProgressModule } from "./progress/progress.module";
 import { ProjectsModule } from "./projects/projects.module";
 import { StorageModule } from "./storage/storage.module";
 import { WorkflowModule } from "./workflow/workflow.module";
@@ -37,6 +38,7 @@ class HealthController {
     DocumentsModule,
     BimModule,
     ProjectsModule,
+    ProgressModule,
     WorkflowModule,
   ],
   controllers: [HealthController],

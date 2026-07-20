@@ -2,6 +2,7 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { BimSpatialType, Prisma } from "@prisma/client";
 import { Job, Worker } from "bullmq";
+import { randomUUID } from "node:crypto";
 import IORedis from "ioredis";
 import { ObjectStorageService } from "../storage/object-storage.service";
 import { PrismaService } from "../prisma/prisma.service";
@@ -33,11 +34,20 @@ interface ExtractedElement {
   properties: ExtractedProperty[];
 }
 
+interface ExtractedArtifact {
+  format: "GLB";
+  mimeType: "model/gltf-binary";
+  sizeBytes: number;
+  geometryElements: number;
+  checksumSha256: string;
+}
+
 interface ExtractedModel {
   schema: string;
   modelName?: string;
   spatialNodes: ExtractedSpatialNode[];
   elements: ExtractedElement[];
+  artifact: ExtractedArtifact;
 }
 
 @Injectable()
@@ -96,13 +106,26 @@ export class BimProcessor implements OnModuleInit, OnModuleDestroy {
         model.documentVersion.storageKey,
         model.documentVersion.fileName,
       );
+      const artifactStorageKey = [
+        "tenants",
+        tenantId,
+        "projects",
+        model.projectId,
+        "bim",
+        bimModelId,
+        `${randomUUID()}.glb`,
+      ].join("/");
+      const artifactUploadUrl = await this.storage.createUploadUrl(
+        artifactStorageKey,
+        "model/gltf-binary",
+      );
       const response = await fetch(`${this.workerUrl.replace(/\/$/, "")}/process`, {
         method: "POST",
         headers: {
           "content-type": "application/json",
           authorization: `Bearer ${this.workerToken}`,
         },
-        body: JSON.stringify({ sourceUrl }),
+        body: JSON.stringify({ sourceUrl, artifactUploadUrl }),
         signal: AbortSignal.timeout(600_000),
       });
       if (!response.ok) {
@@ -110,7 +133,18 @@ export class BimProcessor implements OnModuleInit, OnModuleDestroy {
       }
       const extracted = (await response.json()) as ExtractedModel;
       this.validatePayload(extracted);
-      await this.persist(model.id, tenantId, processingJobId, extracted);
+      const storedArtifact = await this.storage.head(artifactStorageKey);
+      if (storedArtifact.sizeBytes !== extracted.artifact.sizeBytes) {
+        throw new Error("Stored geometry artifact size does not match worker output");
+      }
+      await this.persist(
+        model.id,
+        tenantId,
+        processingJobId,
+        artifactStorageKey,
+        storedArtifact.etag,
+        extracted,
+      );
       return { bimModelId, elements: extracted.elements.length };
     } catch (error) {
       const message = error instanceof Error ? error.message.slice(0, 4000) : "Unknown BIM error";
@@ -138,12 +172,22 @@ export class BimProcessor implements OnModuleInit, OnModuleDestroy {
     if (!Array.isArray(payload.spatialNodes) || !Array.isArray(payload.elements)) {
       throw new Error("Worker returned an invalid extraction payload");
     }
+    if (
+      payload.artifact?.format !== "GLB" ||
+      payload.artifact.mimeType !== "model/gltf-binary" ||
+      !Number.isSafeInteger(payload.artifact.sizeBytes) ||
+      payload.artifact.sizeBytes <= 0
+    ) {
+      throw new Error("Worker returned an invalid geometry artifact");
+    }
   }
 
   private async persist(
     bimModelId: string,
     tenantId: string,
     processingJobId: string,
+    artifactStorageKey: string,
+    artifactEtag: string | undefined,
     extracted: ExtractedModel,
   ) {
     await this.prisma.$transaction(async (tx) => {
@@ -221,6 +265,30 @@ export class BimProcessor implements OnModuleInit, OnModuleDestroy {
         await tx.bimProperty.createMany({ data: batch, skipDuplicates: true });
       }
 
+      await tx.bimGeometryArtifact.upsert({
+        where: { bimModelId },
+        create: {
+          tenantId,
+          bimModelId,
+          format: extracted.artifact.format,
+          storageKey: artifactStorageKey,
+          mimeType: extracted.artifact.mimeType,
+          sizeBytes: BigInt(extracted.artifact.sizeBytes),
+          checksumSha256: extracted.artifact.checksumSha256,
+          storageEtag: artifactEtag,
+          status: "UPLOADED",
+        },
+        update: {
+          format: extracted.artifact.format,
+          storageKey: artifactStorageKey,
+          mimeType: extracted.artifact.mimeType,
+          sizeBytes: BigInt(extracted.artifact.sizeBytes),
+          checksumSha256: extracted.artifact.checksumSha256,
+          storageEtag: artifactEtag,
+          status: "UPLOADED",
+        },
+      });
+
       await tx.bimModel.update({
         where: { id: bimModelId },
         data: {
@@ -248,6 +316,8 @@ export class BimProcessor implements OnModuleInit, OnModuleDestroy {
             schema: extracted.schema,
             elements: storedElements.length,
             spatialNodes: nodeIds.size,
+            geometryElements: extracted.artifact.geometryElements,
+            geometryBytes: extracted.artifact.sizeBytes,
           },
         },
       });

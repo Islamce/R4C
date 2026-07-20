@@ -14,6 +14,15 @@ export class ProjectsController {
     return this.projects.list(user.tenantId);
   }
 
+  @Get(":projectId/wbs")
+  @RequirePermissions("project:read")
+  wbsTree(
+    @CurrentUser() user: AuthContext,
+    @Param("projectId") projectId: string,
+  ) {
+    return this.projects.wbsTree(user.tenantId, projectId);
+  }
+
   @Post()
   @RequirePermissions("project:create")
   create(@CurrentUser() user: AuthContext, @Body() body: CreateProjectDto) {
