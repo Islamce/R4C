@@ -3,34 +3,50 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { clientApi } from "../lib/client-api";
+import { ClientApiError, clientApi } from "../lib/client-api";
 import { useI18n } from "./I18nProvider";
 
-export function LoginForm() {
+type LoginTenant = { code: string; name: string };
+type LoginFailure = "tenant" | "credentials" | null;
+
+export function LoginForm({
+  tenant,
+  tenantOverride,
+}: {
+  tenant: LoginTenant | null;
+  tenantOverride?: string;
+}) {
   const { t } = useI18n();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<LoginFailure>(tenant ? null : "tenant");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!tenant) return;
     setSubmitting(true);
-    setFailed(false);
+    setFailure(null);
     const form = new FormData(event.currentTarget);
+    const query = tenantOverride
+      ? `?tenant=${encodeURIComponent(tenantOverride)}`
+      : "";
     try {
-      await clientApi("/api/session/login", {
+      await clientApi(`/api/session/login${query}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           email: String(form.get("email") ?? ""),
           password: String(form.get("password") ?? ""),
-          tenantId: String(form.get("tenantId") ?? ""),
         }),
       });
       router.replace("/projects");
       router.refresh();
-    } catch {
-      setFailed(true);
+    } catch (error) {
+      setFailure(
+        error instanceof ClientApiError && error.status === 404
+          ? "tenant"
+          : "credentials",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -48,6 +64,13 @@ export function LoginForm() {
           <p className="eyebrow">{t("login.eyebrow")}</p>
           <h1>{t("login.title")}</h1>
           <p className="lead-copy">{t("login.subtitle")}</p>
+          {tenant ? (
+            <div className="login-tenant-context" role="status">
+              <span>{t("login.organization")}</span>
+              <strong>{tenant.name}</strong>
+              <code>{tenant.code}</code>
+            </div>
+          ) : null}
         </div>
         <form className="auth-form" onSubmit={submit}>
           <label>
@@ -64,24 +87,25 @@ export function LoginForm() {
               required
             />
           </label>
-          <label>
-            <span>{t("login.tenantId")}</span>
-            <input
-              name="tenantId"
-              type="text"
-              inputMode="text"
-              pattern="[0-9a-fA-F-]{36}"
-              required
-            />
-            <small>{t("login.tenantHint")}</small>
-          </label>
-          {failed ? (
+          {failure ? (
             <div className="inline-alert" role="alert">
-              <strong>{t("login.failed")}</strong>
-              <span>{t("login.failedHelp")}</span>
+              <strong>
+                {t(failure === "tenant" ? "login.tenantFailed" : "login.failed")}
+              </strong>
+              <span>
+                {t(
+                  failure === "tenant"
+                    ? "login.tenantFailedHelp"
+                    : "login.failedHelp",
+                )}
+              </span>
             </div>
           ) : null}
-          <button className="button button-primary" type="submit" disabled={submitting}>
+          <button
+            className="button button-primary"
+            type="submit"
+            disabled={submitting || !tenant}
+          >
             {submitting ? t("login.submitting") : t("login.submit")}
           </button>
           <Link className="text-link" href="/">
