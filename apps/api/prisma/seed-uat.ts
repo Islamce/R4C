@@ -38,6 +38,19 @@ async function runBootstrapSeed() {
 }
 
 async function seedProgressSubmitter() {
+  const configuredPassword = process.env.SEED_UAT_SUBMIT_PASSWORD;
+  if (!configuredPassword) {
+    console.log(
+      "R4C UAT progress submitter skipped: SEED_UAT_SUBMIT_PASSWORD is not configured",
+    );
+    return;
+  }
+  if (configuredPassword.length < 12) {
+    throw new Error(
+      "SEED_UAT_SUBMIT_PASSWORD must contain at least 12 characters when configured",
+    );
+  }
+
   const tenantCode =
     process.env.SEED_UAT_TENANT_CODE?.trim() || "ALOMRAN";
   const email = (
@@ -48,7 +61,7 @@ async function seedProgressSubmitter() {
   const displayName =
     process.env.SEED_UAT_SUBMIT_DISPLAY_NAME?.trim() ||
     "Alomran UAT Progress Submitter";
-  const password = requiredPassword("SEED_UAT_SUBMIT_PASSWORD");
+  const password = configuredPassword;
 
   if (!email || !displayName) {
     throw new Error(
