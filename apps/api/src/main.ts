@@ -1,9 +1,15 @@
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
+import { trustProxyHops } from "./common/rate-limit";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const express = app.getHttpAdapter().getInstance() as {
+    set(setting: string, value: number): void;
+  };
+  express.set("trust proxy", trustProxyHops());
+
   app.setGlobalPrefix("api/v1");
   const corsOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:3000")
     .split(",")
