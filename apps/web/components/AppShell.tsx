@@ -4,20 +4,20 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { clientApi, ClientApiError } from "../lib/client-api";
-import type { SessionUser } from "../lib/types";
+import type { BrowserSessionUser } from "../lib/types";
 import { useI18n } from "./I18nProvider";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t, locale } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const [user, setUser] = useState<BrowserSessionUser | null>(null);
   const [sessionError, setSessionError] = useState(false);
   const [working, setWorking] = useState(false);
 
   useEffect(() => {
     let active = true;
-    clientApi<{ user: SessionUser }>("/api/session")
+    clientApi<{ user: BrowserSessionUser }>("/api/session")
       .then((response) => {
         if (active) setUser(response.user);
       })
@@ -123,7 +123,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             {user ? (
               <div className="tenant-chip">
                 <span>{t("header.tenant")}</span>
-                <strong>{user.tenantId}</strong>
+                <strong>{user.tenant.name || user.tenant.code}</strong>
+                {user.tenant.code ? <small>{user.tenant.code}</small> : null}
               </div>
             ) : null}
             <button
