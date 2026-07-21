@@ -247,6 +247,13 @@ async function main() {
     const existing = existingPermissionByCode.get(code);
     return existing !== undefined && existing.name !== permissionName(code);
   }).length;
+  const roleUpdates = [
+    { code: "ADMIN", name: "Administrator" },
+    { code: "VIEWER", name: "Viewer" },
+  ].filter(({ code, name }) => {
+    const existing = result.existingRoleByCode.get(code);
+    return existing !== undefined && existing.name !== name;
+  }).length;
 
   const summary: SeedChangeSummary = {
     created: {
@@ -266,7 +273,7 @@ async function main() {
           ? 1
           : 0,
       permissions: permissionUpdates,
-      roles: 0,
+      roles: roleUpdates,
       users:
         existingUser &&
         (existingUser.displayName !== "R4C Administrator" ||
