@@ -113,8 +113,10 @@ test("frontend foundation completes the real bilingual project journey", { timeo
   const refreshCookie = cookieWith("r4c_refresh_token", login.setCookies);
   const accessCookie = cookieWith("r4c_access_token", login.setCookies);
   assert.match(refreshCookie ?? "", /HttpOnly/i);
+  assert.match(refreshCookie ?? "", /Secure/i);
   assert.match(refreshCookie ?? "", /SameSite=Lax/i);
   assert.match(accessCookie ?? "", /HttpOnly/i);
+  assert.match(accessCookie ?? "", /Secure/i);
   assert.ok(jar.get("r4c_refresh_token"));
   assert.ok(jar.get("r4c_access_token"));
 
@@ -196,7 +198,7 @@ test("frontend foundation completes the real bilingual project journey", { timeo
   assert.match(viewer, /import \* as THREE from "three"/);
 
   console.log(`PHASE4_GUARD loggedOut=${guarded.response.status} redirect=/login`);
-  console.log("PHASE4_LOGIN status=201 accessCookie=httpOnly refreshCookie=httpOnly sameSite=lax");
+  console.log("PHASE4_LOGIN status=201 accessCookie=httpOnly+secure refreshCookie=httpOnly+secure sameSite=lax");
   console.log(`PHASE4_STORAGE localStorage=0 sessionStorage=0 documentCookie=0 files=${files.length}`);
   console.log(`PHASE4_PROJECTS list=${listed.response.status} create=${created.response.status} code=${code}`);
   console.log(`PHASE4_DETAIL status=${detail.response.status} project=${created.body.id} wbsNodes=${detail.body.wbs.length}`);
