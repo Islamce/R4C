@@ -28,7 +28,8 @@ RUN pnpm --filter @r4c/api prisma:generate \
     && pnpm --filter @r4c/api build \
     && pnpm --filter @r4c/api deploy --prod --legacy /opt/r4c-api \
     && cp -R apps/api/dist /opt/r4c-api/dist \
-    && cp -R apps/api/prisma /opt/r4c-api/prisma
+    && cp -R apps/api/prisma /opt/r4c-api/prisma \
+    && node -e "const fs=require('fs'),path=require('path');const root=p=>path.resolve(path.dirname(require.resolve('@prisma/client',{paths:[p]})),'../..');const source=path.join(root('/workspace/apps/api'),'.prisma');const destination=path.join(root('/opt/r4c-api'),'.prisma');fs.cpSync(source,destination,{recursive:true,force:true});require(require.resolve('@prisma/client',{paths:['/opt/r4c-api']}));"
 
 FROM dependencies AS tools
 COPY apps/api apps/api
