@@ -16,8 +16,8 @@ export async function GET() {
     let refreshCount: 0 | 1 = 0;
 
     if (!store.get(sessionCookieNames.access)?.value) {
-      const session = await refreshSession(store);
-      user = session.user;
+      await refreshSession(store);
+      user = sessionUser(store);
       refreshCount = 1;
     }
 
