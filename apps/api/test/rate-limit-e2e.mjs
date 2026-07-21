@@ -6,10 +6,10 @@ import { PrismaClient } from "@prisma/client";
 
 const port = Number(process.env.RATE_LIMIT_API_PORT ?? 4117);
 const baseUrl = `http://127.0.0.1:${port}/api/v1`;
-const tenantCode = process.env.SEED_TENANT_CODE ?? "R4C-RATE-LIMIT-CI";
-const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "rate-limit-admin@r4c.test";
+const tenantCode = process.env.RATE_LIMIT_TENANT_CODE ?? "E2E-A";
+const adminEmail = process.env.RATE_LIMIT_ADMIN_EMAIL ?? "admin.e2e@r4c.test";
 const adminPassword =
-  process.env.SEED_ADMIN_PASSWORD ?? "Correct-Horse-Battery-Staple-42";
+  process.env.RATE_LIMIT_ADMIN_PASSWORD ?? "Correct-Horse-Battery-Staple-42";
 const loginLimit = Number(process.env.RATE_LIMIT_LOGIN_PER_MINUTE ?? 3);
 const uploadLimit = Number(process.env.RATE_LIMIT_UPLOAD_PER_MINUTE ?? 2);
 const searchLimit = Number(process.env.RATE_LIMIT_SEARCH_EXPORT_PER_MINUTE ?? 3);
@@ -82,11 +82,10 @@ test(
   { timeout: 120_000 },
   async (t) => {
     assert.ok(process.env.DATABASE_URL, "DATABASE_URL is required");
-    assert.equal(process.env.TRUST_PROXY_HOPS ?? "1", "1");
 
     const prisma = new PrismaClient();
     const tenant = await prisma.tenant.findUnique({ where: { code: tenantCode } });
-    assert.ok(tenant, `Seeded tenant ${tenantCode} was not found`);
+    assert.ok(tenant, `Integration tenant ${tenantCode} was not found`);
 
     let apiLogs = "";
     const apiProcess = spawn(process.execPath, ["dist/main.js"], {
@@ -94,6 +93,11 @@ test(
       env: {
         ...process.env,
         API_PORT: String(port),
+        RATE_LIMIT_GLOBAL_PER_MINUTE: String(globalLimit),
+        RATE_LIMIT_LOGIN_PER_MINUTE: String(loginLimit),
+        RATE_LIMIT_UPLOAD_PER_MINUTE: String(uploadLimit),
+        RATE_LIMIT_SEARCH_EXPORT_PER_MINUTE: String(searchLimit),
+        TRUST_PROXY_HOPS: "1",
       },
       stdio: ["ignore", "pipe", "pipe"],
     });
