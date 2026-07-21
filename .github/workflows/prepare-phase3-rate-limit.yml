@@ -47,35 +47,10 @@ jobs:
               path.write_text(text.rstrip() + '\n' + additions)
           PY
 
-      - name: Add persistent rate-limit verification to CI
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('.github/workflows/ci.yml')
-          text = path.read_text()
-          marker = '      - name: Run authenticated runtime integration\n        run: pnpm --filter @r4c/api test:e2e\n'
-          addition = marker + '\n'.join([
-              '      - name: Verify rate limiting and proxy client isolation',
-              '        run: pnpm --filter @r4c/api test:rate-limit 2>&1 | tee rate-limit-verification.txt',
-              '',
-              '      - name: Retain rate-limit verification evidence',
-              '        uses: actions/upload-artifact@v4',
-              '        with:',
-              '          name: rate-limit-verification-evidence',
-              '          path: rate-limit-verification.txt',
-              '          retention-days: 30',
-              '',
-          ])
-          if 'Verify rate limiting and proxy client isolation' not in text:
-              if marker not in text:
-                  raise SystemExit('CI insertion marker not found')
-              path.write_text(text.replace(marker, addition))
-          PY
-
       - name: Commit generated preparation changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pnpm-lock.yaml .env.example .github/workflows/ci.yml
-          git diff --cached --quiet || git commit -m "build(security): lock throttler and wire verification"
+          git add pnpm-lock.yaml .env.example
+          git diff --cached --quiet || git commit -m "build(security): lock throttler and document limits"
           git push
