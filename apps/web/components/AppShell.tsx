@@ -60,6 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const projectsActive = pathname.startsWith("/projects");
   const costControlActive = pathname.startsWith("/cost-control");
+  const progressActive = pathname.startsWith("/progress");
 
   return (
     <div className="app-shell">
@@ -87,6 +88,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <span className="nav-index" aria-hidden="true">02</span>
             {t("nav.costControl")}
+          </Link>
+          <Link
+            className={progressActive ? "nav-link nav-link-active" : "nav-link"}
+            href="/progress"
+            aria-current={progressActive ? "page" : undefined}
+          >
+            <span className="nav-index" aria-hidden="true">03</span>
+            {t("nav.progress")}
           </Link>
         </nav>
         <div className="sidebar-grid-key" aria-hidden="true">

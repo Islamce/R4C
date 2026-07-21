@@ -41,6 +41,39 @@ export interface ProjectDetailPayload {
   wbs: WbsNodeRecord[];
 }
 
+export type ProgressStatus = "SUBMITTED" | "APPROVED" | "REJECTED";
+
+export interface ProgressActor {
+  id: string;
+  displayName: string;
+}
+
+export interface WbsProgressUpdateRecord {
+  id: string;
+  tenantId: string;
+  wbsNodeId: string;
+  percent: string;
+  note: string | null;
+  status: ProgressStatus;
+  reportedById: string;
+  reviewedById: string | null;
+  reportedAt: string;
+  reviewedAt: string | null;
+  reviewComment: string | null;
+  reportedBy: ProgressActor;
+  reviewedBy: ProgressActor | null;
+}
+
+export interface SubmitProgressPayload {
+  percent: number;
+  note?: string;
+}
+
+export interface ReviewProgressPayload {
+  decision: "APPROVED" | "REJECTED";
+  comment?: string;
+}
+
 export type MoneyString = string;
 
 export interface CostControlBudget {
