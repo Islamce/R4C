@@ -32,12 +32,14 @@ jobs:
           from pathlib import Path
           path = Path('.env.example')
           text = path.read_text()
-          additions = '''RATE_LIMIT_GLOBAL_PER_MINUTE=100
-          RATE_LIMIT_LOGIN_PER_MINUTE=5
-          RATE_LIMIT_UPLOAD_PER_MINUTE=10
-          RATE_LIMIT_SEARCH_EXPORT_PER_MINUTE=30
-          TRUST_PROXY_HOPS=1
-          '''.replace('          ', '')
+          additions = '\n'.join([
+              'RATE_LIMIT_GLOBAL_PER_MINUTE=100',
+              'RATE_LIMIT_LOGIN_PER_MINUTE=5',
+              'RATE_LIMIT_UPLOAD_PER_MINUTE=10',
+              'RATE_LIMIT_SEARCH_EXPORT_PER_MINUTE=30',
+              'TRUST_PROXY_HOPS=1',
+              '',
+          ])
           if 'RATE_LIMIT_GLOBAL_PER_MINUTE=' not in text:
               path.write_text(text.rstrip() + '\n' + additions)
           PY
@@ -48,20 +50,19 @@ jobs:
           from pathlib import Path
           path = Path('.github/workflows/ci.yml')
           text = path.read_text()
-          marker = '''      - name: Run authenticated runtime integration
-                  run: pnpm --filter @r4c/api test:e2e
-          '''.replace('          ', '')
-          addition = marker + '''
-          - name: Verify rate limiting and proxy client isolation
-            run: pnpm --filter @r4c/api test:rate-limit 2>&1 | tee rate-limit-verification.txt
-
-          - name: Retain rate-limit verification evidence
-            uses: actions/upload-artifact@v4
-            with:
-              name: rate-limit-verification-evidence
-              path: rate-limit-verification.txt
-              retention-days: 30
-          '''.replace('          ', '')
+          marker = '      - name: Run authenticated runtime integration\n        run: pnpm --filter @r4c/api test:e2e\n'
+          addition = marker + '\n'.join([
+              '      - name: Verify rate limiting and proxy client isolation',
+              '        run: pnpm --filter @r4c/api test:rate-limit 2>&1 | tee rate-limit-verification.txt',
+              '',
+              '      - name: Retain rate-limit verification evidence',
+              '        uses: actions/upload-artifact@v4',
+              '        with:',
+              '          name: rate-limit-verification-evidence',
+              '          path: rate-limit-verification.txt',
+              '          retention-days: 30',
+              '',
+          ])
           if 'Verify rate limiting and proxy client isolation' not in text:
               if marker not in text:
                   raise SystemExit('CI insertion marker not found')
