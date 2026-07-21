@@ -62,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <aside className="app-sidebar">
         <div className="brand-lockup">
-          <span className="brand-mark" aria-hidden="true">R4C</span>
+          <span className="brand-mark" aria-hidden="true">{t("common.brand")}</span>
           <div>
             <strong>{t("common.brand")}</strong>
             <span>{t("common.platform")}</span>
@@ -78,8 +78,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
         </nav>
         <div className="sidebar-grid-key" aria-hidden="true">
-          <span>R4C</span>
-          <span>CONTROL</span>
+          <span>{t("common.brand")}</span>
+          <span>{t("header.workspace")}</span>
         </div>
       </aside>
 
