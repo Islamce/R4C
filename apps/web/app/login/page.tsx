@@ -4,6 +4,7 @@ import { LoginForm } from "../../components/LoginForm";
 import { normalizeLocale } from "../../lib/i18n";
 import { hasSessionCookies, LOCALE_COOKIE } from "../../lib/server-session";
 import {
+  requestClientIp,
   requestHost,
   resolveTenantByCode,
   tenantCodeForRequest,
@@ -28,7 +29,10 @@ export default async function LoginPage({
   const locale = normalizeLocale(store.get(LOCALE_COOKIE)?.value);
 
   try {
-    const tenant = await resolveTenantByCode(tenantCode);
+    const tenant = await resolveTenantByCode(
+      tenantCode,
+      requestClientIp(requestHeaders),
+    );
     return (
       <LoginForm
         tenant={{ code: tenant.code, name: tenantDisplayName(tenant, locale) }}
