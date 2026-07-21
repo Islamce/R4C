@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "start": "next start",
     "build": "next build",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "node --test"
+    "test": "node --test",
+    "test:journey": "node --test test/frontend-journey-e2e.mjs"
   },
   "dependencies": {
     "next": "^15.4.0",
