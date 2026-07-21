@@ -106,8 +106,9 @@ export async function publicApiRequest<T>(
 
 export async function persistSession(
   session: AuthSessionResponse,
-  store: CookieStore = await cookies(),
+  providedStore?: CookieStore,
 ) {
+  const store = providedStore ?? (await cookies());
   store.set(ACCESS_COOKIE, session.accessToken, secureCookie(session.expiresInSeconds));
   store.set(
     REFRESH_COOKIE,
@@ -126,7 +127,8 @@ export async function persistSession(
   );
 }
 
-export async function clearSession(store: CookieStore = await cookies()) {
+export async function clearSession(providedStore?: CookieStore) {
+  const store = providedStore ?? (await cookies());
   for (const name of [ACCESS_COOKIE, REFRESH_COOKIE, TENANT_COOKIE, USER_COOKIE]) {
     store.set(name, "", secureCookie(0));
   }
@@ -164,8 +166,7 @@ async function rotateRefreshToken(
 
   promise
     .then(() => {
-      const timer = setTimeout(() => refreshFlights.delete(key), REFRESH_GRACE_MS);
-      timer.unref?.();
+      setTimeout(() => refreshFlights.delete(key), REFRESH_GRACE_MS);
     })
     .catch(() => refreshFlights.delete(key));
 
@@ -173,8 +174,9 @@ async function rotateRefreshToken(
 }
 
 export async function refreshSession(
-  store: CookieStore = await cookies(),
+  providedStore?: CookieStore,
 ): Promise<AuthSessionResponse> {
+  const store = providedStore ?? (await cookies());
   const refreshToken = store.get(REFRESH_COOKIE)?.value;
   const tenantId = store.get(TENANT_COOKIE)?.value;
   if (!refreshToken || !tenantId) {
