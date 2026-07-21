@@ -1,4 +1,4 @@
-name: Apply final Phase 5 fixes and gates
+name: Apply scoped Phase 5 web fix
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: agent/phase-5-5d-cost-dashboard
-      - name: Fix web narrowing and add permanent CI evidence gate
+      - name: Fix web narrowing and remove diagnostics
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -35,45 +35,13 @@ jobs:
           source = source.replace('control.budget.currency', 'currency')
           dashboard.write_text(source)
 
-          workflow = Path('.github/workflows/ci.yml')
-          text = workflow.read_text()
-          marker = '      - name: Retain frontend journey evidence\n'
-          run_expression = '$' + '{{ github.run_id }}'
-          addition = '''      - name: Verify live bilingual 5D cost-control dashboard
-        env:
-          JOURNEY_ADMIN_EMAIL: phase4.admin@r4c.test
-          JOURNEY_ADMIN_PASSWORD: Phase4-__RUN_ID__-Correct-Horse-Battery-Staple
-          JOURNEY_WEB_URL: http://127.0.0.1:3000
-          JOURNEY_API_URL: http://127.0.0.1:4000/api/v1
-        run: |
-          pnpm --filter @r4c/web test:cost-dashboard > cost-dashboard-verification.txt 2>&1
-          cat cost-dashboard-verification.txt
-
-      - name: Retain 5D cost-control evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cost-dashboard-verification-evidence
-          path: |
-            cost-dashboard-verification.txt
-            phase4-api-runtime.log
-            phase4-web-runtime.log
-          retention-days: 30
-
-'''.replace('__RUN_ID__', run_expression)
-          if 'Verify live bilingual 5D cost-control dashboard' not in text:
-              if marker not in text:
-                  raise SystemExit('CI insertion marker not found')
-              text = text.replace(marker, addition + marker, 1)
-              workflow.write_text(text)
-
           Path('docs/phase5-typecheck-diagnostics.txt').unlink(missing_ok=True)
           Path('.github/workflows/phase5-apply-ci.yml').unlink()
           PY
-      - name: Commit final scoped changes
+      - name: Commit scoped fix
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git diff --cached --quiet || git commit -m "fix(web): finalize Phase 5 cost dashboard"
+          git diff --cached --quiet || git commit -m "fix(web): narrow Phase 5 budget currency"
           git push
