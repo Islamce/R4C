@@ -198,7 +198,7 @@ test("progress workspace closes submit, review, history, and earned-value loop",
   assert.equal(approvedHistory.response.status, 200);
   assert.equal(approvedHistory.body[0].status, "APPROVED");
   assert.equal(approvedHistory.body[0].reportedBy.displayName, "Phase 6 Submitter");
-  assert.equal(approvedHistory.body[0].reviewedBy.displayName, "Phase 6 Administrator");
+  assert.equal(approvedHistory.body[0].reviewedBy.displayName, "R4C Administrator");
   assert.equal(approvedHistory.body[0].reviewComment, "Independent reviewer confirms installed progress");
   assert.ok(approvedHistory.body[0].reviewedAt);
 
