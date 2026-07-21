@@ -120,7 +120,7 @@ test("frontend foundation completes the real bilingual project journey", { timeo
   assert.ok(jar.get("r4c_refresh_token"));
   assert.ok(jar.get("r4c_access_token"));
 
-  const files = await sourceFiles(path.resolve("apps/web"));
+  const files = await sourceFiles(process.cwd());
   const browserStorageReferences = [];
   for (const file of files) {
     const content = await readFile(file, "utf8");
@@ -194,7 +194,7 @@ test("frontend foundation completes the real bilingual project journey", { timeo
   assert.ok([303, 307, 308].includes(guardedAgain.response.status));
   assert.equal(new URL(guardedAgain.response.headers.get("location"), webBase).pathname, "/login");
 
-  const viewer = await readFile(path.resolve("apps/web/components/BimViewer.tsx"), "utf8");
+  const viewer = await readFile(path.resolve("components/BimViewer.tsx"), "utf8");
   assert.match(viewer, /import \* as THREE from "three"/);
 
   console.log(`PHASE4_GUARD loggedOut=${guarded.response.status} redirect=/login`);
