@@ -1,0 +1,47 @@
+name: Clean Phase 6.5 login copy
+
+on:
+  push:
+    branches:
+      - agent/phase-6-5-ux-loop-closers
+
+permissions:
+  contents: write
+
+jobs:
+  clean:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/phase-6-5-ux-loop-closers
+      - name: Replace obsolete UUID guidance
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('apps/web/lib/i18n.ts')
+          source = path.read_text()
+          replacements = {
+            '"login.subtitle": "Use the tenant UUID and the credentials provisioned by your administrator.",': '"login.subtitle": "Your organization is resolved from this workspace address. Use the credentials provided by your administrator.",',
+            '"login.tenantId": "Tenant UUID",': '"login.tenantId": "Organization",',
+            '"login.tenantHint": "The current API contract requires the tenant UUID. Tenant-code discovery is a backend follow-up.",': '"login.tenantHint": "Organization resolution is managed by the workspace address.",',
+            '"login.failedHelp": "Check the email, password, and tenant UUID, then submit again.",': '"login.failedHelp": "Check the email and password assigned by your organization, then submit again.",',
+            '"login.subtitle": "استخدم معرّف المستأجر وبيانات الدخول التي وفرها مسؤول النظام.",': '"login.subtitle": "يتم تحديد مؤسستك من عنوان مساحة العمل. استخدم بيانات الدخول التي وفرها مسؤول النظام.",',
+            '"login.tenantId": "معرّف المستأجر UUID",': '"login.tenantId": "المؤسسة",',
+            '"login.tenantHint": "يتطلب عقد الواجهة الحالي معرّف UUID للمستأجر. اكتشاف المستأجر بالكود متابعة مطلوبة في الخلفية.",': '"login.tenantHint": "يتم تحديد المؤسسة تلقائياً من عنوان مساحة العمل.",',
+            '"login.failedHelp": "تحقق من البريد وكلمة المرور ومعرّف المستأجر ثم أعد المحاولة.",': '"login.failedHelp": "تحقق من البريد الإلكتروني وكلمة المرور المخصصين من مؤسستك ثم أعد المحاولة.",',
+          }
+          for old, new in replacements.items():
+            if old not in source:
+              raise SystemExit(f'Missing expected copy: {old}')
+            source = source.replace(old, new, 1)
+          path.write_text(source)
+          PY
+      - name: Commit copy cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/web/lib/i18n.ts
+          git diff --cached --quiet || git commit -m "fix(web): remove obsolete tenant UUID guidance"
+          git push
