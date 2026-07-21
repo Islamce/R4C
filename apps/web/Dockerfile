@@ -10,7 +10,7 @@ WORKDIR /workspace
 
 FROM base AS dependencies
 ENV NODE_ENV=development
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
 COPY packages/contracts/package.json packages/contracts/package.json
@@ -19,7 +19,9 @@ RUN --mount=type=cache,id=pnpm-web,target=/pnpm/store \
 
 FROM dependencies AS builder
 ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NODE_ENV=production \
+    NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \
+    NEXT_TELEMETRY_DISABLED=1
 COPY apps/web apps/web
 COPY packages packages
 RUN pnpm --filter @r4c/web build
@@ -27,7 +29,8 @@ RUN pnpm --filter @r4c/web build
 FROM ${NODE_IMAGE} AS runtime
 ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
-    PORT=3000
+    PORT=3000 \
+    NEXT_TELEMETRY_DISABLED=1
 RUN groupadd --gid 10001 r4c \
     && useradd --uid 10001 --gid 10001 --create-home --shell /usr/sbin/nologin r4c
 WORKDIR /app
