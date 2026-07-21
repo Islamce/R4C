@@ -1,0 +1,62 @@
+name: Apply Phase 5 CI verification
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/phase-5-5d-cost-dashboard
+      - name: Add scoped Phase 5 verification steps
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          workflow = Path('.github/workflows/ci.yml')
+          text = workflow.read_text()
+          marker = '''      - name: Retain frontend journey evidence
+'''
+          addition = '''      - name: Verify live bilingual 5D cost-control dashboard
+        env:
+          JOURNEY_ADMIN_EMAIL: phase4.admin@r4c.test
+          JOURNEY_ADMIN_PASSWORD: Phase4-${{ github.run_id }}-Correct-Horse-Battery-Staple
+          JOURNEY_WEB_URL: http://127.0.0.1:3000
+          JOURNEY_API_URL: http://127.0.0.1:4000/api/v1
+        run: |
+          pnpm --filter @r4c/web test:cost-dashboard > cost-dashboard-verification.txt 2>&1
+          cat cost-dashboard-verification.txt
+
+      - name: Retain 5D cost-control evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cost-dashboard-verification-evidence
+          path: |
+            cost-dashboard-verification.txt
+            phase4-api-runtime.log
+            phase4-web-runtime.log
+          retention-days: 30
+
+'''
+          if 'Verify live bilingual 5D cost-control dashboard' not in text:
+              if marker not in text:
+                  raise SystemExit('CI insertion marker not found')
+              text = text.replace(marker, addition + marker, 1)
+              workflow.write_text(text)
+
+          Path('.github/workflows/phase5-apply-ci.yml').unlink()
+          PY
+      - name: Commit permanent CI gate
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "ci(web): verify live 5D cost dashboard"
+          git push
