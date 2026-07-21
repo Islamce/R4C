@@ -63,10 +63,10 @@ export function LoginForm({
         <div className="auth-copy">
           <p className="eyebrow">{t("login.eyebrow")}</p>
           <h1>{t("login.title")}</h1>
-          <p className="lead-copy">{t("login.subtitle")}</p>
+          <p className="lead-copy">{t("tenant.login.subtitle")}</p>
           {tenant ? (
             <div className="login-tenant-context" role="status">
-              <span>{t("login.organization")}</span>
+              <span>{t("tenant.login.organization")}</span>
               <strong>{tenant.name}</strong>
               <code>{tenant.code}</code>
             </div>
@@ -90,12 +90,12 @@ export function LoginForm({
           {failure ? (
             <div className="inline-alert" role="alert">
               <strong>
-                {t(failure === "tenant" ? "login.tenantFailed" : "login.failed")}
+                {t(failure === "tenant" ? "tenant.login.failed" : "login.failed")}
               </strong>
               <span>
                 {t(
                   failure === "tenant"
-                    ? "login.tenantFailedHelp"
+                    ? "tenant.login.failedHelp"
                     : "login.failedHelp",
                 )}
               </span>
