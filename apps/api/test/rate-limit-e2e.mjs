@@ -93,6 +93,8 @@ test(
       env: {
         ...process.env,
         API_PORT: String(port),
+        BIM_WORKER_URL: process.env.BIM_WORKER_URL ?? "http://127.0.0.1:65535",
+        BIM_WORKER_TOKEN: process.env.BIM_WORKER_TOKEN ?? "rate-limit-ci-worker-token",
         RATE_LIMIT_GLOBAL_PER_MINUTE: String(globalLimit),
         RATE_LIMIT_LOGIN_PER_MINUTE: String(loginLimit),
         RATE_LIMIT_UPLOAD_PER_MINUTE: String(uploadLimit),
