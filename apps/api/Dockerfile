@@ -5,7 +5,11 @@ ARG NODE_IMAGE=node:22-bookworm-slim
 FROM ${NODE_IMAGE} AS base
 ENV PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH
-RUN corepack enable && corepack prepare pnpm@10.13.1 --activate
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates openssl \
+    && rm -rf /var/lib/apt/lists/* \
+    && corepack enable \
+    && corepack prepare pnpm@10.13.1 --activate
 WORKDIR /workspace
 
 FROM base AS dependencies
@@ -22,7 +26,7 @@ COPY apps/api apps/api
 COPY packages packages
 RUN pnpm --filter @r4c/api prisma:generate \
     && pnpm --filter @r4c/api build \
-    && pnpm --filter @r4c/api deploy --prod /opt/r4c-api \
+    && pnpm --filter @r4c/api deploy --prod --legacy /opt/r4c-api \
     && cp -R apps/api/dist /opt/r4c-api/dist \
     && cp -R apps/api/prisma /opt/r4c-api/prisma
 
@@ -38,7 +42,10 @@ CMD ["--help"]
 FROM ${NODE_IMAGE} AS runtime
 ENV NODE_ENV=production \
     API_PORT=4000
-RUN groupadd --gid 10001 r4c \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates openssl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 10001 r4c \
     && useradd --uid 10001 --gid 10001 --create-home --shell /usr/sbin/nologin r4c
 WORKDIR /app
 COPY --from=builder --chown=10001:10001 /opt/r4c-api ./
