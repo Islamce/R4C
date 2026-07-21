@@ -2,7 +2,12 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import type { AuthSessionResponse, SessionUser } from "./types";
+import type {
+  AuthSessionResponse,
+  BrowserSessionUser,
+  SessionTenant,
+  SessionUser,
+} from "./types";
 
 const ACCESS_COOKIE = "r4c_access_token";
 const REFRESH_COOKIE = "r4c_refresh_token";
@@ -53,17 +58,55 @@ function secureCookie(maxAge: number) {
   };
 }
 
-function encodeUser(user: SessionUser): string {
+function encodeUser(user: BrowserSessionUser): string {
   return Buffer.from(JSON.stringify(user), "utf8").toString("base64url");
 }
 
-function decodeUser(value: string | undefined): SessionUser | null {
+function decodeUser(value: string | undefined): BrowserSessionUser | null {
   if (!value) return null;
   try {
-    return JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as SessionUser;
+    const decoded = JSON.parse(
+      Buffer.from(value, "base64url").toString("utf8"),
+    ) as Partial<BrowserSessionUser> & { tenantId?: string };
+    if (
+      typeof decoded.id !== "string" ||
+      typeof decoded.email !== "string" ||
+      typeof decoded.displayName !== "string" ||
+      typeof decoded.role !== "string" ||
+      !Array.isArray(decoded.permissions)
+    ) {
+      return null;
+    }
+    return {
+      id: decoded.id,
+      email: decoded.email,
+      displayName: decoded.displayName,
+      role: decoded.role,
+      permissions: decoded.permissions,
+      tenant:
+        decoded.tenant &&
+        typeof decoded.tenant.code === "string" &&
+        typeof decoded.tenant.name === "string"
+          ? decoded.tenant
+          : { code: "", name: "" },
+    };
   } catch {
     return null;
   }
+}
+
+export function browserSessionUser(
+  user: SessionUser,
+  tenant: SessionTenant,
+): BrowserSessionUser {
+  return {
+    id: user.id,
+    email: user.email,
+    displayName: user.displayName,
+    role: user.role,
+    permissions: user.permissions,
+    tenant,
+  };
 }
 
 function normalizeMessage(body: unknown, fallback: string): string {
@@ -107,8 +150,11 @@ export async function publicApiRequest<T>(
 export async function persistSession(
   session: AuthSessionResponse,
   providedStore?: CookieStore,
+  tenant?: SessionTenant,
 ) {
   const store = providedStore ?? (await cookies());
+  const existingTenant = decodeUser(store.get(USER_COOKIE)?.value)?.tenant;
+  const sessionTenant = tenant ?? existingTenant ?? { code: "", name: "" };
   store.set(ACCESS_COOKIE, session.accessToken, secureCookie(session.expiresInSeconds));
   store.set(
     REFRESH_COOKIE,
@@ -122,7 +168,7 @@ export async function persistSession(
   );
   store.set(
     USER_COOKIE,
-    encodeUser(session.user),
+    encodeUser(browserSessionUser(session.user, sessionTenant)),
     secureCookie(session.refreshTokenExpiresInSeconds),
   );
 }
@@ -138,7 +184,7 @@ export function hasSessionCookies(store: CookieStore): boolean {
   return Boolean(store.get(REFRESH_COOKIE)?.value || store.get(ACCESS_COOKIE)?.value);
 }
 
-export function sessionUser(store: CookieStore): SessionUser | null {
+export function sessionUser(store: CookieStore): BrowserSessionUser | null {
   return decodeUser(store.get(USER_COOKIE)?.value);
 }
 
