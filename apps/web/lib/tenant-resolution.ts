@@ -3,6 +3,7 @@ import type { Locale } from "./i18n";
 
 const TENANT_CODE = /^[A-Z0-9][A-Z0-9_-]{1,39}$/;
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+type HeaderReader = { get(name: string): string | null };
 
 export interface TenantLookupRecord {
   id: string;
@@ -21,8 +22,16 @@ function hostnameOnly(host: string | null | undefined) {
   return value.split(":", 1)[0] ?? "";
 }
 
-export function requestHost(headers: Headers) {
+export function requestHost(headers: HeaderReader) {
   return headers.get("x-forwarded-host")?.split(",", 1)[0]?.trim() ?? headers.get("host");
+}
+
+export function requestClientIp(headers: HeaderReader) {
+  return (
+    headers.get("x-forwarded-for")?.split(",", 1)[0]?.trim() ??
+    headers.get("x-real-ip")?.trim() ??
+    null
+  );
 }
 
 export function normalizeTenantCode(value: string | null | undefined) {
@@ -57,10 +66,14 @@ export function tenantCodeForRequest({
   return null;
 }
 
-export async function resolveTenantByCode(code: string | null) {
+export async function resolveTenantByCode(
+  code: string | null,
+  clientIp?: string | null,
+) {
   if (!code) throw new ApiError(404, "Tenant could not be resolved");
   return publicApiRequest<TenantLookupRecord>(
     `/tenants/by-code/${encodeURIComponent(code)}`,
+    clientIp ? { headers: { "x-forwarded-for": clientIp } } : {},
   );
 }
 
