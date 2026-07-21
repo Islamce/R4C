@@ -1,0 +1,53 @@
+name: Wire Phase 6 progress catalog
+
+on:
+  push:
+    branches:
+      - agent/phase-6-progress-reporting
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/phase-6-progress-reporting
+      - name: Integrate progress messages into the central catalog
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('apps/web/lib/i18n.ts')
+          source = path.read_text()
+          import_line = 'import { progressMessages, type ProgressMessageKey } from "./progress-i18n";\n\n'
+          if not source.startswith(import_line):
+              source = import_line + source
+          source = source.replace(
+              'export type MessageKey = keyof typeof en;',
+              'export type MessageKey = keyof typeof en | ProgressMessageKey;',
+              1,
+          )
+          source = source.replace(
+              'const ar: Record<MessageKey, string> = {',
+              'const ar: Record<keyof typeof en, string> = {',
+              1,
+          )
+          source = source.replace(
+              'export const dictionaries: Record<Locale, Record<MessageKey, string>> = { en, ar };',
+              'export const dictionaries: Record<Locale, Record<MessageKey, string>> = {\n  en: { ...en, ...progressMessages.en },\n  ar: { ...ar, ...progressMessages.ar },\n};',
+              1,
+          )
+          path.write_text(source)
+          Path('.github/workflows/phase6-wire-i18n.yml').unlink()
+          PY
+      - name: Commit central catalog integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "feat(web): wire Phase 6 progress catalog"
+          git push
