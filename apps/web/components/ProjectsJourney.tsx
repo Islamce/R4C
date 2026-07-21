@@ -100,7 +100,7 @@ export function ProjectsJourney() {
       {showCreate ? (
         <section className="create-panel">
           <div className="panel-heading">
-            <span className="governance-number" aria-hidden="true">NEW</span>
+            <span className="governance-number" aria-hidden="true">{t("projects.new")}</span>
             <h2>{t("projects.createTitle")}</h2>
           </div>
           <form className="project-form" onSubmit={createProject}>
