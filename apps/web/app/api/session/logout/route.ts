@@ -4,16 +4,17 @@ import {
   apiErrorResponse,
   clearSession,
   publicApiRequest,
+  resolveSessionTenantId,
   sessionCookieNames,
 } from "../../../../lib/server-session";
 
 export async function POST() {
   const store = await cookies();
   const refreshToken = store.get(sessionCookieNames.refresh)?.value;
-  const tenantId = store.get(sessionCookieNames.tenant)?.value;
 
   try {
-    if (refreshToken && tenantId) {
+    if (refreshToken) {
+      const tenantId = await resolveSessionTenantId(store);
       await publicApiRequest("/auth/logout", {
         method: "POST",
         headers: { "content-type": "application/json" },
