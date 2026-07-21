@@ -99,7 +99,9 @@ jobs:
         run: pnpm --filter @r4c/api test:e2e
 
       - name: Verify rate limiting and proxy client isolation
-        run: pnpm --filter @r4c/api test:rate-limit 2>&1 | tee rate-limit-verification.txt
+        run: |
+          pnpm --filter @r4c/api test:rate-limit > rate-limit-verification.txt 2>&1
+          cat rate-limit-verification.txt
 
       - name: Retain rate-limit verification evidence
         uses: actions/upload-artifact@v4
