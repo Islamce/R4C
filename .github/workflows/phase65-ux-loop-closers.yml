@@ -135,10 +135,12 @@ jobs:
           cat uat-seed-second.txt
           pnpm --filter @r4c/api exec node - <<'NODE' > uat-seed-verification.txt
           const fs = require('fs');
+          const path = require('path');
           const { PrismaClient } = require('@prisma/client');
           const prisma = new PrismaClient();
           async function verify() {
-            const first = JSON.parse(fs.readFileSync('uat-seed-first-counts.json', 'utf8'));
+            const countsPath = path.join(process.env.GITHUB_WORKSPACE, 'uat-seed-first-counts.json');
+            const first = JSON.parse(fs.readFileSync(countsPath, 'utf8'));
             const tenant = await prisma.tenant.findUnique({ where: { code: 'ALOMRAN' } });
             const user = await prisma.user.findUnique({ where: { email: 'uat.admin@alomran.test' } });
             if (!tenant || !user) throw new Error('UAT tenant or admin missing after second seed');
