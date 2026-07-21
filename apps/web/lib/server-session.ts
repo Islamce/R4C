@@ -11,7 +11,8 @@ import type {
 
 const ACCESS_COOKIE = "r4c_access_token";
 const REFRESH_COOKIE = "r4c_refresh_token";
-const TENANT_COOKIE = "r4c_tenant_id";
+const TENANT_COOKIE = "r4c_tenant_code";
+const LEGACY_TENANT_COOKIE = "r4c_tenant_id";
 const USER_COOKIE = "r4c_session_user";
 export const LOCALE_COOKIE = "r4c_locale";
 
@@ -28,6 +29,7 @@ const refreshFlights = new Map<
 const REFRESH_GRACE_MS = 5_000;
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
+type TenantResolution = { id: string; code: string; name: string; status: "ACTIVE" };
 
 export class ApiError extends Error {
   constructor(
@@ -67,7 +69,7 @@ function decodeUser(value: string | undefined): BrowserSessionUser | null {
   try {
     const decoded = JSON.parse(
       Buffer.from(value, "base64url").toString("utf8"),
-    ) as Partial<BrowserSessionUser> & { tenantId?: string };
+    ) as Partial<BrowserSessionUser>;
     if (
       typeof decoded.id !== "string" ||
       typeof decoded.email !== "string" ||
@@ -147,6 +149,13 @@ export async function publicApiRequest<T>(
   return body as T;
 }
 
+async function tenantIdForCode(code: string) {
+  const tenant = await publicApiRequest<TenantResolution>(
+    `/tenants/by-code/${encodeURIComponent(code)}`,
+  );
+  return tenant.id;
+}
+
 export async function persistSession(
   session: AuthSessionResponse,
   providedStore?: CookieStore,
@@ -155,6 +164,8 @@ export async function persistSession(
   const store = providedStore ?? (await cookies());
   const existingTenant = decodeUser(store.get(USER_COOKIE)?.value)?.tenant;
   const sessionTenant = tenant ?? existingTenant ?? { code: "", name: "" };
+  if (!sessionTenant.code) throw new ApiError(500, "Session tenant code is unavailable");
+
   store.set(ACCESS_COOKIE, session.accessToken, secureCookie(session.expiresInSeconds));
   store.set(
     REFRESH_COOKIE,
@@ -163,9 +174,10 @@ export async function persistSession(
   );
   store.set(
     TENANT_COOKIE,
-    session.user.tenantId,
+    sessionTenant.code,
     secureCookie(session.refreshTokenExpiresInSeconds),
   );
+  store.set(LEGACY_TENANT_COOKIE, "", secureCookie(0));
   store.set(
     USER_COOKIE,
     encodeUser(browserSessionUser(session.user, sessionTenant)),
@@ -175,7 +187,13 @@ export async function persistSession(
 
 export async function clearSession(providedStore?: CookieStore) {
   const store = providedStore ?? (await cookies());
-  for (const name of [ACCESS_COOKIE, REFRESH_COOKIE, TENANT_COOKIE, USER_COOKIE]) {
+  for (const name of [
+    ACCESS_COOKIE,
+    REFRESH_COOKIE,
+    TENANT_COOKIE,
+    LEGACY_TENANT_COOKIE,
+    USER_COOKIE,
+  ]) {
     store.set(name, "", secureCookie(0));
   }
 }
@@ -224,15 +242,17 @@ export async function refreshSession(
 ): Promise<AuthSessionResponse> {
   const store = providedStore ?? (await cookies());
   const refreshToken = store.get(REFRESH_COOKIE)?.value;
-  const tenantId = store.get(TENANT_COOKIE)?.value;
-  if (!refreshToken || !tenantId) {
+  const tenantCode = store.get(TENANT_COOKIE)?.value;
+  const tenant = decodeUser(store.get(USER_COOKIE)?.value)?.tenant;
+  if (!refreshToken || !tenantCode || !tenant) {
     await clearSession(store);
     throw new ApiError(401, "Session refresh is unavailable");
   }
 
   try {
+    const tenantId = await tenantIdForCode(tenantCode);
     const rotated = await rotateRefreshToken(refreshToken, tenantId);
-    await persistSession(rotated, store);
+    await persistSession(rotated, store, tenant);
     return rotated;
   } catch (error) {
     await clearSession(store);
@@ -284,6 +304,12 @@ export async function authenticatedApiRequest<T>(
       throw retryError;
     }
   }
+}
+
+export async function resolveSessionTenantId(store: CookieStore) {
+  const tenantCode = store.get(TENANT_COOKIE)?.value;
+  if (!tenantCode) throw new ApiError(401, "Session tenant is unavailable");
+  return tenantIdForCode(tenantCode);
 }
 
 export function apiErrorResponse(error: unknown) {
