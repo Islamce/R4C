@@ -4,12 +4,12 @@ ARG NODE_IMAGE=node:22-bookworm-slim
 
 FROM ${NODE_IMAGE} AS base
 ENV PNPM_HOME=/pnpm \
-    PATH=/pnpm:$PATH
+    PATH=/usr/local/bin:/pnpm:$PATH
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates openssl \
     && rm -rf /var/lib/apt/lists/* \
-    && corepack enable \
-    && corepack prepare pnpm@10.13.1 --activate
+    && npm install --global pnpm@10.13.1 \
+    && npm cache clean --force
 WORKDIR /workspace
 
 FROM base AS dependencies
@@ -33,7 +33,8 @@ RUN pnpm --filter @r4c/api prisma:generate \
 FROM dependencies AS tools
 COPY apps/api apps/api
 COPY packages packages
-RUN pnpm --filter @r4c/api prisma:generate
+RUN pnpm --filter @r4c/api prisma:generate \
+    && pnpm --version
 USER node
 WORKDIR /workspace
 ENTRYPOINT ["pnpm", "--filter", "@r4c/api"]
