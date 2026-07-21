@@ -29,6 +29,10 @@ The authenticated product uses a responsive two-zone plan grid: a compact naviga
 
 Each project and WBS node carries a **governance rail**: a vertical control line with status markers and compact evidence counts. It visually connects project identity, state, WBS structure, and audit-minded delivery without imitating a conventional kanban or generic KPI dashboard.
 
+## Session boundary
+
+All authenticated browser traffic, including requests made by rich components such as the BIM viewer, crosses the restricted Next.js server boundary. Browser components do not read or persist access or refresh tokens; server route handlers attach the bearer token, rotate the refresh token once after a 401, and persist the newest cookie pair.
+
 ## Interaction quality
 
 - Visible `:focus-visible` outlines on every interactive element.
