@@ -41,6 +41,14 @@ export const AuthSessionRateLimit = () =>
     },
   });
 
+export const TenantLookupRateLimit = () =>
+  Throttle({
+    default: {
+      limit: environmentLimit("RATE_LIMIT_TENANT_LOOKUP_PER_MINUTE", 20),
+      ttl: RATE_LIMIT_WINDOW_MS,
+    },
+  });
+
 export const UploadRateLimit = () =>
   Throttle({
     default: {
