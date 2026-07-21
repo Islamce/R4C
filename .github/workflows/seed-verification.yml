@@ -1,0 +1,83 @@
+name: Seed verification
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-seed:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: r4c
+          POSTGRES_PASSWORD: r4c_dev
+          POSTGRES_DB: r4c
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U r4c -d r4c"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://r4c:r4c_dev@localhost:5432/r4c
+      REDIS_URL: redis://127.0.0.1:6379
+      JWT_ACCESS_SECRET: seed-verification-only-value-with-32-characters
+      S3_ENDPOINT: http://127.0.0.1:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: r4c-seed-ci
+      S3_ACCESS_KEY: seed-ci-access
+      S3_SECRET_KEY: seed-ci-secret
+      BIM_WORKER_URL: http://127.0.0.1:65535
+      BIM_WORKER_TOKEN: seed-ci-worker-token
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @r4c/api prisma:generate
+
+      - name: Deploy migrations to clean PostgreSQL
+        run: pnpm --filter @r4c/api prisma:migrate:deploy
+
+      - name: Build monorepo
+        run: pnpm build
+
+      - name: Verify seed guardrails, idempotency, login, and token use
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter @r4c/api test:seed | tee seed-verification-evidence.txt
+
+      - name: Retain seed verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seed-verification-evidence
+          path: seed-verification-evidence.txt
+          retention-days: 30
