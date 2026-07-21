@@ -8,6 +8,7 @@ const apiBase = process.env.JOURNEY_API_URL ?? "http://127.0.0.1:4000/api/v1";
 const email = process.env.JOURNEY_UAT_ADMIN_EMAIL ?? "uat.admin@alomran.test";
 const password = process.env.JOURNEY_UAT_ADMIN_PASSWORD;
 const workspaceHost = "alomran.r4c.local";
+let webIpOctet = 10;
 
 class CookieJar {
   values = new Map();
@@ -37,6 +38,9 @@ class CookieJar {
 
 async function webRequest(jar, pathname, options = {}) {
   const headers = new Headers(options.headers);
+  if (!headers.has("x-forwarded-for")) {
+    headers.set("x-forwarded-for", `198.51.100.${webIpOctet++}`);
+  }
   if (jar.header()) headers.set("cookie", jar.header());
   if (options.body !== undefined) headers.set("content-type", "application/json");
   headers.set("origin", webBase);
