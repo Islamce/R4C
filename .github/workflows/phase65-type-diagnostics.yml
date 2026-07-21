@@ -1,0 +1,45 @@
+name: Phase 6.5 type diagnostics
+
+on:
+  push:
+    branches:
+      - agent/phase-6-5-ux-loop-closers
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Capture API and web diagnostics
+        run: |
+          pnpm --filter @r4c/api prisma:generate
+          set +e
+          pnpm --filter @r4c/api typecheck > phase65-api-typecheck.txt 2>&1
+          api_status=$?
+          pnpm --filter @r4c/web typecheck > phase65-web-typecheck.txt 2>&1
+          web_status=$?
+          cat phase65-api-typecheck.txt
+          cat phase65-web-typecheck.txt
+          echo "api_status=$api_status" >> "$GITHUB_ENV"
+          echo "web_status=$web_status" >> "$GITHUB_ENV"
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase65-type-diagnostics
+          path: |
+            phase65-api-typecheck.txt
+            phase65-web-typecheck.txt
+          retention-days: 3
+      - name: Enforce diagnostics result
+        run: test "$api_status" = "0" && test "$web_status" = "0"
