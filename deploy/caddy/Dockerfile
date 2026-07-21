@@ -11,3 +11,5 @@ RUN xcaddy build v${CADDY_VERSION} \
 
 FROM caddy:${CADDY_VERSION}-alpine
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+RUN chown -R caddy:caddy /data /config /etc/caddy
+USER caddy
