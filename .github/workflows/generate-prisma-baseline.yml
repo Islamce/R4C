@@ -1,9 +1,9 @@
 name: Generate Prisma baseline
 
 on:
-  push:
-    branches:
-      - agent/production-readiness-migrations
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
@@ -30,6 +30,8 @@ jobs:
       DATABASE_URL: postgresql://r4c:r4c_dev@localhost:5432/r4c
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - uses: pnpm/action-setup@v4
         with:
@@ -56,4 +58,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add apps/api/prisma/migrations
           git commit -m "chore: add Prisma 0_init baseline"
-          git push
+          git push origin "HEAD:${{ github.head_ref }}"
