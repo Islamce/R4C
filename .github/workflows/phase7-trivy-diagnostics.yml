@@ -1,0 +1,40 @@
+name: Phase 7 Trivy diagnostics
+
+on:
+  pull_request:
+    paths:
+      - "apps/api/Dockerfile"
+      - "apps/web/Dockerfile"
+      - "deploy/**"
+      - "docker-compose.prod.yml"
+      - ".env.production.example"
+      - "scripts/generate-production-env.sh"
+      - ".github/workflows/phase7-trivy-diagnostics.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Capture Trivy findings
+        run: |
+          docker run --rm \
+            -v "$PWD:/workspace" \
+            -v "$HOME/.cache/trivy:/root/.cache/" \
+            aquasec/trivy:0.72.0 fs \
+            --scanners vuln,secret,misconfig \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 0 \
+            --format table \
+            --output /workspace/phase7-trivy.txt \
+            /workspace
+          cat phase7-trivy.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase7-trivy-diagnostics
+          path: phase7-trivy.txt
+          retention-days: 3
