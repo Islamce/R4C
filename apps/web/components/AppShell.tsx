@@ -58,6 +58,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }
 
+  const projectsActive = pathname.startsWith("/projects");
+  const costControlActive = pathname.startsWith("/cost-control");
+
   return (
     <div className="app-shell">
       <aside className="app-sidebar">
@@ -70,11 +73,20 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <nav className="app-nav" aria-label={t("nav.controlHome")}>
           <Link
-            className={pathname.startsWith("/projects") ? "nav-link nav-link-active" : "nav-link"}
+            className={projectsActive ? "nav-link nav-link-active" : "nav-link"}
             href="/projects"
+            aria-current={projectsActive ? "page" : undefined}
           >
             <span className="nav-index" aria-hidden="true">01</span>
             {t("nav.projects")}
+          </Link>
+          <Link
+            className={costControlActive ? "nav-link nav-link-active" : "nav-link"}
+            href="/cost-control"
+            aria-current={costControlActive ? "page" : undefined}
+          >
+            <span className="nav-index" aria-hidden="true">02</span>
+            {t("nav.costControl")}
           </Link>
         </nav>
         <div className="sidebar-grid-key" aria-hidden="true">
