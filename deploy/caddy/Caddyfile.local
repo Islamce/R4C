@@ -1,0 +1,41 @@
+{
+  admin off
+  local_certs
+  log {
+    output stdout
+    format json
+  }
+}
+
+(security_headers) {
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "DENY"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    -Server
+  }
+}
+
+{$API_DOMAIN} {
+  tls internal
+  import security_headers
+  encode zstd gzip
+  reverse_proxy api:4000
+}
+
+{$APP_DOMAIN}, *.{$TENANT_BASE_DOMAIN} {
+  tls internal
+  import security_headers
+  encode zstd gzip
+
+  @public_api path /api/v1/*
+  handle @public_api {
+    reverse_proxy api:4000
+  }
+
+  handle {
+    reverse_proxy web:3000
+  }
+}
