@@ -1,4 +1,5 @@
 import { ApiError, publicApiRequest } from "./server-session";
+import type { Locale } from "./i18n";
 
 const TENANT_CODE = /^[A-Z0-9][A-Z0-9_-]{1,39}$/;
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
@@ -18,6 +19,10 @@ function hostnameOnly(host: string | null | undefined) {
     return closing >= 0 ? value.slice(1, closing) : value;
   }
   return value.split(":", 1)[0] ?? "";
+}
+
+export function requestHost(headers: Headers) {
+  return headers.get("x-forwarded-host")?.split(",", 1)[0]?.trim() ?? headers.get("host");
 }
 
 export function normalizeTenantCode(value: string | null | undefined) {
@@ -57,4 +62,12 @@ export async function resolveTenantByCode(code: string | null) {
   return publicApiRequest<TenantLookupRecord>(
     `/tenants/by-code/${encodeURIComponent(code)}`,
   );
+}
+
+export function tenantDisplayName(tenant: TenantLookupRecord, locale: Locale) {
+  const uatCode = normalizeTenantCode(process.env.SEED_UAT_TENANT_CODE ?? "ALOMRAN");
+  if (locale === "ar" && tenant.code === uatCode) {
+    return process.env.SEED_UAT_TENANT_NAME_AR?.trim() || "العمران للتطوير العقاري";
+  }
+  return tenant.name;
 }
