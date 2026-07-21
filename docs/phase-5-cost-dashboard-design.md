@@ -30,6 +30,10 @@ The control axis is the signature element. CPI and SPI receive equal visual weig
 - Published budget but missing actual cost or planned value: show the available money values while explaining why CPI, SPI, EAC, ETC, or VAC cannot yet be calculated.
 - API failure: reuse the shared corrective error primitive.
 
+## Scope boundary
+
+The screen reads the authoritative `cost-control` result only. Budget authoring, cost-ledger browsing or posting, progress entry, and schedule management remain separate future workflows and are not added to this phase.
+
 ## Accessibility and motion
 
 - Visible `:focus-visible` treatment on selectors, sorting controls, links, and actions.
