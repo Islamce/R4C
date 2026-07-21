@@ -1,6 +1,11 @@
 name: Phase 6.5 type diagnostics
 
 on:
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - "apps/web/**"
+      - ".github/workflows/phase65-type-diagnostics.yml"
   push:
     branches:
       - agent/phase-6-5-ux-loop-closers
