@@ -10,6 +10,7 @@ import {
 } from "@nestjs/common";
 import { AuthContext, CurrentUser } from "../common/auth-context";
 import { RequirePermissions } from "../common/authorization";
+import { SearchExportRateLimit, UploadRateLimit } from "../common/rate-limit";
 import { LinkBimElementsDto } from "./bim.dto";
 import { BimService } from "./bim.service";
 
@@ -17,6 +18,7 @@ import { BimService } from "./bim.service";
 export class BimController {
   constructor(private readonly bim: BimService) {}
 
+  @UploadRateLimit()
   @Post("document-versions/:versionId/bim/process")
   @RequirePermissions("bim:process")
   process(@CurrentUser() user: AuthContext, @Param("versionId") versionId: string) {
@@ -38,6 +40,7 @@ export class BimController {
     return this.bim.spatialTree(user.tenantId, bimModelId);
   }
 
+  @SearchExportRateLimit()
   @Get("bim-models/:bimModelId/elements")
   @RequirePermissions("bim:read")
   elements(

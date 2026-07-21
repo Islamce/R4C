@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
 import { AuthContext, CurrentUser } from "../common/auth-context";
 import { RequirePermissions } from "../common/authorization";
+import { SearchExportRateLimit } from "../common/rate-limit";
 import {
   CreateInventoryLocationDto,
   CreateMaterialDto,
@@ -15,6 +16,7 @@ import { MaterialsService } from "./materials.service";
 export class MaterialsController {
   constructor(private readonly materialsService: MaterialsService) {}
 
+  @SearchExportRateLimit()
   @Get("materials")
   @RequirePermissions("materials:read")
   materials(@CurrentUser() user: AuthContext, @Query("q") query?: string) {

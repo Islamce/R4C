@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { AuthContext, CurrentUser } from "../common/auth-context";
 import { RequirePermissions } from "../common/authorization";
+import { UploadRateLimit } from "../common/rate-limit";
 import {
   AddCommentDto,
   CreateDocumentDto,
@@ -36,6 +37,7 @@ export class DocumentsController {
     return this.documents.versions(user.tenantId, documentId);
   }
 
+  @UploadRateLimit()
   @Post("documents/:documentId/versions/upload-request")
   @RequirePermissions("document:upload")
   requestUpload(
@@ -46,6 +48,7 @@ export class DocumentsController {
     return this.documents.requestUpload(user.tenantId, documentId, user.userId, body);
   }
 
+  @UploadRateLimit()
   @Post("document-versions/:versionId/confirm-upload")
   @RequirePermissions("document:upload")
   confirmUpload(
