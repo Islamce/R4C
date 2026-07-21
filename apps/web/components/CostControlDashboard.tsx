@@ -311,6 +311,7 @@ export function CostControlDashboard() {
   });
   const dateFormatter = new Intl.DateTimeFormat(localeTag, { dateStyle: "medium" });
   const selectedProject = projects.find((project) => project.id === projectId);
+  const currency = control?.budget?.currency ?? "";
   const partial = Boolean(
     control?.summary &&
       (control.summary.cpi === null ||
@@ -464,7 +465,7 @@ export function CostControlDashboard() {
                         <strong>
                           <MoneyValue
                             value={metric.value}
-                            currency={control.budget.currency}
+                            currency={currency}
                             locale={locale}
                           />
                         </strong>
@@ -540,16 +541,16 @@ export function CostControlDashboard() {
                               </td>
                               <td data-label={t("cost.table.code")}><code>{node.code}</code></td>
                               <td data-label={t("cost.table.name")}><strong>{node.name}</strong></td>
-                              <td data-label={t("cost.table.budget")}><MoneyValue value={node.budget} currency={control.budget.currency} locale={locale} /></td>
+                              <td data-label={t("cost.table.budget")}><MoneyValue value={node.budget} currency={currency} locale={locale} /></td>
                               <td data-label={t("cost.table.plannedProgress")}><bdi dir="ltr">{percentFormatter.format(node.plannedProgress / 100)}</bdi></td>
                               <td data-label={t("cost.table.actualProgress")}><bdi dir="ltr">{percentFormatter.format(node.actualProgress / 100)}</bdi></td>
-                              <td data-label={t("cost.table.pv")}><MoneyValue value={node.plannedValue} currency={control.budget.currency} locale={locale} /></td>
-                              <td data-label={t("cost.table.ev")}><MoneyValue value={node.earnedValue} currency={control.budget.currency} locale={locale} /></td>
-                              <td data-label={t("cost.table.ac")}><MoneyValue value={node.actualCost} currency={control.budget.currency} locale={locale} /></td>
-                              <td data-label={t("cost.table.committed")}><MoneyValue value={node.committed} currency={control.budget.currency} locale={locale} /></td>
-                              <td className={decimalSign(node.costVariance) < 0 ? "cell-adverse" : ""} data-label={t("cost.table.cv")}><MoneyValue value={node.costVariance} currency={control.budget.currency} locale={locale} /></td>
-                              <td className={decimalSign(node.scheduleVariance) < 0 ? "cell-adverse" : ""} data-label={t("cost.table.sv")}><MoneyValue value={node.scheduleVariance} currency={control.budget.currency} locale={locale} /></td>
-                              <td className={compareDecimalStrings(node.forecastExposure, node.budget) > 0 ? "cell-adverse" : ""} data-label={t("cost.table.forecast")}><MoneyValue value={node.forecastExposure} currency={control.budget.currency} locale={locale} /></td>
+                              <td data-label={t("cost.table.pv")}><MoneyValue value={node.plannedValue} currency={currency} locale={locale} /></td>
+                              <td data-label={t("cost.table.ev")}><MoneyValue value={node.earnedValue} currency={currency} locale={locale} /></td>
+                              <td data-label={t("cost.table.ac")}><MoneyValue value={node.actualCost} currency={currency} locale={locale} /></td>
+                              <td data-label={t("cost.table.committed")}><MoneyValue value={node.committed} currency={currency} locale={locale} /></td>
+                              <td className={decimalSign(node.costVariance) < 0 ? "cell-adverse" : ""} data-label={t("cost.table.cv")}><MoneyValue value={node.costVariance} currency={currency} locale={locale} /></td>
+                              <td className={decimalSign(node.scheduleVariance) < 0 ? "cell-adverse" : ""} data-label={t("cost.table.sv")}><MoneyValue value={node.scheduleVariance} currency={currency} locale={locale} /></td>
+                              <td className={compareDecimalStrings(node.forecastExposure, node.budget) > 0 ? "cell-adverse" : ""} data-label={t("cost.table.forecast")}><MoneyValue value={node.forecastExposure} currency={currency} locale={locale} /></td>
                             </tr>
                           );
                         })}
