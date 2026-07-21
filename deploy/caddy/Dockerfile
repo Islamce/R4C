@@ -11,5 +11,8 @@ RUN xcaddy build v${CADDY_VERSION} \
 
 FROM caddy:${CADDY_VERSION}-alpine
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
-RUN chown -R caddy:caddy /data /config /etc/caddy
-USER caddy
+RUN addgroup --system --gid 10001 r4c \
+    && adduser --system --disabled-password --no-create-home --uid 10001 --ingroup r4c r4c \
+    && setcap cap_net_bind_service=+ep /usr/bin/caddy \
+    && chown -R 10001:10001 /data /config /etc/caddy /srv
+USER 10001:10001
