@@ -237,7 +237,7 @@ interface ElementDetail {
 
 type ViewMode = "progress" | "fourD" | "fiveD" | "materials" | "quality" | "safety" | "turnover";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+const API_URL = "/api/backend";
 const DAY_MS = 86_400_000;
 
 function progressColor(state?: VisualState) {
@@ -429,16 +429,12 @@ export function BimViewer({ modelId }: { modelId: string }) {
   const [status, setStatus] = useState("Loading model…");
   const [error, setError] = useState("");
 
-  const token = () => window.localStorage.getItem("r4c_access_token");
-
   async function api<T>(path: string, options?: RequestInit): Promise<T> {
-    const accessToken = token();
-    if (!accessToken) throw new Error("Sign in first; no R4C access token was found.");
     const response = await fetch(`${API_URL}${path}`, {
       ...options,
+      credentials: "same-origin",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${accessToken}`,
         ...options?.headers,
       },
     });

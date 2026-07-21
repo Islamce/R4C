@@ -79,7 +79,7 @@ async function apiRequest(pathname, options = {}) {
 async function sourceFiles(directory) {
   const result = [];
   for (const entry of await readdir(directory)) {
-    if ([".next", "node_modules", "test", "BimViewer.tsx"].includes(entry)) continue;
+    if ([".next", "node_modules", "test"].includes(entry)) continue;
     const full = path.join(directory, entry);
     const metadata = await stat(full);
     if (metadata.isDirectory()) result.push(...(await sourceFiles(full)));
@@ -199,7 +199,7 @@ test("frontend foundation completes the real bilingual project journey", { timeo
 
   console.log(`PHASE4_GUARD loggedOut=${guarded.response.status} redirect=/login`);
   console.log("PHASE4_LOGIN status=201 accessCookie=httpOnly+secure refreshCookie=httpOnly+secure sameSite=lax");
-  console.log(`PHASE4_STORAGE phase4BrowserStorage=0 legacyViewerExcluded=true files=${files.length}`);
+  console.log(`PHASE4_STORAGE phase4BrowserStorage=0 viewerServerSession=true files=${files.length}`);
   console.log(`PHASE4_PROJECTS list=${listed.response.status} create=${created.response.status} code=${code}`);
   console.log(`PHASE4_DETAIL status=${detail.response.status} project=${created.body.id} wbsNodes=${detail.body.wbs.length}`);
   console.log("PHASE4_LTR lang=en dir=ltr projectsHeading=rendered");
