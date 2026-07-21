@@ -6,7 +6,8 @@ import test from "node:test";
 const webBase = process.env.JOURNEY_WEB_URL ?? "http://127.0.0.1:3000";
 const apiBase = process.env.JOURNEY_API_URL ?? "http://127.0.0.1:4000/api/v1";
 const email = process.env.JOURNEY_UAT_ADMIN_EMAIL ?? "uat.admin@alomran.test";
-const password = process.env.JOURNEY_UAT_ADMIN_PASSWORD;
+const password =
+  process.env.JOURNEY_UAT_ADMIN_PASSWORD ?? process.env.SEED_UAT_ADMIN_PASSWORD;
 const workspaceHost = "alomran.r4c.local";
 let webIpOctet = 10;
 
