@@ -10,7 +10,9 @@
     "test": "node --test test/*.test.mjs",
     "test:e2e": "node --test test/http-e2e.mjs",
     "prisma:generate": "prisma generate",
-    "prisma:validate": "prisma validate"
+    "prisma:validate": "prisma validate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.0",
