@@ -1,13 +1,16 @@
 import { Controller, Get, Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerModule } from "@nestjs/throttler";
 import { AuditModule } from "./audit/audit.module";
 import { AuthModule } from "./auth/auth.module";
 import { BimModule } from "./bim/bim.module";
 import { AuthorizationService } from "./common/authorization";
 import { JwtAuthGuard } from "./common/jwt-auth.guard";
 import { PermissionsGuard } from "./common/permissions.guard";
+import { ProxyAwareThrottlerGuard } from "./common/proxy-aware-throttler.guard";
 import { Public } from "./common/public";
+import { positiveInteger, RATE_LIMIT_WINDOW_MS } from "./common/rate-limit";
 import { CostModule } from "./cost/cost.module";
 import { DocumentsModule } from "./documents/documents.module";
 import { HseModule } from "./hse/hse.module";
@@ -59,6 +62,16 @@ class HealthController {
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => [
+        {
+          name: "default",
+          ttl: RATE_LIMIT_WINDOW_MS,
+          limit: positiveInteger(config.get<string>("RATE_LIMIT_GLOBAL_PER_MINUTE"), 100),
+        },
+      ],
+    }),
     PrismaModule,
     AuditModule,
     StorageModule,
@@ -78,6 +91,7 @@ class HealthController {
   controllers: [HealthController],
   providers: [
     AuthorizationService,
+    { provide: APP_GUARD, useClass: ProxyAwareThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: PermissionsGuard },
   ],
