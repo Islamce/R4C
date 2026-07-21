@@ -1,0 +1,89 @@
+name: Auth session verification
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: r4c
+          POSTGRES_PASSWORD: r4c_dev
+          POSTGRES_DB: r4c_auth
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U r4c -d r4c_auth"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://r4c:r4c_dev@localhost:5432/r4c_auth
+      REDIS_URL: redis://127.0.0.1:6379
+      S3_ENDPOINT: http://127.0.0.1:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: r4c-auth-ci
+      S3_ACCESS_KEY: r4c-auth-${{ github.run_id }}
+      S3_SECRET_KEY: r4c-auth-value-${{ github.run_id }}
+      JWT_ACCESS_SECRET: auth-ci-${{ github.run_id }}-value-at-least-32-characters
+      BIM_WORKER_URL: http://127.0.0.1:65535
+      BIM_WORKER_TOKEN: auth-ci-worker-token
+      REFRESH_TOKEN_TTL_DAYS: 14
+      RATE_LIMIT_AUTH_SESSION_PER_MINUTE: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate and validate Prisma client
+        run: |
+          pnpm --filter @r4c/api prisma:validate
+          pnpm --filter @r4c/api prisma:generate
+
+      - name: Deploy migrations and verify drift
+        run: |
+          pnpm --filter @r4c/api prisma:migrate:deploy
+          pnpm --filter @r4c/api exec prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+
+      - name: Typecheck and build
+        run: |
+          pnpm typecheck
+          pnpm build
+
+      - name: Verify refresh rotation and logout
+        run: |
+          pnpm --filter @r4c/api test:auth-session > auth-session-verification.txt 2>&1
+          cat auth-session-verification.txt
+
+      - name: Retain auth session verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: auth-session-verification-evidence
+          path: auth-session-verification.txt
+          retention-days: 30

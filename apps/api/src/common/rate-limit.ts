@@ -33,6 +33,14 @@ export const LoginRateLimit = () =>
     },
   });
 
+export const AuthSessionRateLimit = () =>
+  Throttle({
+    default: {
+      limit: environmentLimit("RATE_LIMIT_AUTH_SESSION_PER_MINUTE", 20),
+      ttl: RATE_LIMIT_WINDOW_MS,
+    },
+  });
+
 export const UploadRateLimit = () =>
   Throttle({
     default: {
