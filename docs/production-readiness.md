@@ -10,14 +10,14 @@ Every pull request and push to `main` must now:
 2. install the exact frozen lockfile;
 3. validate and generate the Prisma client;
 4. start PostgreSQL 17 and wait for database health;
-5. apply the complete Prisma schema to a clean database;
+5. deploy the complete versioned Prisma migration history to a clean database;
 6. compare the deployed database back to the schema and fail on drift;
 7. type-check the monorepo;
 8. build all TypeScript applications;
 9. run API security and governance contracts;
 10. lint and test the BIM worker.
 
-The database rehearsal proves that schema relations, constraints, indexes, and PostgreSQL types are executable—not merely syntactically valid.
+The database rehearsal proves that versioned migration SQL, schema relations, constraints, indexes, and PostgreSQL types are executable—not merely syntactically valid.
 
 ## API contracts
 
@@ -65,7 +65,7 @@ Recommended orchestration behavior:
 
 1. Confirm the release PR is green and record its head SHA.
 2. Create and verify a PostgreSQL backup.
-3. Apply the reviewed production migration or schema deployment step.
+3. Run `pnpm --filter @r4c/api prisma:migrate:deploy` to apply the reviewed versioned migrations.
 4. Deploy the API and workers.
 5. Wait for `/health/ready` to return `ready`.
 6. Run smoke tests for authentication, project read, document read, BIM manifest, and one domain dashboard.
