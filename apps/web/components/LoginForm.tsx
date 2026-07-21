@@ -41,8 +41,8 @@ export function LoginForm() {
       <section className="auth-panel">
         <div className="auth-rail" aria-hidden="true">
           <span>01</span>
-          <span>AUTH</span>
-          <span>CONTROLLED</span>
+          <span>{t("common.brand")}</span>
+          <span>{t("login.eyebrow")}</span>
         </div>
         <div className="auth-copy">
           <p className="eyebrow">{t("login.eyebrow")}</p>
