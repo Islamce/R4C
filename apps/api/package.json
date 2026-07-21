@@ -13,6 +13,7 @@
     "test:rate-limit": "node --test test/rate-limit-e2e.mjs",
     "test:auth-session": "node --test test/auth-session-e2e.mjs",
     "seed": "tsx prisma/seed.ts",
+    "seed:uat": "tsx prisma/seed-uat.ts",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",
     "prisma:migrate:dev": "prisma migrate dev",

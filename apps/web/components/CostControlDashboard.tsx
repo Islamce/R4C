@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -31,7 +32,6 @@ type SortKey =
   | "costVariance"
   | "scheduleVariance"
   | "forecastExposure";
-
 type SortDirection = "ascending" | "descending";
 type DecimalParts = { sign: -1 | 1; whole: string; fraction: string };
 type RatioStyle = CSSProperties & { "--ratio-position": string };
@@ -57,8 +57,9 @@ const columns: Array<{
 
 function todayForInput() {
   const now = new Date();
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
-  return local.toISOString().slice(0, 10);
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 10);
 }
 
 function parseDecimal(value: string): DecimalParts {
@@ -74,28 +75,24 @@ function parseDecimal(value: string): DecimalParts {
   };
 }
 
-function compareMagnitude(left: DecimalParts, right: DecimalParts) {
-  if (left.whole.length !== right.whole.length) {
-    return left.whole.length < right.whole.length ? -1 : 1;
-  }
-  if (left.whole !== right.whole) return left.whole < right.whole ? -1 : 1;
-  const width = Math.max(left.fraction.length, right.fraction.length);
-  const leftFraction = left.fraction.padEnd(width, "0");
-  const rightFraction = right.fraction.padEnd(width, "0");
-  if (leftFraction === rightFraction) return 0;
-  return leftFraction < rightFraction ? -1 : 1;
-}
-
 function compareDecimalStrings(leftValue: string, rightValue: string) {
   const left = parseDecimal(leftValue);
   const right = parseDecimal(rightValue);
   if (left.sign !== right.sign) return left.sign < right.sign ? -1 : 1;
-  const magnitude = compareMagnitude(left, right);
-  return left.sign === -1 ? -magnitude : magnitude;
-}
-
-function decimalSign(value: string) {
-  return compareDecimalStrings(value, "0");
+  if (left.whole.length !== right.whole.length) {
+    const result = left.whole.length < right.whole.length ? -1 : 1;
+    return left.sign === -1 ? -result : result;
+  }
+  if (left.whole !== right.whole) {
+    const result = left.whole < right.whole ? -1 : 1;
+    return left.sign === -1 ? -result : result;
+  }
+  const width = Math.max(left.fraction.length, right.fraction.length);
+  const leftFraction = left.fraction.padEnd(width, "0");
+  const rightFraction = right.fraction.padEnd(width, "0");
+  if (leftFraction === rightFraction) return 0;
+  const result = leftFraction < rightFraction ? -1 : 1;
+  return left.sign === -1 ? -result : result;
 }
 
 function formatDecimalString(value: string, locale: "en" | "ar") {
@@ -105,22 +102,23 @@ function formatDecimalString(value: string, locale: "en" | "ar") {
     maximumFractionDigits: 0,
     useGrouping: true,
   });
-  const digitFormatter = new Intl.NumberFormat(localeTag, { useGrouping: false });
   const partsFormatter = new Intl.NumberFormat(localeTag, {
     minimumFractionDigits: 1,
   });
+  const digitFormatter = new Intl.NumberFormat(localeTag, { useGrouping: false });
   const decimalSeparator =
     partsFormatter.formatToParts(1.1).find((part) => part.type === "decimal")?.value ?? ".";
   const minusSign =
     partsFormatter.formatToParts(-1).find((part) => part.type === "minusSign")?.value ?? "-";
   const digits = Array.from({ length: 10 }, (_, digit) => digitFormatter.format(digit));
-  const localizedFraction = parsed.fraction
+  const fraction = parsed.fraction
     .padEnd(2, "0")
     .split("")
     .map((digit) => digits[Number(digit)] ?? digit)
     .join("");
-  const prefix = parsed.sign === -1 ? minusSign : "";
-  return `${prefix}${integerFormatter.format(BigInt(parsed.whole))}${decimalSeparator}${localizedFraction}`;
+  return `${parsed.sign === -1 ? minusSign : ""}${integerFormatter.format(
+    BigInt(parsed.whole),
+  )}${decimalSeparator}${fraction}`;
 }
 
 function MoneyValue({
@@ -140,13 +138,7 @@ function MoneyValue({
   );
 }
 
-function RatioAnchor({
-  kind,
-  value,
-}: {
-  kind: "cpi" | "spi";
-  value: number | null;
-}) {
+function RatioAnchor({ kind, value }: { kind: "cpi" | "spi"; value: number | null }) {
   const { t, locale } = useI18n();
   const favorable = value !== null && value >= 1;
   const statusKey: MessageKey =
@@ -168,10 +160,11 @@ function RatioAnchor({
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-
   return (
     <article
-      className={`ratio-anchor ${value === null ? "ratio-partial" : favorable ? "ratio-favorable" : "ratio-adverse"}`}
+      className={`ratio-anchor ${
+        value === null ? "ratio-partial" : favorable ? "ratio-favorable" : "ratio-adverse"
+      }`}
       style={style}
     >
       <div className="ratio-heading">
@@ -200,22 +193,19 @@ function RatioAnchor({
   );
 }
 
-function metricTone(value: string | null) {
-  if (value === null) return "neutral";
-  const sign = decimalSign(value);
-  return sign > 0 ? "favorable" : sign < 0 ? "adverse" : "neutral";
-}
-
 function nodeNeedsAttention(node: CostControlNode) {
   return (
-    decimalSign(node.costVariance) < 0 ||
-    decimalSign(node.scheduleVariance) < 0 ||
+    compareDecimalStrings(node.costVariance, "0") < 0 ||
+    compareDecimalStrings(node.scheduleVariance, "0") < 0 ||
     compareDecimalStrings(node.forecastExposure, node.budget) > 0
   );
 }
 
 export function CostControlDashboard() {
   const { t, locale } = useI18n();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryProjectId = searchParams.get("projectId") ?? "";
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [projectId, setProjectId] = useState("");
   const [asOf, setAsOf] = useState(todayForInput);
@@ -234,17 +224,21 @@ export function CostControlDashboard() {
     try {
       const result = await clientApi<ProjectRecord[]>("/api/projects");
       setProjects(result);
-      setProjectId((current) =>
-        current && result.some((project) => project.id === current)
-          ? current
-          : result[0]?.id ?? "",
-      );
+      setProjectId((current) => {
+        if (current && result.some((project) => project.id === current)) return current;
+        if (queryProjectId) {
+          return result.some((project) => project.id === queryProjectId)
+            ? queryProjectId
+            : "";
+        }
+        return result[0]?.id ?? "";
+      });
     } catch {
       setFailed(true);
     } finally {
       setLoadingProjects(false);
     }
-  }, []);
+  }, [queryProjectId]);
 
   const loadControl = useCallback(async () => {
     if (!projectId) {
@@ -268,31 +262,17 @@ export function CostControlDashboard() {
     }
   }, [asOf, projectId]);
 
-  useEffect(() => {
-    void loadProjects();
-  }, [loadProjects]);
+  useEffect(() => void loadProjects(), [loadProjects]);
+  useEffect(() => void loadControl(), [loadControl]);
 
-  useEffect(() => {
-    void loadControl();
-  }, [loadControl]);
-
-  const sortedNodes = useMemo(() => {
-    if (!control) return [];
-    const column = columns.find((candidate) => candidate.key === sort.key)!;
-    return [...control.nodes].sort((left, right) => {
-      const leftValue = left[sort.key];
-      const rightValue = right[sort.key];
-      let comparison = 0;
-      if (column.kind === "money") {
-        comparison = compareDecimalStrings(String(leftValue), String(rightValue));
-      } else if (column.kind === "number") {
-        comparison = Number(leftValue) - Number(rightValue);
-      } else {
-        comparison = String(leftValue).localeCompare(String(rightValue), locale);
-      }
-      return sort.direction === "ascending" ? comparison : -comparison;
-    });
-  }, [control, locale, sort]);
+  function selectProject(nextProjectId: string) {
+    setProjectId(nextProjectId);
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextProjectId) params.set("projectId", nextProjectId);
+    else params.delete("projectId");
+    const query = params.toString();
+    router.replace(query ? `/cost-control?${query}` : "/cost-control", { scroll: false });
+  }
 
   function toggleSort(key: SortKey) {
     setSort((current) => ({
@@ -303,6 +283,22 @@ export function CostControlDashboard() {
           : "ascending",
     }));
   }
+
+  const sortedNodes = useMemo(() => {
+    if (!control) return [];
+    const column = columns.find((candidate) => candidate.key === sort.key)!;
+    return [...control.nodes].sort((left, right) => {
+      const leftValue = left[sort.key];
+      const rightValue = right[sort.key];
+      const comparison =
+        column.kind === "money"
+          ? compareDecimalStrings(String(leftValue), String(rightValue))
+          : column.kind === "number"
+            ? Number(leftValue) - Number(rightValue)
+            : String(leftValue).localeCompare(String(rightValue), locale);
+      return sort.direction === "ascending" ? comparison : -comparison;
+    });
+  }, [control, locale, sort]);
 
   const localeTag = locale === "ar" ? "ar-SA" : "en-GB";
   const percentFormatter = new Intl.NumberFormat(localeTag, {
@@ -320,21 +316,21 @@ export function CostControlDashboard() {
         control.summary.estimateToComplete === null ||
         control.summary.varianceAtCompletion === null),
   );
-
-  const moneyMetrics = control?.summary
+  const summary = control?.summary;
+  const moneyMetrics = summary
     ? [
-        { key: "bac", label: "cost.kpi.bac" as MessageKey, value: control.summary.budgetAtCompletion },
-        { key: "pv", label: "cost.kpi.pv" as MessageKey, value: control.summary.plannedValue },
-        { key: "ev", label: "cost.kpi.ev" as MessageKey, value: control.summary.earnedValue },
-        { key: "ac", label: "cost.kpi.ac" as MessageKey, value: control.summary.actualCost },
-        { key: "commitments", label: "cost.kpi.commitments" as MessageKey, value: control.summary.commitments },
-        { key: "forecast", label: "cost.kpi.forecastExposure" as MessageKey, value: control.summary.forecastExposure },
-        { key: "cv", label: "cost.kpi.cv" as MessageKey, value: control.summary.costVariance, signal: true },
-        { key: "sv", label: "cost.kpi.sv" as MessageKey, value: control.summary.scheduleVariance, signal: true },
-        { key: "eac", label: "cost.kpi.eac" as MessageKey, value: control.summary.estimateAtCompletion },
-        { key: "etc", label: "cost.kpi.etc" as MessageKey, value: control.summary.estimateToComplete },
-        { key: "vac", label: "cost.kpi.vac" as MessageKey, value: control.summary.varianceAtCompletion, signal: true },
-      ]
+        ["bac", "cost.kpi.bac", summary.budgetAtCompletion],
+        ["pv", "cost.kpi.pv", summary.plannedValue],
+        ["ev", "cost.kpi.ev", summary.earnedValue],
+        ["ac", "cost.kpi.ac", summary.actualCost],
+        ["commitments", "cost.kpi.commitments", summary.commitments],
+        ["forecast", "cost.kpi.forecastExposure", summary.forecastExposure],
+        ["cv", "cost.kpi.cv", summary.costVariance],
+        ["sv", "cost.kpi.sv", summary.scheduleVariance],
+        ["eac", "cost.kpi.eac", summary.estimateAtCompletion],
+        ["etc", "cost.kpi.etc", summary.estimateToComplete],
+        ["vac", "cost.kpi.vac", summary.varianceAtCompletion],
+      ] as Array<[string, MessageKey, string | null]>
     : [];
 
   return (
@@ -353,11 +349,7 @@ export function CostControlDashboard() {
         <EmptyState
           titleKey="cost.noProjectsTitle"
           messageKey="cost.noProjectsMessage"
-          action={
-            <Link className="button button-primary" href="/projects">
-              {t("cost.goProjects")}
-            </Link>
-          }
+          action={<Link className="button button-primary" href="/projects">{t("cost.goProjects")}</Link>}
         />
       ) : null}
 
@@ -366,7 +358,7 @@ export function CostControlDashboard() {
           <section className="cost-controls" aria-label={t("cost.title")}>
             <label>
               <span>{t("cost.projectLabel")}</span>
-              <select value={projectId} onChange={(event) => setProjectId(event.target.value)}>
+              <select value={projectId} onChange={(event) => selectProject(event.target.value)}>
                 <option value="">{t("cost.projectPlaceholder")}</option>
                 {projects.map((project) => (
                   <option key={project.id} value={project.id}>
@@ -379,12 +371,7 @@ export function CostControlDashboard() {
               <span>{t("cost.asOfLabel")}</span>
               <input type="date" value={asOf} onChange={(event) => setAsOf(event.target.value)} />
             </label>
-            <button
-              className="button button-secondary"
-              type="button"
-              onClick={() => void loadControl()}
-              disabled={loadingControl || !projectId}
-            >
+            <button className="button button-secondary" type="button" onClick={() => void loadControl()} disabled={loadingControl || !projectId}>
               {t("cost.reload")}
             </button>
           </section>
@@ -395,168 +382,37 @@ export function CostControlDashboard() {
             <EmptyState titleKey="cost.noBudgetTitle" messageKey="cost.noBudgetMessage" />
           ) : null}
 
-          {!loadingControl && !failed && control?.budget && control.summary ? (
+          {!loadingControl && !failed && control?.budget && summary ? (
             <>
               <section className="cost-context-strip">
-                <div>
-                  <span>{t("cost.budgetContext")}</span>
-                  <strong>{control.budget.name}</strong>
-                </div>
+                <div><span>{t("cost.budgetContext")}</span><strong>{control.budget.name}</strong></div>
                 <dl>
-                  <div>
-                    <dt>{t("cost.revision")}</dt>
-                    <dd>{control.budget.revision}</dd>
-                  </div>
-                  <div>
-                    <dt>{t("cost.asOf")}</dt>
-                    <dd>{dateFormatter.format(new Date(control.asOf))}</dd>
-                  </div>
-                  <div>
-                    <dt>{t("cost.projectLabel")}</dt>
-                    <dd>{selectedProject?.code ?? "—"}</dd>
-                  </div>
+                  <div><dt>{t("cost.revision")}</dt><dd>{control.budget.revision}</dd></div>
+                  <div><dt>{t("cost.asOf")}</dt><dd>{dateFormatter.format(new Date(control.asOf))}</dd></div>
+                  <div><dt>{t("cost.projectLabel")}</dt><dd>{selectedProject?.code ?? "—"}</dd></div>
                 </dl>
               </section>
-
               <section className="control-axis-section">
-                <header className="section-heading">
-                  <div>
-                    <p className="eyebrow">{t("cost.controlAxisTitle")}</p>
-                    <h2>{t("cost.controlAxisTitle")}</h2>
-                    <p>{t("cost.controlAxisSubtitle")}</p>
-                  </div>
-                </header>
-                <div className="ratio-pair">
-                  <RatioAnchor kind="cpi" value={control.summary.cpi} />
-                  <RatioAnchor kind="spi" value={control.summary.spi} />
-                </div>
+                <header className="section-heading"><div><p className="eyebrow">{t("cost.controlAxisTitle")}</p><h2>{t("cost.controlAxisTitle")}</h2><p>{t("cost.controlAxisSubtitle")}</p></div></header>
+                <div className="ratio-pair"><RatioAnchor kind="cpi" value={summary.cpi} /><RatioAnchor kind="spi" value={summary.spi} /></div>
               </section>
-
-              {partial ? (
-                <section className="cost-partial-state" role="status">
-                  <span aria-hidden="true">i</span>
-                  <div>
-                    <h2>{t("cost.partialTitle")}</h2>
-                    <p>{t("cost.partialMessage")}</p>
-                  </div>
-                </section>
-              ) : null}
-
+              {partial ? <section className="cost-partial-state" role="status"><span aria-hidden="true">i</span><div><h2>{t("cost.partialTitle")}</h2><p>{t("cost.partialMessage")}</p></div></section> : null}
               <section className="cost-summary-section">
-                <header className="section-heading">
-                  <div>
-                    <p className="eyebrow">{t("cost.summaryTitle")}</p>
-                    <h2>{t("cost.summaryTitle")}</h2>
-                    <p>{t("cost.summarySubtitle")}</p>
-                  </div>
-                </header>
+                <header className="section-heading"><div><p className="eyebrow">{t("cost.summaryTitle")}</p><h2>{t("cost.summaryTitle")}</h2><p>{t("cost.summarySubtitle")}</p></div></header>
                 <div className="cost-metric-grid">
-                  {moneyMetrics.map((metric) => {
-                    const tone = metric.signal ? metricTone(metric.value) : "neutral";
-                    const signalKey: MessageKey =
-                      tone === "favorable"
-                        ? "cost.metric.favorable"
-                        : tone === "adverse"
-                          ? "cost.metric.adverse"
-                          : "cost.metric.neutral";
-                    return (
-                      <article className={`cost-metric metric-${tone}`} key={metric.key}>
-                        <span>{t(metric.label)}</span>
-                        <strong>
-                          <MoneyValue
-                            value={metric.value}
-                            currency={currency}
-                            locale={locale}
-                          />
-                        </strong>
-                        {metric.signal ? (
-                          <small>
-                            <span aria-hidden="true">
-                              {tone === "favorable" ? "✓" : tone === "adverse" ? "!" : "—"}
-                            </span>
-                            {t(signalKey)}
-                          </small>
-                        ) : null}
-                      </article>
-                    );
+                  {moneyMetrics.map(([key, label, value]) => {
+                    const signal = key === "cv" || key === "sv" || key === "vac";
+                    const comparison = value === null ? 0 : compareDecimalStrings(value, "0");
+                    const tone = signal ? (comparison < 0 ? "adverse" : comparison > 0 ? "favorable" : "neutral") : "neutral";
+                    const signalKey: MessageKey = tone === "adverse" ? "cost.metric.adverse" : tone === "favorable" ? "cost.metric.favorable" : "cost.metric.neutral";
+                    return <article className={`cost-metric metric-${tone}`} key={key}><span>{t(label)}</span><strong><MoneyValue value={value} currency={currency} locale={locale} /></strong>{signal ? <small><span aria-hidden="true">{tone === "adverse" ? "!" : tone === "favorable" ? "✓" : "—"}</span>{t(signalKey)}</small> : null}</article>;
                   })}
                 </div>
               </section>
-
               <section className="cost-table-section">
-                <header className="section-heading">
-                  <div>
-                    <p className="eyebrow">{t("cost.tableTitle")}</p>
-                    <h2>{t("cost.tableTitle")}</h2>
-                    <p>{t("cost.tableSubtitle")}</p>
-                  </div>
-                </header>
-
-                {sortedNodes.length === 0 ? (
-                  <EmptyState titleKey="cost.table.emptyTitle" messageKey="cost.table.emptyMessage" />
-                ) : (
-                  <div className="cost-table-scroll">
-                    <table className="cost-table">
-                      <thead>
-                        <tr>
-                          <th scope="col">{t("cost.table.status")}</th>
-                          {columns.map((column) => (
-                            <th
-                              key={column.key}
-                              scope="col"
-                              aria-sort={sort.key === column.key ? sort.direction : "none"}
-                            >
-                              <button
-                                type="button"
-                                onClick={() => toggleSort(column.key)}
-                                aria-label={`${t("cost.sortBy")} ${t(column.label)}, ${
-                                  sort.key === column.key && sort.direction === "ascending"
-                                    ? t("cost.sortDescending")
-                                    : t("cost.sortAscending")
-                                }`}
-                              >
-                                {t(column.label)}
-                                <span aria-hidden="true">
-                                  {sort.key === column.key
-                                    ? sort.direction === "ascending"
-                                      ? "↑"
-                                      : "↓"
-                                    : "↕"}
-                                </span>
-                              </button>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sortedNodes.map((node) => {
-                          const adverse = nodeNeedsAttention(node);
-                          return (
-                            <tr className={adverse ? "cost-row-adverse" : ""} key={node.wbsNodeId}>
-                              <td data-label={t("cost.table.status")}>
-                                <span className={`variance-flag ${adverse ? "variance-adverse" : "variance-clear"}`}>
-                                  <span aria-hidden="true">{adverse ? "!" : "✓"}</span>
-                                  {t(adverse ? "cost.table.attention" : "cost.table.clear")}
-                                </span>
-                              </td>
-                              <td data-label={t("cost.table.code")}><code>{node.code}</code></td>
-                              <td data-label={t("cost.table.name")}><strong>{node.name}</strong></td>
-                              <td data-label={t("cost.table.budget")}><MoneyValue value={node.budget} currency={currency} locale={locale} /></td>
-                              <td data-label={t("cost.table.plannedProgress")}><bdi dir="ltr">{percentFormatter.format(node.plannedProgress / 100)}</bdi></td>
-                              <td data-label={t("cost.table.actualProgress")}><bdi dir="ltr">{percentFormatter.format(node.actualProgress / 100)}</bdi></td>
-                              <td data-label={t("cost.table.pv")}><MoneyValue value={node.plannedValue} currency={currency} locale={locale} /></td>
-                              <td data-label={t("cost.table.ev")}><MoneyValue value={node.earnedValue} currency={currency} locale={locale} /></td>
-                              <td data-label={t("cost.table.ac")}><MoneyValue value={node.actualCost} currency={currency} locale={locale} /></td>
-                              <td data-label={t("cost.table.committed")}><MoneyValue value={node.committed} currency={currency} locale={locale} /></td>
-                              <td className={decimalSign(node.costVariance) < 0 ? "cell-adverse" : ""} data-label={t("cost.table.cv")}><MoneyValue value={node.costVariance} currency={currency} locale={locale} /></td>
-                              <td className={decimalSign(node.scheduleVariance) < 0 ? "cell-adverse" : ""} data-label={t("cost.table.sv")}><MoneyValue value={node.scheduleVariance} currency={currency} locale={locale} /></td>
-                              <td className={compareDecimalStrings(node.forecastExposure, node.budget) > 0 ? "cell-adverse" : ""} data-label={t("cost.table.forecast")}><MoneyValue value={node.forecastExposure} currency={currency} locale={locale} /></td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                <header className="section-heading"><div><p className="eyebrow">{t("cost.tableTitle")}</p><h2>{t("cost.tableTitle")}</h2><p>{t("cost.tableSubtitle")}</p></div></header>
+                {sortedNodes.length === 0 ? <EmptyState titleKey="cost.table.emptyTitle" messageKey="cost.table.emptyMessage" /> : (
+                  <div className="cost-table-scroll"><table className="cost-table"><thead><tr><th scope="col">{t("cost.table.status")}</th>{columns.map((column) => <th key={column.key} scope="col" aria-sort={sort.key === column.key ? sort.direction : "none"}><button type="button" onClick={() => toggleSort(column.key)}>{t(column.label)} <span aria-hidden="true">{sort.key === column.key ? sort.direction === "ascending" ? "↑" : "↓" : "↕"}</span></button></th>)}</tr></thead><tbody>{sortedNodes.map((node) => { const adverse = nodeNeedsAttention(node); return <tr className={adverse ? "cost-row-adverse" : ""} key={node.wbsNodeId}><td data-label={t("cost.table.status")}><span className={`variance-flag ${adverse ? "variance-adverse" : "variance-clear"}`}><span aria-hidden="true">{adverse ? "!" : "✓"}</span>{t(adverse ? "cost.table.attention" : "cost.table.clear")}</span></td><td data-label={t("cost.table.code")}><code>{node.code}</code></td><td data-label={t("cost.table.name")}><strong>{node.name}</strong></td><td data-label={t("cost.table.budget")}><MoneyValue value={node.budget} currency={currency} locale={locale} /></td><td data-label={t("cost.table.plannedProgress")}><bdi dir="ltr">{percentFormatter.format(node.plannedProgress / 100)}</bdi></td><td data-label={t("cost.table.actualProgress")}><bdi dir="ltr">{percentFormatter.format(node.actualProgress / 100)}</bdi></td><td data-label={t("cost.table.pv")}><MoneyValue value={node.plannedValue} currency={currency} locale={locale} /></td><td data-label={t("cost.table.ev")}><MoneyValue value={node.earnedValue} currency={currency} locale={locale} /></td><td data-label={t("cost.table.ac")}><MoneyValue value={node.actualCost} currency={currency} locale={locale} /></td><td data-label={t("cost.table.committed")}><MoneyValue value={node.committed} currency={currency} locale={locale} /></td><td className={compareDecimalStrings(node.costVariance, "0") < 0 ? "cell-adverse" : ""} data-label={t("cost.table.cv")}><MoneyValue value={node.costVariance} currency={currency} locale={locale} /></td><td className={compareDecimalStrings(node.scheduleVariance, "0") < 0 ? "cell-adverse" : ""} data-label={t("cost.table.sv")}><MoneyValue value={node.scheduleVariance} currency={currency} locale={locale} /></td><td className={compareDecimalStrings(node.forecastExposure, node.budget) > 0 ? "cell-adverse" : ""} data-label={t("cost.table.forecast")}><MoneyValue value={node.forecastExposure} currency={currency} locale={locale} /></td></tr>; })}</tbody></table></div>
                 )}
               </section>
             </>

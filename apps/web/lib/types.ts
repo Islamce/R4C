@@ -131,6 +131,15 @@ export interface SessionUser {
   permissions: string[];
 }
 
+export interface SessionTenant {
+  code: string;
+  name: string;
+}
+
+export interface BrowserSessionUser extends Omit<SessionUser, "tenantId"> {
+  tenant: SessionTenant;
+}
+
 export interface AuthSessionResponse {
   accessToken: string;
   tokenType: "Bearer";
