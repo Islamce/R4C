@@ -7,6 +7,7 @@ import {
   publicApiRequest,
 } from "../../../../lib/server-session";
 import {
+  requestClientIp,
   requestHost,
   resolveTenantByCode,
   tenantCodeForRequest,
@@ -22,7 +23,10 @@ export async function POST(request: Request) {
       host: requestHost(request.headers),
       override,
     });
-    const tenant = await resolveTenantByCode(tenantCode);
+    const tenant = await resolveTenantByCode(
+      tenantCode,
+      requestClientIp(request.headers),
+    );
     const session = await publicApiRequest<AuthSessionResponse>("/auth/login", {
       method: "POST",
       headers: { "content-type": "application/json" },
