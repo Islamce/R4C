@@ -1,0 +1,60 @@
+import type { ProjectSummary } from "../../../packages/contracts/src/index";
+
+export type ProjectStatus = ProjectSummary["status"] | "ARCHIVED";
+
+export interface ProjectRecord extends Omit<ProjectSummary, "status"> {
+  status: ProjectStatus;
+  description: string | null;
+  startDate: string | null;
+  targetDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    wbsNodes: number;
+    workItems: number;
+  };
+}
+
+export interface WbsNodeRecord {
+  id: string;
+  tenantId: string;
+  projectId: string;
+  parentId: string | null;
+  code: string;
+  name: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  _count: {
+    children: number;
+    workItems: number;
+    bimLinks: number;
+  };
+  progressUpdates: Array<{
+    percent: string;
+    reportedAt: string;
+  }>;
+}
+
+export interface ProjectDetailPayload {
+  project: ProjectRecord;
+  wbs: WbsNodeRecord[];
+}
+
+export interface SessionUser {
+  id: string;
+  email: string;
+  displayName: string;
+  tenantId: string;
+  role: string;
+  permissions: string[];
+}
+
+export interface AuthSessionResponse {
+  accessToken: string;
+  tokenType: "Bearer";
+  expiresInSeconds: number;
+  refreshToken: string;
+  refreshTokenExpiresInSeconds: number;
+  user: SessionUser;
+}
