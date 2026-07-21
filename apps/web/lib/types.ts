@@ -41,6 +41,54 @@ export interface ProjectDetailPayload {
   wbs: WbsNodeRecord[];
 }
 
+export type MoneyString = string;
+
+export interface CostControlBudget {
+  id: string;
+  name: string;
+  revision: string;
+  currency: string;
+}
+
+export interface CostControlSummary {
+  budgetAtCompletion: MoneyString;
+  plannedValue: MoneyString;
+  earnedValue: MoneyString;
+  actualCost: MoneyString;
+  commitments: MoneyString;
+  forecastExposure: MoneyString;
+  costVariance: MoneyString;
+  scheduleVariance: MoneyString;
+  cpi: number | null;
+  spi: number | null;
+  estimateAtCompletion: MoneyString | null;
+  estimateToComplete: MoneyString | null;
+  varianceAtCompletion: MoneyString | null;
+}
+
+export interface CostControlNode {
+  wbsNodeId: string;
+  code: string;
+  name: string;
+  budget: MoneyString;
+  plannedProgress: number;
+  actualProgress: number;
+  plannedValue: MoneyString;
+  earnedValue: MoneyString;
+  committed: MoneyString;
+  actualCost: MoneyString;
+  costVariance: MoneyString;
+  scheduleVariance: MoneyString;
+  forecastExposure: MoneyString;
+}
+
+export interface CostControlResponse {
+  budget: CostControlBudget | null;
+  asOf: string;
+  summary: CostControlSummary | null;
+  nodes: CostControlNode[];
+}
+
 export interface SessionUser {
   id: string;
   email: string;
