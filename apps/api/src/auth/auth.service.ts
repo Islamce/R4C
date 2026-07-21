@@ -5,6 +5,14 @@ import { AuditService } from "../audit/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { LoginDto } from "./auth.dto";
 
+export async function hashPassword(password: string) {
+  return argon2.hash(password, { type: argon2.argon2id });
+}
+
+export async function verifyPassword(passwordHash: string, password: string) {
+  return argon2.verify(passwordHash, password);
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -18,7 +26,7 @@ export class AuthService {
       where: { email: command.email.toLowerCase() },
     });
     const validPassword =
-      user?.isActive && (await argon2.verify(user.passwordHash, command.password));
+      user?.isActive && (await verifyPassword(user.passwordHash, command.password));
 
     if (!user || !validPassword) {
       throw new UnauthorizedException("Invalid credentials");
