@@ -2,11 +2,14 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import type { Locale, MessageKey } from "../lib/i18n";
+import { tenantMessages, type TenantMessageKey } from "../lib/tenant-i18n";
+
+type ApplicationMessageKey = MessageKey | TenantMessageKey;
 
 interface I18nContextValue {
   locale: Locale;
   direction: "rtl" | "ltr";
-  t: (key: MessageKey) => string;
+  t: (key: ApplicationMessageKey) => string;
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -22,9 +25,13 @@ export function I18nProvider({
   messages: Record<MessageKey, string>;
   children: ReactNode;
 }) {
+  const applicationMessages: Record<ApplicationMessageKey, string> = {
+    ...messages,
+    ...tenantMessages[locale],
+  };
   return (
     <I18nContext.Provider
-      value={{ locale, direction, t: (key) => messages[key] }}
+      value={{ locale, direction, t: (key) => applicationMessages[key] }}
     >
       {children}
     </I18nContext.Provider>
