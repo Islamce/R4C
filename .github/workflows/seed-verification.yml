@@ -69,4 +69,15 @@ jobs:
         run: pnpm build
 
       - name: Verify seed guardrails, idempotency, login, and token use
-        run: pnpm --filter @r4c/api test:seed
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter @r4c/api test:seed | tee seed-verification-evidence.txt
+
+      - name: Retain seed verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seed-verification-evidence
+          path: seed-verification-evidence.txt
+          retention-days: 30
