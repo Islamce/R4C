@@ -196,15 +196,17 @@ test("frontend foundation completes the real bilingual project journey", { timeo
 
   const viewer = await readFile(path.resolve("components/BimViewer.tsx"), "utf8");
   assert.match(viewer, /import \* as THREE from "three"/);
+  assert.match(viewer, /const API_URL = "\/api\/backend"/);
+  assert.doesNotMatch(viewer, /localStorage|r4c_access_token/);
 
   console.log(`PHASE4_GUARD loggedOut=${guarded.response.status} redirect=/login`);
   console.log("PHASE4_LOGIN status=201 accessCookie=httpOnly+secure refreshCookie=httpOnly+secure sameSite=lax");
-  console.log(`PHASE4_STORAGE phase4BrowserStorage=0 viewerServerSession=true files=${files.length}`);
+  console.log(`PHASE4_STORAGE browserStorageReferences=0 viewerServerSession=true files=${files.length}`);
   console.log(`PHASE4_PROJECTS list=${listed.response.status} create=${created.response.status} code=${code}`);
   console.log(`PHASE4_DETAIL status=${detail.response.status} project=${created.body.id} wbsNodes=${detail.body.wbs.length}`);
   console.log("PHASE4_LTR lang=en dir=ltr projectsHeading=rendered");
   console.log("PHASE4_RTL lang=ar dir=rtl projectsHeading=rendered");
   console.log("PHASE4_REFRESH forced401=true refreshCount=1 retry=success rotatedRefreshPersisted=true");
   console.log("PHASE4_LOGOUT status=200 cookiesCleared=true protectedRedirect=/login");
-  console.log("PHASE4_BIM_VIEWER sourceIntact=true buildRequired=true");
+  console.log("PHASE4_BIM_VIEWER threeRenderingPreserved=true serverSessionProxy=true browserTokenStorage=false");
 });
