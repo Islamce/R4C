@@ -12,10 +12,12 @@ A refresh token is formatted as `<record-id>.<random-secret>`. The record ID loc
 
 Every successful refresh revokes the presented token and creates its replacement in the same database transaction. Presenting a previously revoked token is treated as reuse: all other active refresh tokens for the same user and tenant are revoked and an audit event is recorded.
 
+The refresh lifetime is configured with `REFRESH_TOKEN_TTL_DAYS`. It defaults to 14 days and accepts integer values from 1 through 365. Refresh and logout share an authentication-session throttle configured by `RATE_LIMIT_AUTH_SESSION_PER_MINUTE`, defaulting to 20 requests per minute per resolved client IP.
+
 ## Endpoints
 
 - `POST /api/v1/auth/login`: returns access and refresh tokens.
-- `POST /api/v1/auth/refresh`: rotates a tenant-bound refresh token and returns a new token pair.
-- `POST /api/v1/auth/logout`: revokes the presented refresh token.
+- `POST /api/v1/auth/refresh`: accepts `refreshToken` and `tenantId`, rotates the tenant-bound token, and returns a new token pair.
+- `POST /api/v1/auth/logout`: accepts `refreshToken` and `tenantId` and revokes the presented token.
 
 Refresh and logout are public authentication-boundary routes, but remain protected by the global throttler and the auth-session-specific rate limit.
