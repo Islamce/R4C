@@ -96,7 +96,7 @@ export function LoginForm({
                 {t(
                   failure === "tenant"
                     ? "tenant.login.failedHelp"
-                    : "login.failedHelp",
+                    : "tenant.login.credentialsHelp",
                 )}
               </span>
             </div>
