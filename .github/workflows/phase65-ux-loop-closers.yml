@@ -1,0 +1,201 @@
+name: Phase 6.5 UX loop closers verification
+
+on:
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - "apps/web/**"
+      - ".env.example"
+      - "docs/auth-sessions.md"
+      - ".github/workflows/phase65-ux-loop-closers.yml"
+  push:
+    branches:
+      - main
+      - agent/phase-6-5-ux-loop-closers
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: r4c
+          POSTGRES_PASSWORD: r4c_dev
+          POSTGRES_DB: r4c_phase65
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U r4c -d r4c_phase65"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://r4c:r4c_dev@127.0.0.1:5432/r4c_phase65
+      REDIS_URL: redis://127.0.0.1:6379
+      S3_ENDPOINT: http://127.0.0.1:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: r4c-phase65
+      S3_ACCESS_KEY: phase65-${{ github.run_id }}
+      S3_SECRET_KEY: phase65-value-${{ github.run_id }}
+      JWT_ACCESS_SECRET: phase65-${{ github.run_id }}-value-at-least-32-characters-long
+      BIM_WORKER_URL: http://127.0.0.1:65535
+      BIM_WORKER_TOKEN: phase65-bim-worker-${{ github.run_id }}
+      API_URL: http://127.0.0.1:4000/api/v1
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:4000/api/v1
+      CORS_ORIGINS: http://127.0.0.1:3000
+      TENANT_BASE_DOMAIN: r4c.local
+      TENANT_DEFAULT_CODE: ALOMRAN
+      SEED_UAT_TENANT_CODE: ALOMRAN
+      SEED_UAT_TENANT_NAME: Alomran Development
+      SEED_UAT_TENANT_NAME_AR: العمران للتطوير العقاري
+      SEED_UAT_ADMIN_EMAIL: uat.admin@alomran.test
+      SEED_UAT_ADMIN_PASSWORD: Phase65-${{ github.run_id }}-Correct-Horse-Battery-Staple
+      RATE_LIMIT_GLOBAL_PER_MINUTE: 2000
+      RATE_LIMIT_LOGIN_PER_MINUTE: 100
+      RATE_LIMIT_AUTH_SESSION_PER_MINUTE: 100
+      RATE_LIMIT_TENANT_LOOKUP_PER_MINUTE: 3
+      TRUST_PROXY_HOPS: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start isolated object storage
+        run: |
+          docker run --rm -d --name r4c-phase65-minio \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER="$S3_ACCESS_KEY" \
+            -e MINIO_ROOT_PASSWORD="$S3_SECRET_KEY" \
+            minio/minio:RELEASE.2025-07-23T15-54-02Z server /data
+          for attempt in {1..30}; do
+            curl --fail --silent http://127.0.0.1:9000/minio/health/ready >/dev/null && exit 0
+            sleep 1
+          done
+          docker logs r4c-phase65-minio
+          exit 1
+
+      - name: Generate client, migrate, and prove no drift
+        run: |
+          pnpm --filter @r4c/api prisma:generate
+          pnpm --filter @r4c/api prisma:migrate:deploy
+          pnpm --filter @r4c/api exec prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+
+      - name: Typecheck and build
+        run: |
+          pnpm typecheck
+          pnpm build
+
+      - name: Seed Alomran UAT tenant twice
+        run: |
+          pnpm --filter @r4c/api seed:uat > uat-seed-first.txt 2>&1
+          cat uat-seed-first.txt
+          pnpm --filter @r4c/api exec node - <<'NODE' > uat-seed-first-counts.json
+          const { PrismaClient } = require('@prisma/client');
+          const prisma = new PrismaClient();
+          async function counts() {
+            const tenant = await prisma.tenant.findUnique({ where: { code: 'ALOMRAN' } });
+            if (!tenant) throw new Error('ALOMRAN tenant missing after first seed');
+            const user = await prisma.user.findUnique({ where: { email: 'uat.admin@alomran.test' } });
+            if (!user) throw new Error('Alomran UAT admin missing after first seed');
+            const result = {
+              tenantId: tenant.id,
+              tenants: await prisma.tenant.count({ where: { code: 'ALOMRAN' } }),
+              roles: await prisma.role.count({ where: { tenantId: tenant.id, code: { in: ['ADMIN', 'VIEWER'] } } }),
+              memberships: await prisma.tenantMembership.count({ where: { tenantId: tenant.id, userId: user.id } }),
+              rolePermissions: await prisma.rolePermission.count({ where: { role: { tenantId: tenant.id } } }),
+            };
+            console.log(JSON.stringify(result));
+          }
+          counts().finally(() => prisma.$disconnect());
+          NODE
+          pnpm --filter @r4c/api seed:uat > uat-seed-second.txt 2>&1
+          cat uat-seed-second.txt
+          pnpm --filter @r4c/api exec node - <<'NODE' > uat-seed-verification.txt
+          const fs = require('fs');
+          const { PrismaClient } = require('@prisma/client');
+          const prisma = new PrismaClient();
+          async function verify() {
+            const first = JSON.parse(fs.readFileSync('uat-seed-first-counts.json', 'utf8'));
+            const tenant = await prisma.tenant.findUnique({ where: { code: 'ALOMRAN' } });
+            const user = await prisma.user.findUnique({ where: { email: 'uat.admin@alomran.test' } });
+            if (!tenant || !user) throw new Error('UAT tenant or admin missing after second seed');
+            const second = {
+              tenantId: tenant.id,
+              tenants: await prisma.tenant.count({ where: { code: 'ALOMRAN' } }),
+              roles: await prisma.role.count({ where: { tenantId: tenant.id, code: { in: ['ADMIN', 'VIEWER'] } } }),
+              memberships: await prisma.tenantMembership.count({ where: { tenantId: tenant.id, userId: user.id } }),
+              rolePermissions: await prisma.rolePermission.count({ where: { role: { tenantId: tenant.id } } }),
+            };
+            if (tenant.name !== 'Alomran Development' || tenant.status !== 'ACTIVE') throw new Error('UAT tenant identity mismatch');
+            if (second.tenants !== 1 || second.roles !== 2 || second.memberships !== 1 || second.rolePermissions < 1) throw new Error(`UAT structure mismatch: ${JSON.stringify(second)}`);
+            if (JSON.stringify(first) !== JSON.stringify(second)) throw new Error(`Second seed changed counts: ${JSON.stringify({ first, second })}`);
+            console.log(`PHASE65_SEED tenant=ALOMRAN name=${tenant.name} status=${tenant.status} tenants=1 roles=2 memberships=1 idempotent=true`);
+          }
+          verify().finally(() => prisma.$disconnect());
+          NODE
+          cat uat-seed-verification.txt
+
+      - name: Start production API and Next.js
+        run: |
+          node apps/api/dist/main.js > phase65-api-runtime.log 2>&1 &
+          echo $! > phase65-api-runtime.pid
+          pnpm --filter @r4c/web exec next start -p 3000 > phase65-web-runtime.log 2>&1 &
+          echo $! > phase65-web-runtime.pid
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:4000/api/v1/health/ready >/dev/null && curl --fail --silent -H 'X-Forwarded-Host: alomran.r4c.local' http://127.0.0.1:3000/login >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat phase65-api-runtime.log
+          cat phase65-web-runtime.log
+          exit 1
+
+      - name: Verify all three Phase 6.5 tasks
+        run: |
+          pnpm --filter @r4c/web test:ux-loop-closers > phase65-verification.txt 2>&1
+          cat phase65-verification.txt
+
+      - name: Retain Phase 6.5 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase65-ux-loop-closers-evidence
+          path: |
+            phase65-verification.txt
+            uat-seed-first.txt
+            uat-seed-second.txt
+            uat-seed-verification.txt
+            phase65-api-runtime.log
+            phase65-web-runtime.log
+          retention-days: 30
+
+      - name: Stop verification servers
+        if: always()
+        run: |
+          test -f phase65-web-runtime.pid && kill $(cat phase65-web-runtime.pid) || true
+          test -f phase65-api-runtime.pid && kill $(cat phase65-api-runtime.pid) || true
+          docker rm -f r4c-phase65-minio || true
