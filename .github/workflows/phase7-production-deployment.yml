@@ -96,8 +96,9 @@ jobs:
       - name: Build every production image
         run: |
           docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools build --pull
+          touch phase7-images-built.ok
 
-      - name: Start infrastructure, migrate, and seed
+      - name: Start infrastructure, migrate, and seed twice
         run: |
           docker compose --env-file .env.production -f docker-compose.prod.yml up -d postgres redis minio
           for attempt in {1..60}; do
@@ -115,7 +116,13 @@ jobs:
           docker compose --env-file .env.production -f docker-compose.prod.yml run --rm minio-init
           docker compose --env-file .env.production -f docker-compose.prod.yml run --rm api-migrate
           docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools run --rm api-tools seed
-          docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools run --rm api-tools seed:uat | tee phase7-seed-uat.txt
+          docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools run --rm api-tools seed:uat | tee phase7-seed-uat-first.txt
+          docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools run --rm api-tools seed:uat | tee phase7-seed-uat-second.txt
+          grep -q '"createdRolePermissionLinks": 0' phase7-seed-uat-second.txt
+          grep -q '"removedRolePermissionLinks": 0' phase7-seed-uat-second.txt
+          grep -q '"membershipsCreated": 0' phase7-seed-uat-second.txt
+          grep -q '"canReview": false' phase7-seed-uat-second.txt
+          touch phase7-seeds-idempotent.ok
 
       - name: Start the full production compose stack
         run: |
@@ -126,7 +133,7 @@ jobs:
               status=$(docker inspect -f '{{.State.Health.Status}}' "r4c-${service}-1" 2>/dev/null || true)
               [ "$status" = healthy ] && healthy=$((healthy+1))
             done
-            [ "$healthy" = 4 ] && exit 0
+            [ "$healthy" = 4 ] && touch phase7-stack-healthy.ok && exit 0
             sleep 2
           done
           docker compose --env-file .env.production -f docker-compose.prod.yml ps
@@ -201,25 +208,44 @@ jobs:
           secure_count=$(grep -i '^set-cookie:' phase7-admin-headers.txt | grep -c 'Secure')
           test "$secure_count" -ge 4
           ! grep -qi 'r4c_tenant_id=[0-9a-f-]' phase7-admin-headers.txt
-          rm -f phase7-admin-login.json phase7-submitter-login.json
+          grep -i '^set-cookie:' phase7-admin-headers.txt \
+            | sed -E 's/(set-cookie: [^=]+=)[^;]*/\1<redacted>/' \
+            > phase7-cookie-security.txt
+          rm -f \
+            phase7-admin-login.json \
+            phase7-submitter-login.json \
+            phase7-admin-cookies.txt \
+            phase7-admin-headers.txt \
+            phase7-submitter-headers.txt
+          touch phase7-https-login.ok
 
       - name: Capture deployment evidence
         if: always()
         run: |
           {
-            echo "PHASE7_IMAGES api=built web=built bim-worker=built caddy=built"
+            if test -f phase7-images-built.ok; then
+              echo "PHASE7_IMAGES api=built web=built bim-worker=built caddy=built"
+            else
+              echo "PHASE7_IMAGES incomplete"
+            fi
             test -f phase7-users.txt && cat phase7-users.txt
             test -f phase7-api-health.json && echo "PHASE7_API $(cat phase7-api-health.json)"
             test -f phase7-web-health.json && echo "PHASE7_WEB $(cat phase7-web-health.json)"
             test -f phase7-admin-response.json && node -e "const u=require('./phase7-admin-response.json').user; console.log('PHASE7_ADMIN role='+u.role+' tenant='+u.tenant.code)"
             test -f phase7-submitter-response.json && node -e "const u=require('./phase7-submitter-response.json').user; console.log('PHASE7_SUBMITTER role='+u.role+' submit='+u.permissions.includes('progress:submit')+' review='+u.permissions.includes('progress:review'))"
-            echo "PHASE7_TLS app=https://r4c.local api=https://api.r4c.local tenant=https://alomran.r4c.local secureCookies=true"
+            test -f phase7-https-login.ok && echo "PHASE7_TLS app=https://r4c.local api=https://api.r4c.local tenant=https://alomran.r4c.local secureCookies=true"
             echo "PHASE7_SECRETS generated=true devDefaults=false committed=false"
-            echo "PHASE7_COMPOSE fullStack=true migrations=deploy seeds=bootstrap+uat health=green"
+            if test -f phase7-stack-healthy.ok && test -f phase7-seeds-idempotent.ok; then
+              echo "PHASE7_COMPOSE fullStack=true migrations=deploy seeds=bootstrap+uat-twice idempotent=true health=green"
+            else
+              echo "PHASE7_COMPOSE incomplete"
+            fi
           } | tee phase7-verification.txt
           docker compose --env-file .env.production -f docker-compose.prod.yml ps -a > phase7-compose-ps.txt || true
           docker compose --env-file .env.production -f docker-compose.prod.yml logs --no-color --tail=200 > phase7-compose-logs.txt 2>&1 || true
-          docker image ls --format '{{.Repository}}:{{.Tag}} {{.ID}} {{.Size}}' > phase7-images.txt
+          docker image ls --format '{{.Repository}}:{{.Tag}} {{.ID}} {{.Size}}' \
+            | grep -E '^(r4c-|postgres:17-alpine|redis:8-alpine|minio/)' \
+            > phase7-images.txt || true
 
       - name: Retain Phase 7 evidence
         if: always()
@@ -228,11 +254,12 @@ jobs:
           name: phase7-production-deployment-evidence
           path: |
             phase7-verification.txt
-            phase7-seed-uat.txt
+            phase7-seed-uat-first.txt
+            phase7-seed-uat-second.txt
             phase7-users.txt
             phase7-api-health.json
             phase7-web-health.json
-            phase7-admin-headers.txt
+            phase7-cookie-security.txt
             phase7-admin-response.json
             phase7-submitter-response.json
             phase7-compose-ps.txt
