@@ -23,37 +23,21 @@ jobs:
           from pathlib import Path
           viewer = Path('apps/web/components/BimViewer.tsx')
           text = viewer.read_text()
-          text = text.replace(
-              'const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";',
-              'const API_URL = "/api/backend";',
-          )
-          old = '''  const token = () => window.localStorage.getItem("r4c_access_token");
-
-          async function api<T>(path: string, options?: RequestInit): Promise<T> {
-            const accessToken = token();
-            if (!accessToken) throw new Error("Sign in first; no R4C access token was found.");
-            const response = await fetch(`${API_URL}${path}`, {
-              ...options,
-              headers: {
-                "content-type": "application/json",
-                authorization: `Bearer ${accessToken}`,
-                ...options?.headers,
-              },
-            });
-          '''.replace('          ', '')
-          new = '''  async function api<T>(path: string, options?: RequestInit): Promise<T> {
-            const response = await fetch(`${API_URL}${path}`, {
-              ...options,
-              credentials: "same-origin",
-              headers: {
-                "content-type": "application/json",
-                ...options?.headers,
-              },
-            });
-          '''.replace('          ', '')
-          if old not in text:
-              raise SystemExit('Viewer authentication block not found')
-          viewer.write_text(text.replace(old, new))
+          replacements = {
+              'const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";': 'const API_URL = "/api/backend";',
+              '  const token = () => window.localStorage.getItem("r4c_access_token");\n\n': '',
+              '    const accessToken = token();\n': '',
+              '    if (!accessToken) throw new Error("Sign in first; no R4C access token was found.");\n': '',
+              '        authorization: `Bearer ${accessToken}`,\n': '',
+              '      ...options,\n      headers: {': '      ...options,\n      credentials: "same-origin",\n      headers: {',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'Expected viewer fragment not found: {old[:60]}')
+              text = text.replace(old, new, 1)
+          if 'localStorage' in text or 'r4c_access_token' in text:
+              raise SystemExit('Browser token storage remains in BIM viewer')
+          viewer.write_text(text)
 
           test = Path('apps/web/test/frontend-journey-e2e.mjs')
           evidence = test.read_text()
