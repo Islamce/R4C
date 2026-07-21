@@ -39,7 +39,7 @@ function WbsBranch({
   });
 
   return (
-    <li className="wbs-node" style={{ "--wbs-depth": depth } as React.CSSProperties}>
+    <li className="wbs-node" data-depth={depth}>
       <div className="wbs-node-card">
         <div className="wbs-node-rail" aria-hidden="true">
           <span />
