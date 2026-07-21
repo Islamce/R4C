@@ -87,7 +87,20 @@ jobs:
           pnpm --filter @r4c/api exec prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
 
       - name: Typecheck
-        run: pnpm typecheck
+        run: |
+          set +e
+          pnpm typecheck > typecheck-diagnostics.txt 2>&1
+          status=$?
+          cat typecheck-diagnostics.txt
+          exit $status
+
+      - name: Retain typecheck diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-diagnostics
+          path: typecheck-diagnostics.txt
+          retention-days: 7
 
       - name: Build
         run: pnpm build
