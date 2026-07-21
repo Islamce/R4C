@@ -1,4 +1,4 @@
-name: Capture Phase 5 typecheck diagnostics
+name: Capture Phase 5 web typecheck diagnostics
 
 on:
   push:
@@ -22,14 +22,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Capture exact diagnostics
+      - name: Capture exact web diagnostics
         run: |
           pnpm install --frozen-lockfile
-          pnpm typecheck > docs/phase5-typecheck-diagnostics.txt 2>&1 || true
+          pnpm --filter @r4c/web typecheck > docs/phase5-typecheck-diagnostics.txt 2>&1 || true
       - name: Commit diagnostics
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/phase5-typecheck-diagnostics.txt
-          git diff --cached --quiet || git commit -m "chore(web): capture Phase 5 typecheck diagnostics"
+          git diff --cached --quiet || git commit -m "chore(web): capture Phase 5 web diagnostics"
           git push
