@@ -191,7 +191,14 @@ test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, as
   assert.ok(!("tenantId" in login.body.user));
   assert.ok(!JSON.stringify(login.body).includes(tenantUuid));
   assert.ok(login.setCookies.some((cookie) => cookie.startsWith("r4c_tenant_code=ALOMRAN")));
-  assert.ok(!login.setCookies.some((cookie) => cookie.startsWith("r4c_tenant_id=")));
+  const legacyTenantCookies = login.setCookies.filter((cookie) =>
+    cookie.startsWith("r4c_tenant_id="),
+  );
+  assert.ok(
+    legacyTenantCookies.every(
+      (cookie) => cookie.startsWith("r4c_tenant_id=;") && /max-age=0/i.test(cookie),
+    ),
+  );
   assert.ok(!login.setCookies.some((cookie) => cookie.includes(tenantUuid)));
 
   const session = await webRequest(englishJar, "/api/session");
@@ -282,7 +289,7 @@ test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, as
   assert.deepEqual(browserStorageReferences, []);
 
   console.log(`PHASE65_TENANT endpointFields=id,code,name,status code=ALOMRAN status=ACTIVE unknown=404 rate=${rateStatuses.join(",")}`);
-  console.log("PHASE65_LOGIN fields=email,password subdomain=alomran.r4c.local uuidInHtml=false uuidInJson=false uuidInCookies=false sessionTenant=ALOMRAN");
+  console.log("PHASE65_LOGIN fields=email,password subdomain=alomran.r4c.local uuidInHtml=false uuidInJson=false uuidInCookies=false legacyCookieDeleted=true sessionTenant=ALOMRAN");
   console.log(`PHASE65_DEEPLINK project=${project.id} data=200 en=ltr ar=rtl urlSync=true bogusFallback=true`);
   console.log("PHASE65_UAT login=true canonicalName=Alomran Development arabicName=العمران للتطوير العقاري roles=verified-by-workflow idempotent=verified-by-workflow");
   console.log(`PHASE65_FOUNDATION browserStorageReferences=${browserStorageReferences.length} refreshCookie=${Boolean(englishJar.get("r4c_refresh_token"))}`);
