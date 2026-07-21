@@ -81,9 +81,9 @@ jobs:
           pnpm --filter @r4c/api prisma:validate
           pnpm --filter @r4c/api prisma:generate
 
-      - name: Rehearse database schema deployment
+      - name: Rehearse database migration deployment
         run: |
-          pnpm --filter @r4c/api exec prisma db push --force-reset --skip-generate
+          pnpm --filter @r4c/api prisma:migrate:deploy
           pnpm --filter @r4c/api exec prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
 
       - name: Typecheck
