@@ -1,6 +1,7 @@
 name: Migrate BIM viewer session transport
 
 on:
+  pull_request:
   push:
     branches:
       - agent/phase-4-frontend-foundation
@@ -28,28 +29,28 @@ jobs:
           )
           old = '''  const token = () => window.localStorage.getItem("r4c_access_token");
 
-  async function api<T>(path: string, options?: RequestInit): Promise<T> {
-    const accessToken = token();
-    if (!accessToken) throw new Error("Sign in first; no R4C access token was found.");
-    const response = await fetch(`${API_URL}${path}`, {
-      ...options,
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${accessToken}`,
-        ...options?.headers,
-      },
-    });
-'''
+          async function api<T>(path: string, options?: RequestInit): Promise<T> {
+            const accessToken = token();
+            if (!accessToken) throw new Error("Sign in first; no R4C access token was found.");
+            const response = await fetch(`${API_URL}${path}`, {
+              ...options,
+              headers: {
+                "content-type": "application/json",
+                authorization: `Bearer ${accessToken}`,
+                ...options?.headers,
+              },
+            });
+          '''.replace('          ', '')
           new = '''  async function api<T>(path: string, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${API_URL}${path}`, {
-      ...options,
-      credentials: "same-origin",
-      headers: {
-        "content-type": "application/json",
-        ...options?.headers,
-      },
-    });
-'''
+            const response = await fetch(`${API_URL}${path}`, {
+              ...options,
+              credentials: "same-origin",
+              headers: {
+                "content-type": "application/json",
+                ...options?.headers,
+              },
+            });
+          '''.replace('          ', '')
           if old not in text:
               raise SystemExit('Viewer authentication block not found')
           viewer.write_text(text.replace(old, new))
@@ -65,11 +66,12 @@ jobs:
               'phase4BrowserStorage=0 viewerServerSession=true',
           )
           test.write_text(evidence)
+          Path('.github/workflows/phase4-migrate-viewer-session.yml').unlink()
           PY
       - name: Commit focused viewer session migration
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add apps/web/components/BimViewer.tsx apps/web/test/frontend-journey-e2e.mjs
+          git add -A
           git diff --cached --quiet || git commit -m "fix(web): move BIM viewer off browser token storage"
           git push
