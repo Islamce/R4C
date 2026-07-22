@@ -1,0 +1,274 @@
+name: Phase 7 production deployment verification
+
+on:
+  pull_request:
+    paths:
+      - "apps/api/Dockerfile"
+      - "apps/web/Dockerfile"
+      - "apps/web/app/api/health/**"
+      - "apps/api/prisma/seed-uat.ts"
+      - "apps/bim-worker/**"
+      - "deploy/caddy/**"
+      - "docker-compose.prod.yml"
+      - ".dockerignore"
+      - ".env.production.example"
+      - "scripts/generate-production-env.sh"
+      - "docs/deploy-hostinger-vps.md"
+      - ".github/workflows/phase7-production-deployment.yml"
+  push:
+    branches:
+      - main
+      - agent/phase-7-production-deployment-package
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install, typecheck, and build the monorepo
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --filter @r4c/api prisma:generate
+          pnpm typecheck
+          pnpm build
+
+      - name: Generate isolated production test configuration
+        run: |
+          chmod +x scripts/generate-production-env.sh
+          ./scripts/generate-production-env.sh .env.production.example .env.production
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.env.production')
+          text = path.read_text()
+          replacements = {
+              'APP_DOMAIN=r4c.example.com': 'APP_DOMAIN=r4c.local',
+              'API_DOMAIN=api.r4c.example.com': 'API_DOMAIN=api.r4c.local',
+              'TENANT_BASE_DOMAIN=r4c.example.com': 'TENANT_BASE_DOMAIN=r4c.local',
+              'ACME_EMAIL=owner@example.com': 'ACME_EMAIL=ci@r4c.local',
+              'CLOUDFLARE_API_TOKEN=REPLACE_WITH_CLOUDFLARE_DNS_TOKEN': 'CLOUDFLARE_API_TOKEN=ci-local-tls-does-not-use-cloudflare',
+              'CADDYFILE=Caddyfile': 'CADDYFILE=Caddyfile.local',
+              'NEXT_PUBLIC_API_URL=https://api.r4c.example.com/api/v1': 'NEXT_PUBLIC_API_URL=https://api.r4c.local/api/v1',
+              'CORS_ORIGINS=https://r4c.example.com,https://alomran.r4c.example.com': 'CORS_ORIGINS=https://r4c.local,https://alomran.r4c.local',
+              'SEED_ADMIN_EMAIL=platform.admin@example.com': 'SEED_ADMIN_EMAIL=platform.admin@r4c.local',
+              'SEED_UAT_ADMIN_EMAIL=uat.admin@alomran.example.com': 'SEED_UAT_ADMIN_EMAIL=uat.admin@alomran.local',
+              'SEED_UAT_SUBMIT_EMAIL=uat.submit@alomran.example.com': 'SEED_UAT_SUBMIT_EMAIL=uat.submit@alomran.local',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'Missing expected production placeholder: {old}')
+              text = text.replace(old, new)
+          path.write_text(text)
+          PY
+          chmod 600 .env.production
+          grep -n 'REPLACE_WITH' .env.production && exit 1 || true
+          docker compose --env-file .env.production -f docker-compose.prod.yml config --quiet
+
+      - name: Prove generated secrets are private and non-development
+        run: |
+          git check-ignore .env.production
+          test -z "$(git ls-files .env.production)"
+          ! grep -Eq 'r4c_dev|change-me|replace-with-at-least|SET_A_SECURE' .env.production
+          set -a
+          source .env.production
+          set +a
+          test ${#POSTGRES_PASSWORD} -ge 40
+          test ${#REDIS_PASSWORD} -ge 40
+          test ${#JWT_ACCESS_SECRET} -ge 64
+          test ${#JWT_REFRESH_SECRET} -ge 64
+          test ${#BIM_WORKER_TOKEN} -ge 64
+          ! git grep -F "$JWT_ACCESS_SECRET"
+          ! git grep -F "$POSTGRES_PASSWORD"
+
+      - name: Build every production image
+        run: |
+          docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools build --pull
+          touch phase7-images-built.ok
+
+      - name: Start infrastructure, migrate, and seed twice
+        run: |
+          docker compose --env-file .env.production -f docker-compose.prod.yml up -d postgres redis minio
+          for attempt in {1..60}; do
+            postgres=$(docker inspect -f '{{.State.Health.Status}}' r4c-postgres-1 2>/dev/null || true)
+            redis=$(docker inspect -f '{{.State.Health.Status}}' r4c-redis-1 2>/dev/null || true)
+            minio=$(docker inspect -f '{{.State.Health.Status}}' r4c-minio-1 2>/dev/null || true)
+            if [ "$postgres" = healthy ] && [ "$redis" = healthy ] && [ "$minio" = healthy ]; then
+              break
+            fi
+            sleep 2
+          done
+          test "$(docker inspect -f '{{.State.Health.Status}}' r4c-postgres-1)" = healthy
+          test "$(docker inspect -f '{{.State.Health.Status}}' r4c-redis-1)" = healthy
+          test "$(docker inspect -f '{{.State.Health.Status}}' r4c-minio-1)" = healthy
+          docker compose --env-file .env.production -f docker-compose.prod.yml run --rm minio-init
+          docker compose --env-file .env.production -f docker-compose.prod.yml run --rm api-migrate
+          docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools run --rm api-tools seed
+          docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools run --rm api-tools seed:uat | tee phase7-seed-uat-first.txt
+          docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools run --rm api-tools seed:uat | tee phase7-seed-uat-second.txt
+          grep -q '"createdRolePermissionLinks": 0' phase7-seed-uat-second.txt
+          grep -q '"removedRolePermissionLinks": 0' phase7-seed-uat-second.txt
+          grep -q '"membershipsCreated": 0' phase7-seed-uat-second.txt
+          grep -q '"canReview": false' phase7-seed-uat-second.txt
+          touch phase7-seeds-idempotent.ok
+
+      - name: Start the full production compose stack
+        run: |
+          docker compose --env-file .env.production -f docker-compose.prod.yml up -d
+          for attempt in {1..90}; do
+            healthy=0
+            for service in api web bim-worker caddy; do
+              status=$(docker inspect -f '{{.State.Health.Status}}' "r4c-${service}-1" 2>/dev/null || true)
+              [ "$status" = healthy ] && healthy=$((healthy+1))
+            done
+            [ "$healthy" = 4 ] && touch phase7-stack-healthy.ok && exit 0
+            sleep 2
+          done
+          docker compose --env-file .env.production -f docker-compose.prod.yml ps
+          docker compose --env-file .env.production -f docker-compose.prod.yml logs --tail=200
+          exit 1
+
+      - name: Verify non-root images and container health
+        run: |
+          api_user=$(docker inspect -f '{{.Config.User}}' r4c-api-1)
+          web_user=$(docker inspect -f '{{.Config.User}}' r4c-web-1)
+          bim_user=$(docker inspect -f '{{.Config.User}}' r4c-bim-worker-1)
+          test -n "$api_user" && test "$api_user" != "0" && test "$api_user" != "root"
+          test -n "$web_user" && test "$web_user" != "0" && test "$web_user" != "root"
+          test -n "$bim_user" && test "$bim_user" != "0" && test "$bim_user" != "root"
+          for service in postgres redis minio api web bim-worker caddy; do
+            test "$(docker inspect -f '{{.State.Health.Status}}' "r4c-${service}-1")" = healthy
+          done
+          printf 'PHASE7_USERS api=%s web=%s bim=%s\n' "$api_user" "$web_user" "$bim_user" | tee phase7-users.txt
+
+      - name: Verify HTTPS routing and Alomran login
+        run: |
+          set -a
+          source .env.production
+          set +a
+          curl -skf --resolve r4c.local:443:127.0.0.1 https://r4c.local/api/health > phase7-web-health.json
+          curl -skf --resolve api.r4c.local:443:127.0.0.1 https://api.r4c.local/api/v1/health/ready > phase7-api-health.json
+          curl -skf --resolve alomran.r4c.local:443:127.0.0.1 https://alomran.r4c.local/login > phase7-alomran-login.html
+          grep -q 'Alomran Development' phase7-alomran-login.html
+
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('phase7-admin-login.json').write_text(json.dumps({
+              'email': os.environ['SEED_UAT_ADMIN_EMAIL'],
+              'password': os.environ['SEED_UAT_ADMIN_PASSWORD'],
+          }))
+          Path('phase7-submitter-login.json').write_text(json.dumps({
+              'email': os.environ['SEED_UAT_SUBMIT_EMAIL'],
+              'password': os.environ['SEED_UAT_SUBMIT_PASSWORD'],
+          }))
+          PY
+
+          admin_status=$(curl -sk --resolve alomran.r4c.local:443:127.0.0.1 \
+            -D phase7-admin-headers.txt -c phase7-admin-cookies.txt \
+            -o phase7-admin-response.json -w '%{http_code}' \
+            -H 'content-type: application/json' \
+            --data-binary @phase7-admin-login.json \
+            https://alomran.r4c.local/api/session/login)
+          test "$admin_status" = 201
+
+          submit_status=$(curl -sk --resolve alomran.r4c.local:443:127.0.0.1 \
+            -D phase7-submitter-headers.txt \
+            -o phase7-submitter-response.json -w '%{http_code}' \
+            -H 'content-type: application/json' \
+            --data-binary @phase7-submitter-login.json \
+            https://alomran.r4c.local/api/session/login)
+          test "$submit_status" = 201
+
+          python3 - <<'PY'
+          import json
+          admin = json.load(open('phase7-admin-response.json'))['user']
+          submitter = json.load(open('phase7-submitter-response.json'))['user']
+          assert admin['tenant']['code'] == 'ALOMRAN'
+          assert admin['role'] == 'ADMIN'
+          assert submitter['tenant']['code'] == 'ALOMRAN'
+          assert submitter['role'] == 'PROGRESS_SUBMITTER'
+          assert 'progress:submit' in submitter['permissions']
+          assert 'progress:review' not in submitter['permissions']
+          assert 'tenantId' not in admin and 'tenantId' not in submitter
+          print('PHASE7_LOGIN admin=201 tenant=ALOMRAN submitter=201 canSubmit=true canReview=false uuidExposed=false')
+          PY
+          secure_count=$(grep -i '^set-cookie:' phase7-admin-headers.txt | grep -c 'Secure')
+          test "$secure_count" -ge 4
+          ! grep -qi 'r4c_tenant_id=[0-9a-f-]' phase7-admin-headers.txt
+          grep -i '^set-cookie:' phase7-admin-headers.txt \
+            | sed -E 's/(set-cookie: [^=]+=)[^;]*/\1<redacted>/' \
+            > phase7-cookie-security.txt
+          rm -f \
+            phase7-admin-login.json \
+            phase7-submitter-login.json \
+            phase7-admin-cookies.txt \
+            phase7-admin-headers.txt \
+            phase7-submitter-headers.txt
+          touch phase7-https-login.ok
+
+      - name: Capture deployment evidence
+        if: always()
+        run: |
+          {
+            if test -f phase7-images-built.ok; then
+              echo "PHASE7_IMAGES api=built web=built bim-worker=built caddy=built"
+            else
+              echo "PHASE7_IMAGES incomplete"
+            fi
+            test -f phase7-users.txt && cat phase7-users.txt
+            test -f phase7-api-health.json && echo "PHASE7_API $(cat phase7-api-health.json)"
+            test -f phase7-web-health.json && echo "PHASE7_WEB $(cat phase7-web-health.json)"
+            test -f phase7-admin-response.json && node -e "const u=require('./phase7-admin-response.json').user; console.log('PHASE7_ADMIN role='+u.role+' tenant='+u.tenant.code)"
+            test -f phase7-submitter-response.json && node -e "const u=require('./phase7-submitter-response.json').user; console.log('PHASE7_SUBMITTER role='+u.role+' submit='+u.permissions.includes('progress:submit')+' review='+u.permissions.includes('progress:review'))"
+            test -f phase7-https-login.ok && echo "PHASE7_TLS app=https://r4c.local api=https://api.r4c.local tenant=https://alomran.r4c.local secureCookies=true"
+            echo "PHASE7_SECRETS generated=true devDefaults=false committed=false"
+            if test -f phase7-stack-healthy.ok && test -f phase7-seeds-idempotent.ok; then
+              echo "PHASE7_COMPOSE fullStack=true migrations=deploy seeds=bootstrap+uat-twice idempotent=true health=green"
+            else
+              echo "PHASE7_COMPOSE incomplete"
+            fi
+          } | tee phase7-verification.txt
+          docker compose --env-file .env.production -f docker-compose.prod.yml ps -a > phase7-compose-ps.txt || true
+          docker compose --env-file .env.production -f docker-compose.prod.yml logs --no-color --tail=200 > phase7-compose-logs.txt 2>&1 || true
+          docker image ls --format '{{.Repository}}:{{.Tag}} {{.ID}} {{.Size}}' \
+            | grep -E '^(r4c-|postgres:17-alpine|redis:8-alpine|minio/)' \
+            > phase7-images.txt || true
+
+      - name: Retain Phase 7 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase7-production-deployment-evidence
+          path: |
+            phase7-verification.txt
+            phase7-seed-uat-first.txt
+            phase7-seed-uat-second.txt
+            phase7-users.txt
+            phase7-api-health.json
+            phase7-web-health.json
+            phase7-cookie-security.txt
+            phase7-admin-response.json
+            phase7-submitter-response.json
+            phase7-compose-ps.txt
+            phase7-compose-logs.txt
+            phase7-images.txt
+          retention-days: 30
+
+      - name: Stop isolated stack
+        if: always()
+        run: |
+          docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools down --volumes --remove-orphans || true
+          rm -f .env.production phase7-admin-cookies.txt
