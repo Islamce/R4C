@@ -5,7 +5,6 @@ from typing import Any
 import ifcopenshell
 from ifcopenshell.util import element as ifc_element
 
-
 SPATIAL_TYPES = {
     "IfcProject": "PROJECT",
     "IfcSite": "SITE",
@@ -96,9 +95,7 @@ def extract_ifc(path: Path, max_elements: int) -> dict[str, Any]:
 
     raw_elements = model.by_type("IfcElement")
     if len(raw_elements) > max_elements:
-        raise ValueError(
-            f"Model contains {len(raw_elements)} elements; limit is {max_elements}"
-        )
+        raise ValueError(f"Model contains {len(raw_elements)} elements; limit is {max_elements}")
 
     elements: list[dict[str, Any]] = []
     seen_global_ids: set[str] = set()

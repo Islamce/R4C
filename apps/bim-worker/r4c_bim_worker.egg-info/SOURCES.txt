@@ -1,0 +1,12 @@
+pyproject.toml
+r4c_bim_worker/__init__.py
+r4c_bim_worker/extractor.py
+r4c_bim_worker/geometry.py
+r4c_bim_worker/main.py
+r4c_bim_worker/settings.py
+r4c_bim_worker.egg-info/PKG-INFO
+r4c_bim_worker.egg-info/SOURCES.txt
+r4c_bim_worker.egg-info/dependency_links.txt
+r4c_bim_worker.egg-info/requires.txt
+r4c_bim_worker.egg-info/top_level.txt
+tests/test_extractor.py

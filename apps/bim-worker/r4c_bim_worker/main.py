@@ -12,7 +12,6 @@ from .extractor import extract_ifc
 from .geometry import generate_glb
 from .settings import settings
 
-
 app = FastAPI(title="R4C BIM Worker", version="0.3.0")
 
 
