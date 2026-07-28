@@ -39,6 +39,22 @@ PR #33 (`feat/local-development-runtime`) added personal-computer bootstrap scri
   - Run production audit before opening or updating a PR.
   - Do not manually edit dependency integrity records.
 
+### Failure 3 — frozen lockfile cascade
+
+- Affected workflows: `CI`, `Security`, `Seed verification`, `Auth session verification`, Phase 5, Phase 6, Phase 6.5, and Phase 7 verification.
+- Failed stage: dependency installation.
+- Root cause:
+  - `apps/web/package.json` and root `pnpm.overrides` were changed before the regenerated `pnpm-lock.yaml` was committed.
+  - All standard workflows use `pnpm install --frozen-lockfile`, so they correctly rejected the inconsistent dependency graph before running tests.
+  - The temporary refresh workflow originally ran the security audit before committing the regenerated lockfile. When the audit failed, the commit step was never reached.
+- Correction:
+  - Reordered the refresh workflow to generate and commit `pnpm-lock.yaml` before running frozen installation, audit, lint, typecheck, tests, and build.
+  - Limited the refresh workflow trigger to its own controlled workflow-file update so the bot lockfile commit does not cause a recursive loop.
+- Prevention:
+  - Never push a dependency manifest change without its generated lockfile in the same change set.
+  - Dependency repair automation must persist the generated lockfile before non-persistence validation gates.
+  - Standard PR workflows remain frozen-lockfile-only.
+
 ### Non-root-cause warnings
 
 - GitHub-hosted actions reported Node.js 20 action-runtime deprecation.
@@ -51,5 +67,6 @@ These warnings did not terminate PR #33 checks and must not be confused with the
 
 - BIM lint correction: committed.
 - Dependency manifest correction: committed.
-- Lockfile regeneration and full verification: automated workflow pending.
+- Frozen lockfile cascade: recorded and refresh workflow corrected.
+- Lockfile regeneration and full verification: pending automated bot commit and rerun.
 - Merge decision: blocked until all required checks are green.
