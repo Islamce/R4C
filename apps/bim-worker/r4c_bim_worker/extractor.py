@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any
 
 import ifcopenshell
-import ifcopenshell.util.element
+from ifcopenshell.util import element as ifc_element
 
 
 SPATIAL_TYPES = {
@@ -49,7 +49,7 @@ def spatial_key(element: Any) -> str | None:
 
 def extract_properties(element: Any, limit: int = 200) -> list[dict[str, str | None]]:
     result: list[dict[str, str | None]] = []
-    property_sets = ifcopenshell.util.element.get_psets(element)
+    property_sets = ifc_element.get_psets(element)
     for property_set, values in property_sets.items():
         if not isinstance(values, dict):
             continue
@@ -72,7 +72,7 @@ def extract_properties(element: Any, limit: int = 200) -> list[dict[str, str | N
 def extract_ifc(path: Path, max_elements: int) -> dict[str, Any]:
     model = ifcopenshell.open(str(path))
     schema = str(model.schema).upper()
-    if not (schema.startswith("IFC2X3") or schema.startswith("IFC4")):
+    if not schema.startswith(("IFC2X3", "IFC4")):
         raise ValueError(f"Unsupported IFC schema: {schema}")
 
     projects = model.by_type("IfcProject")
