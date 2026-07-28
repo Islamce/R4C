@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test",
     "test:journey": "node --test test/frontend-journey-e2e.mjs",
-    "test:cost-dashboard": "node --test test/cost-dashboard-e2e.mjs",
-    "test:progress-workspace": "node --test test/progress-workspace-e2e.mjs",
+    "test:cost-dashboard": "node test/run-date-safe-e2e.mjs test/cost-dashboard-e2e.mjs",
+    "test:progress-workspace": "node test/run-date-safe-e2e.mjs test/progress-workspace-e2e.mjs",
     "test:ux-loop-closers": "node --test test/ux-loop-closers-e2e.mjs"
   },
   "dependencies": {
