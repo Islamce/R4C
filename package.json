@@ -16,5 +16,11 @@
     "local:services": "docker compose up -d postgres redis minio",
     "local:stop": "docker compose down",
     "local:reset": "docker compose down -v"
+  },
+  "pnpm": {
+    "overrides": {
+      "sharp": ">=0.35.0",
+      "postcss": ">=8.5.18"
+    }
   }
 }
