@@ -14,5 +14,6 @@ __pycache__/
 .pytest_cache/
 .venv/
 *.pyc
+*.egg-info/
 data/
 storage/
