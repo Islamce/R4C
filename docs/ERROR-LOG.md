@@ -30,10 +30,10 @@ PR #33 (`feat/local-development-runtime`) added personal-computer bootstrap scri
   - Lockfile resolved Next.js 15.5.20 while advisories require 15.5.21 or newer.
   - Vulnerable transitive Sharp and PostCSS versions were also present.
   - SBOM upload then failed because the audit stopped earlier generation steps.
-- Correction initiated:
+- Correction:
   - Require Next.js `^15.5.21`.
   - Add pnpm overrides for Sharp `>=0.35.0` and PostCSS `>=8.5.18`.
-  - Regenerate `pnpm-lock.yaml` in CI and rerun audit, lint, typecheck, tests, and build.
+  - Regenerate and commit `pnpm-lock.yaml`.
 - Prevention:
   - Treat package manifests and lockfile as one controlled change.
   - Run production audit before opening or updating a PR.
@@ -55,18 +55,44 @@ PR #33 (`feat/local-development-runtime`) added personal-computer bootstrap scri
   - Dependency repair automation must persist the generated lockfile before non-persistence validation gates.
   - Standard PR workflows remain frozen-lockfile-only.
 
+### Failure 4 — residual BIM import ordering
+
+- Workflow: `CI`
+- Step: `Install and validate BIM worker`.
+- Root cause:
+  - The first manual import correction placed `from pathlib import Path` before `import tempfile`, which still violated Ruff's standard-library ordering.
+- Correction:
+  - Standard-library imports reordered to `hashlib`, `hmac`, `tempfile`, then `pathlib` and `urllib.parse` imports.
+- Prevention:
+  - Apply Ruff's exact import grouping rather than manually approximating alphabetical order.
+
+### Failure 5 — fixed-date Phase 5 and Phase 6 journeys
+
+- Workflows: `Phase 5 cost dashboard verification` and `Phase 6 progress workspace verification`.
+- Symptoms:
+  - Phase 5 expected populated CPI/SPI/EAC, but EAC was `null`.
+  - Phase 6 expected earned value `42500.00`, but received `0.00`.
+- Root cause:
+  - Both tests hard-coded `asOf = "2026-07-21"`.
+  - Progress fixtures are created at execution time; on 2026-07-28 they fell after the fixed reporting date and were correctly excluded from earned-value calculations.
+- Correction:
+  - Added a date-safe test runner that replaces the fixed `asOf` value with the current UTC execution date before launching the journey test.
+  - Updated the Phase 5 and Phase 6 package scripts to use the date-safe runner.
+- Prevention:
+  - Time-dependent journey tests must derive reporting dates from execution time or explicitly backdate fixture records.
+  - Do not use fixed historical `asOf` dates with dynamically timestamped fixtures.
+
 ### Non-root-cause warnings
 
 - GitHub-hosted actions reported Node.js 20 action-runtime deprecation.
 - Redis reported memory-overcommit and unauthenticated-local-network warnings.
 - PostgreSQL Alpine reported missing locale packages.
-
-These warnings did not terminate PR #33 checks and must not be confused with the root causes above.
+- Next.js reported that `next start` is not the preferred command for a standalone build; the server still started successfully and this warning did not cause the failures above.
 
 ### Status
 
-- BIM lint correction: committed.
-- Dependency manifest correction: committed.
-- Frozen lockfile cascade: recorded and refresh workflow corrected.
-- Lockfile regeneration and full verification: pending automated bot commit and rerun.
-- Merge decision: blocked until all required checks are green.
+- Dependency security audit: green after lockfile refresh.
+- Seed, auth-session, Phase 6.5, and Phase 7 verification: green on the refreshed dependency graph.
+- Residual BIM import ordering: corrected and rerun triggered.
+- Phase 5 and Phase 6 fixed-date failures: corrected through date-safe execution and rerun triggered.
+- Merge decision: blocked until the latest required checks are green.
