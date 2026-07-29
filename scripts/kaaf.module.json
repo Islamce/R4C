@@ -1,0 +1,17 @@
+{
+  "apis": [],
+  "confidence": "verified",
+  "consumes": [],
+  "dependsOn": [],
+  "externalIntegrations": [],
+  "flows": [],
+  "id": "r4c-scripts",
+  "ownedEntities": [],
+  "owner": "DevOps",
+  "permissions": [],
+  "publicEntryPoints": [
+    "scripts/local-setup.sh"
+  ],
+  "purpose": "Provision local development environments and generate production configuration.",
+  "schemaVersion": "1.0.0"
+}

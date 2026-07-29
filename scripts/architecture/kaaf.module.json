@@ -1,0 +1,17 @@
+{
+  "apis": [],
+  "confidence": "verified",
+  "consumes": [],
+  "dependsOn": [],
+  "externalIntegrations": [],
+  "flows": [],
+  "id": "r4c-kaaf-tooling",
+  "ownedEntities": [],
+  "owner": "DevOps",
+  "permissions": [],
+  "publicEntryPoints": [
+    "scripts/architecture/generate.sh"
+  ],
+  "purpose": "Generate and validate this repository's KAAF architecture context.",
+  "schemaVersion": "1.0.0"
+}
