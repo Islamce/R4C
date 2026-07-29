@@ -6,7 +6,7 @@ This directory is a copy of the KAAF architecture tooling. **Do not edit it here
 |---|---|
 | Source | `Islamce/KAAF` — `scripts/architecture/` |
 | Generator version | `0.7.0` |
-| Vendored at commit | `c4dc8f9ffc93ca3b1626167faa2388c2ceab8902` |
+| Vendored at commit | `d28018f72c6e71ef7930f1f7bdbc0f40906bde29` |
 | Runtime | Python 3.11+, standard library only — no dependencies to install |
 
 ## Why vendored rather than installed
@@ -16,11 +16,14 @@ which is what makes the CI gates cheap enough to run on every pull request.
 
 ## What was deliberately left out
 
-- `tests/` and `run-tests.sh` — they test the tooling itself, which is verified in KAAF's
-  own CI. R4C consumes the tooling; it does not develop it.
-- `validators/validate-structure.sh` — it asserts the layout of the KAAF repository
-  itself (its governance documents, execution prompts and agent files) and does not apply
-  to an adopting repository.
+`tests/` and `run-tests.sh` — they test the tooling itself, which is verified in KAAF's own
+CI. R4C consumes the tooling; it does not develop it.
+
+Everything else is vendored, including `validators/validate-structure.sh`. That validator
+distinguishes the *core* checks every KAAF repository must satisfy from the *framework*
+checks that apply only to KAAF itself, and reads which set to run from `"kaafRole"` in
+`kaaf.repo.json`. This repository declares no role, so it is treated as an adopter and the
+framework checks are reported as skipped rather than silently omitted.
 
 ## Fixing a defect
 
@@ -37,6 +40,5 @@ for d in scanners generators utils validators; do
   cp <kaaf>/scripts/architecture/$d/*.py scripts/architecture/$d/
 done
 cp <kaaf>/scripts/architecture/{generate.py,generate.sh,aggregate.py,compat.py} scripts/architecture/
-rm -f scripts/architecture/validators/validate-structure.sh
 ./scripts/architecture/generate.sh
 ```
