@@ -1,0 +1,167 @@
+{
+  "_meta": {
+    "artifact": "ai-context.json",
+    "bodyDigest": "2e213fe3b5da71617aa02789c3d18afe96f463a5c404f5e85df4f05518e62395",
+    "confidence": "verified",
+    "doNotEdit": true,
+    "generator": "kaaf",
+    "generatorVersion": "0.7.0",
+    "inputDigest": "f262c6d224273eba3467246171de5fbd5f5495332290d3256d3959079f23c48d",
+    "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
+    "schemaVersion": "1.0.0"
+  },
+  "conventions": {
+    "branchNaming": [
+      "chore/*",
+      "feat/*",
+      "fix/*"
+    ],
+    "generatedContextRoot": ".ai/",
+    "moduleManifestFile": "kaaf.module.json",
+    "monorepo": "apps/* are deployable applications; packages/* are shared libraries"
+  },
+  "counts": {
+    "apis": 0,
+    "externalIntegrations": 2,
+    "modules": 6,
+    "modulesDeclared": 6,
+    "modulesUndeclared": 0,
+    "permissions": 0
+  },
+  "drift": {
+    "counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 0
+    },
+    "detail": ".ai/drift.json",
+    "hasErrors": false
+  },
+  "kaafPhase": 7,
+  "modules": [
+    {
+      "confidence": "verified",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependsOn": [],
+      "detail": "modules/r4c-api.json",
+      "hasDiscoveredCode": true,
+      "id": "r4c-api",
+      "owner": "Backend",
+      "path": "apps/api",
+      "publicEntryPoints": [
+        "apps/api/package.json",
+        "apps/api/src/main.ts"
+      ],
+      "purpose": "Serve the governed R4C domain over HTTP: projects, WBS, documents, approvals and progress."
+    },
+    {
+      "confidence": "verified",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependsOn": [],
+      "detail": "modules/r4c-bim-worker.json",
+      "hasDiscoveredCode": true,
+      "id": "r4c-bim-worker",
+      "owner": "Data",
+      "path": "apps/bim-worker",
+      "publicEntryPoints": [
+        "apps/bim-worker/pyproject.toml",
+        "apps/bim-worker/r4c_bim_worker/main.py"
+      ],
+      "purpose": "Extract geometry and metadata from IFC models so the platform can reason about them."
+    },
+    {
+      "confidence": "verified",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependsOn": [],
+      "detail": "modules/r4c-contracts.json",
+      "hasDiscoveredCode": true,
+      "id": "r4c-contracts",
+      "owner": "Backend",
+      "path": "packages/contracts",
+      "publicEntryPoints": [
+        "packages/contracts/package.json"
+      ],
+      "purpose": "Define the typed contracts shared between the API and the web client."
+    },
+    {
+      "confidence": "verified",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependsOn": [],
+      "detail": "modules/r4c-kaaf-tooling.json",
+      "hasDiscoveredCode": true,
+      "id": "r4c-kaaf-tooling",
+      "owner": "DevOps",
+      "path": "scripts/architecture",
+      "publicEntryPoints": [
+        "scripts/architecture/generate.sh"
+      ],
+      "purpose": "Generate and validate this repository's KAAF architecture context."
+    },
+    {
+      "confidence": "verified",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependsOn": [],
+      "detail": "modules/r4c-scripts.json",
+      "hasDiscoveredCode": true,
+      "id": "r4c-scripts",
+      "owner": "DevOps",
+      "path": "scripts",
+      "publicEntryPoints": [
+        "scripts/local-setup.sh"
+      ],
+      "purpose": "Provision local development environments and generate production configuration."
+    },
+    {
+      "confidence": "verified",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependsOn": [
+        "r4c-contracts"
+      ],
+      "detail": "modules/r4c-web.json",
+      "hasDiscoveredCode": true,
+      "id": "r4c-web",
+      "owner": "Frontend",
+      "path": "apps/web",
+      "publicEntryPoints": [
+        "apps/web/package.json"
+      ],
+      "purpose": "Present the R4C platform to users, including the IFC model viewer and executive dashboards."
+    }
+  ],
+  "pointers": {
+    "architecture": ".ai/architecture.json",
+    "drift": ".ai/drift.json",
+    "governance": "docs/kaaf/GOVERNANCE.md",
+    "moduleDetail": ".ai/modules/<id>.json",
+    "prompts": "docs/ai/prompts/",
+    "roadmap": "docs/kaaf/ROADMAP.md",
+    "standards": "docs/kaaf/STANDARDS.md",
+    "summary": ".ai/summary.md"
+  },
+  "readOrder": [
+    ".ai/ai-context.json",
+    ".ai/summary.md",
+    ".ai/modules/<id>.json for the module the task touches",
+    "only the source files those steps referenced"
+  ],
+  "repository": {
+    "defaultBranch": "main",
+    "description": "R4C — a BIM-centered platform for governed real-estate development delivery, connecting projects, WBS, design documents, IFC models, approvals, progress and executive visibility.",
+    "name": "R4C",
+    "repository": "Islamce/R4C"
+  },
+  "rules": [
+    "Never hand-edit anything under .ai/ except README.md and .gitkeep.",
+    "If a component is not described here and not in the source, it does not exist — say 'not found'.",
+    "Regenerate .ai/ in the same pull request as any structural change.",
+    "Tag every architectural claim with a confidence level.",
+    "Confidence here is computed from evidence, not copied from a manifest: 'verified' means declared and corroborated by discovered code, 'documented' means declared with no code to check it against, 'derived' means discovered with no declaration.",
+    "Check drift before trusting this: findings in .ai/drift.json mean the manifests have fallen behind the code."
+  ]
+}

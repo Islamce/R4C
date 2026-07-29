@@ -1,0 +1,295 @@
+{
+  "_meta": {
+    "artifact": "architecture.json",
+    "bodyDigest": "bbc0432e04d98da9f5d8c4c70be7a84ccb0566cf3e91de1ece30800926422a6e",
+    "confidence": "verified",
+    "doNotEdit": true,
+    "generator": "kaaf",
+    "generatorVersion": "0.7.0",
+    "inputDigest": "f262c6d224273eba3467246171de5fbd5f5495332290d3256d3959079f23c48d",
+    "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
+    "schemaVersion": "1.0.0"
+  },
+  "apis": [],
+  "dependencies": {
+    "declaredEdges": [
+      {
+        "from": "r4c-web",
+        "to": "r4c-contracts"
+      }
+    ],
+    "discoveredEdges": [
+      {
+        "declared": true,
+        "evidence": [
+          "apps/web/lib/types.ts"
+        ],
+        "from": "r4c-web",
+        "to": "r4c-contracts"
+      }
+    ],
+    "edges": [
+      {
+        "from": "r4c-web",
+        "to": "r4c-contracts"
+      }
+    ],
+    "hasCycles": false,
+    "note": "'edges' and 'declaredEdges' come from the manifests; cycles there are rejected at scan time (KAAF-E004). 'discoveredEdges' come from real imports — see drift.json where the two disagree."
+  },
+  "deployment": {
+    "environments": [
+      "production"
+    ],
+    "note": "Caddy reverse proxy configuration lives in deploy/caddy. Deployment is described in the phase7-production-deployment workflow."
+  },
+  "drift": {
+    "counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 0
+    },
+    "detail": ".ai/drift.json",
+    "hasErrors": false
+  },
+  "externalIntegrations": [
+    {
+      "confidence": "verified",
+      "criticality": "required",
+      "kind": "database",
+      "module": "r4c-api",
+      "name": "PostgreSQL (Prisma)",
+      "onUnavailable": "The API cannot serve or accept any domain data.",
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "criticality": "required",
+      "kind": "api",
+      "module": "r4c-web",
+      "name": "R4C API",
+      "onUnavailable": "The client renders but shows no project data.",
+      "sourceManifest": "apps/web/kaaf.module.json"
+    }
+  ],
+  "modules": [
+    {
+      "confidence": "verified",
+      "confidenceReason": "Declared and corroborated by 77 discovered code file(s).",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependedOnBy": [],
+      "dependsOn": [],
+      "discovery": {
+        "codeFileCount": 77,
+        "discovered": true,
+        "entryPoints": [],
+        "languages": [
+          "javascript",
+          "json",
+          "typescript"
+        ],
+        "parseErrors": [],
+        "publicSymbols": [],
+        "sourceFileCount": 81
+      },
+      "id": "r4c-api",
+      "ownedEntities": [
+        "approval",
+        "design-document",
+        "progress-record",
+        "project",
+        "wbs-node"
+      ],
+      "owner": "Backend",
+      "path": "apps/api",
+      "publicEntryPoints": [
+        "apps/api/package.json",
+        "apps/api/src/main.ts"
+      ],
+      "purpose": "Serve the governed R4C domain over HTTP: projects, WBS, documents, approvals and progress.",
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "confidenceReason": "Declared and corroborated by 6 discovered code file(s).",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependedOnBy": [],
+      "dependsOn": [],
+      "discovery": {
+        "codeFileCount": 6,
+        "discovered": true,
+        "entryPoints": [],
+        "languages": [
+          "json",
+          "python"
+        ],
+        "parseErrors": [],
+        "publicSymbols": [
+          "ProcessRequest",
+          "health",
+          "process_ifc",
+          "validate_storage_url"
+        ],
+        "sourceFileCount": 7
+      },
+      "id": "r4c-bim-worker",
+      "ownedEntities": [
+        "ifc-extraction",
+        "model-geometry"
+      ],
+      "owner": "Data",
+      "path": "apps/bim-worker",
+      "publicEntryPoints": [
+        "apps/bim-worker/pyproject.toml",
+        "apps/bim-worker/r4c_bim_worker/main.py"
+      ],
+      "purpose": "Extract geometry and metadata from IFC models so the platform can reason about them.",
+      "sourceManifest": "apps/bim-worker/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "confidenceReason": "Declared and corroborated by 1 discovered code file(s).",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependedOnBy": [
+        "r4c-web"
+      ],
+      "dependsOn": [],
+      "discovery": {
+        "codeFileCount": 1,
+        "discovered": true,
+        "entryPoints": [],
+        "languages": [
+          "json",
+          "typescript"
+        ],
+        "parseErrors": [],
+        "publicSymbols": [],
+        "sourceFileCount": 4
+      },
+      "id": "r4c-contracts",
+      "ownedEntities": [
+        "api-contract"
+      ],
+      "owner": "Backend",
+      "path": "packages/contracts",
+      "publicEntryPoints": [
+        "packages/contracts/package.json"
+      ],
+      "purpose": "Define the typed contracts shared between the API and the web client.",
+      "sourceManifest": "packages/contracts/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "confidenceReason": "Declared and corroborated by 31 discovered code file(s).",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependedOnBy": [],
+      "dependsOn": [],
+      "discovery": {
+        "codeFileCount": 31,
+        "discovered": true,
+        "entryPoints": [
+          "scripts/architecture/aggregate.py",
+          "scripts/architecture/compat.py",
+          "scripts/architecture/generate.py",
+          "scripts/architecture/generate.sh",
+          "scripts/architecture/validators/validate_drift.py",
+          "scripts/architecture/validators/validate_generated.py",
+          "scripts/architecture/validators/validate_index.py"
+        ],
+        "languages": [
+          "json",
+          "markdown",
+          "python",
+          "shell"
+        ],
+        "parseErrors": [],
+        "publicSymbols": [],
+        "sourceFileCount": 33
+      },
+      "id": "r4c-kaaf-tooling",
+      "ownedEntities": [],
+      "owner": "DevOps",
+      "path": "scripts/architecture",
+      "publicEntryPoints": [
+        "scripts/architecture/generate.sh"
+      ],
+      "purpose": "Generate and validate this repository's KAAF architecture context.",
+      "sourceManifest": "scripts/architecture/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "confidenceReason": "Declared and corroborated by 2 discovered code file(s).",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependedOnBy": [],
+      "dependsOn": [],
+      "discovery": {
+        "codeFileCount": 2,
+        "discovered": true,
+        "entryPoints": [
+          "scripts/generate-production-env.sh",
+          "scripts/local-setup.sh"
+        ],
+        "languages": [
+          "json",
+          "shell"
+        ],
+        "parseErrors": [],
+        "publicSymbols": [],
+        "sourceFileCount": 3
+      },
+      "id": "r4c-scripts",
+      "ownedEntities": [],
+      "owner": "DevOps",
+      "path": "scripts",
+      "publicEntryPoints": [
+        "scripts/local-setup.sh"
+      ],
+      "purpose": "Provision local development environments and generate production configuration.",
+      "sourceManifest": "scripts/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "confidenceReason": "Declared and corroborated by 43 discovered code file(s).",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependedOnBy": [],
+      "dependsOn": [
+        "r4c-contracts"
+      ],
+      "discovery": {
+        "codeFileCount": 43,
+        "discovered": true,
+        "entryPoints": [],
+        "languages": [
+          "javascript",
+          "json",
+          "typescript"
+        ],
+        "parseErrors": [],
+        "publicSymbols": [],
+        "sourceFileCount": 46
+      },
+      "id": "r4c-web",
+      "ownedEntities": [],
+      "owner": "Frontend",
+      "path": "apps/web",
+      "publicEntryPoints": [
+        "apps/web/package.json"
+      ],
+      "purpose": "Present the R4C platform to users, including the IFC model viewer and executive dashboards.",
+      "sourceManifest": "apps/web/kaaf.module.json"
+    }
+  ],
+  "permissions": [],
+  "repository": {
+    "defaultBranch": "main",
+    "kaafPhase": 7,
+    "name": "R4C",
+    "repository": "Islamce/R4C"
+  }
+}

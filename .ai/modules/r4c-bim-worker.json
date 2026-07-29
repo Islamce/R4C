@@ -1,0 +1,72 @@
+{
+  "_meta": {
+    "artifact": "modules/r4c-bim-worker.json",
+    "bodyDigest": "e0e3dd7d6df69bfd87dca31ad5a0ebc2e405b2b1298711e440542535ab681066",
+    "confidence": "verified",
+    "doNotEdit": true,
+    "generator": "kaaf",
+    "generatorVersion": "0.7.0",
+    "inputDigest": "f262c6d224273eba3467246171de5fbd5f5495332290d3256d3959079f23c48d",
+    "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
+    "schemaVersion": "1.0.0"
+  },
+  "apis": [],
+  "confidence": "verified",
+  "confidenceReason": "Declared and corroborated by 6 discovered code file(s).",
+  "declared": true,
+  "declaredConfidence": "verified",
+  "dependedOnBy": [],
+  "dependsOn": [],
+  "discovery": {
+    "codeFiles": [
+      "apps/bim-worker/r4c_bim_worker/__init__.py",
+      "apps/bim-worker/r4c_bim_worker/extractor.py",
+      "apps/bim-worker/r4c_bim_worker/geometry.py",
+      "apps/bim-worker/r4c_bim_worker/main.py",
+      "apps/bim-worker/r4c_bim_worker/settings.py",
+      "apps/bim-worker/tests/test_extractor.py"
+    ],
+    "discovered": true,
+    "entryPoints": [],
+    "languages": [
+      "json",
+      "python"
+    ],
+    "parseErrors": [],
+    "publicSymbols": [
+      "ProcessRequest",
+      "health",
+      "process_ifc",
+      "validate_storage_url"
+    ],
+    "sourceFiles": [
+      "apps/bim-worker/kaaf.module.json",
+      "apps/bim-worker/r4c_bim_worker/__init__.py",
+      "apps/bim-worker/r4c_bim_worker/extractor.py",
+      "apps/bim-worker/r4c_bim_worker/geometry.py",
+      "apps/bim-worker/r4c_bim_worker/main.py",
+      "apps/bim-worker/r4c_bim_worker/settings.py",
+      "apps/bim-worker/tests/test_extractor.py"
+    ]
+  },
+  "driftFindings": [],
+  "externalIntegrations": [],
+  "id": "r4c-bim-worker",
+  "ownedEntities": [
+    "ifc-extraction",
+    "model-geometry"
+  ],
+  "owner": "Data",
+  "path": "apps/bim-worker",
+  "permissions": [],
+  "publicEntryPoints": [
+    "apps/bim-worker/pyproject.toml",
+    "apps/bim-worker/r4c_bim_worker/main.py"
+  ],
+  "purpose": "Extract geometry and metadata from IFC models so the platform can reason about them.",
+  "readNext": [
+    "apps/bim-worker/pyproject.toml",
+    "apps/bim-worker/r4c_bim_worker/main.py"
+  ],
+  "sourceManifest": "apps/bim-worker/kaaf.module.json"
+}
