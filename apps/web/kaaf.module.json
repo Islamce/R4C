@@ -1,0 +1,26 @@
+{
+  "apis": [],
+  "confidence": "verified",
+  "consumes": [],
+  "dependsOn": [
+    "r4c-contracts"
+  ],
+  "externalIntegrations": [
+    {
+      "criticality": "required",
+      "kind": "api",
+      "name": "R4C API",
+      "onUnavailable": "The client renders but shows no project data."
+    }
+  ],
+  "flows": [],
+  "id": "r4c-web",
+  "ownedEntities": [],
+  "owner": "Frontend",
+  "permissions": [],
+  "publicEntryPoints": [
+    "apps/web/package.json"
+  ],
+  "purpose": "Present the R4C platform to users, including the IFC model viewer and executive dashboards.",
+  "schemaVersion": "1.0.0"
+}

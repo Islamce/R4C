@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "artifact": "modules/r4c-scripts.json",
+    "bodyDigest": "2e7328612efbfa56eacd650585f229510a13fc3c69127e41eb67e1eb1b41ec27",
+    "confidence": "verified",
+    "doNotEdit": true,
+    "generator": "kaaf",
+    "generatorVersion": "0.7.0",
+    "inputDigest": "f262c6d224273eba3467246171de5fbd5f5495332290d3256d3959079f23c48d",
+    "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
+    "schemaVersion": "1.0.0"
+  },
+  "apis": [],
+  "confidence": "verified",
+  "confidenceReason": "Declared and corroborated by 2 discovered code file(s).",
+  "declared": true,
+  "declaredConfidence": "verified",
+  "dependedOnBy": [],
+  "dependsOn": [],
+  "discovery": {
+    "codeFiles": [
+      "scripts/generate-production-env.sh",
+      "scripts/local-setup.sh"
+    ],
+    "discovered": true,
+    "entryPoints": [
+      "scripts/generate-production-env.sh",
+      "scripts/local-setup.sh"
+    ],
+    "languages": [
+      "json",
+      "shell"
+    ],
+    "parseErrors": [],
+    "publicSymbols": [],
+    "sourceFiles": [
+      "scripts/generate-production-env.sh",
+      "scripts/kaaf.module.json",
+      "scripts/local-setup.sh"
+    ]
+  },
+  "driftFindings": [],
+  "externalIntegrations": [],
+  "id": "r4c-scripts",
+  "ownedEntities": [],
+  "owner": "DevOps",
+  "path": "scripts",
+  "permissions": [],
+  "publicEntryPoints": [
+    "scripts/local-setup.sh"
+  ],
+  "purpose": "Provision local development environments and generate production configuration.",
+  "readNext": [
+    "scripts/local-setup.sh"
+  ],
+  "sourceManifest": "scripts/kaaf.module.json"
+}

@@ -1,0 +1,31 @@
+{
+  "apis": [],
+  "confidence": "verified",
+  "consumes": [],
+  "dependsOn": [],
+  "externalIntegrations": [
+    {
+      "criticality": "required",
+      "kind": "database",
+      "name": "PostgreSQL (Prisma)",
+      "onUnavailable": "The API cannot serve or accept any domain data."
+    }
+  ],
+  "flows": [],
+  "id": "r4c-api",
+  "ownedEntities": [
+    "project",
+    "wbs-node",
+    "design-document",
+    "approval",
+    "progress-record"
+  ],
+  "owner": "Backend",
+  "permissions": [],
+  "publicEntryPoints": [
+    "apps/api/package.json",
+    "apps/api/src/main.ts"
+  ],
+  "purpose": "Serve the governed R4C domain over HTTP: projects, WBS, documents, approvals and progress.",
+  "schemaVersion": "1.0.0"
+}

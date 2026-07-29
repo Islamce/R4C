@@ -1,0 +1,78 @@
+{
+  "_meta": {
+    "artifact": "drift.json",
+    "bodyDigest": "a0027857feaa58f953d17ed64e03d3249da84bdf99c5cecf4804dde127b8230c",
+    "confidence": "derived",
+    "doNotEdit": true,
+    "generator": "kaaf",
+    "generatorVersion": "0.7.0",
+    "inputDigest": "f262c6d224273eba3467246171de5fbd5f5495332290d3256d3959079f23c48d",
+    "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
+    "schemaVersion": "1.0.0"
+  },
+  "confidenceByModule": {
+    "r4c-api": {
+      "level": "verified",
+      "reason": "Declared and corroborated by 77 discovered code file(s)."
+    },
+    "r4c-bim-worker": {
+      "level": "verified",
+      "reason": "Declared and corroborated by 6 discovered code file(s)."
+    },
+    "r4c-contracts": {
+      "level": "verified",
+      "reason": "Declared and corroborated by 1 discovered code file(s)."
+    },
+    "r4c-kaaf-tooling": {
+      "level": "verified",
+      "reason": "Declared and corroborated by 31 discovered code file(s)."
+    },
+    "r4c-scripts": {
+      "level": "verified",
+      "reason": "Declared and corroborated by 2 discovered code file(s)."
+    },
+    "r4c-web": {
+      "level": "verified",
+      "reason": "Declared and corroborated by 43 discovered code file(s)."
+    }
+  },
+  "counts": {
+    "error": 0,
+    "info": 0,
+    "warning": 0
+  },
+  "declaredModules": [
+    "r4c-api",
+    "r4c-bim-worker",
+    "r4c-contracts",
+    "r4c-kaaf-tooling",
+    "r4c-scripts",
+    "r4c-web"
+  ],
+  "discoveredImportEdges": [
+    {
+      "evidence": [
+        "apps/web/lib/types.ts"
+      ],
+      "from": "r4c-web",
+      "to": "r4c-contracts"
+    }
+  ],
+  "discoveredModules": [
+    "r4c-api",
+    "r4c-bim-worker",
+    "r4c-contracts",
+    "r4c-kaaf-tooling",
+    "r4c-scripts",
+    "r4c-web"
+  ],
+  "findings": [],
+  "hasErrors": false,
+  "howToRead": [
+    "error: the declaration and the code disagree in a way that must be fixed; CI fails.",
+    "warning: real drift that does not block, most often code with no manifest.",
+    "info: expected divergence, such as a documentation-only dependency.",
+    "Everything here is derived from a static read of the source: dynamic imports and runtime wiring are invisible to it, so absence of a finding is not proof of absence."
+  ],
+  "undeclaredCode": []
+}

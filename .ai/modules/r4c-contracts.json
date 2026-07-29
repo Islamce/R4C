@@ -1,0 +1,58 @@
+{
+  "_meta": {
+    "artifact": "modules/r4c-contracts.json",
+    "bodyDigest": "15e2f41649144e1f43d99196eb56617acaf0ddd993d1d3f9f1da529bd3dd34f6",
+    "confidence": "verified",
+    "doNotEdit": true,
+    "generator": "kaaf",
+    "generatorVersion": "0.7.0",
+    "inputDigest": "f262c6d224273eba3467246171de5fbd5f5495332290d3256d3959079f23c48d",
+    "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
+    "schemaVersion": "1.0.0"
+  },
+  "apis": [],
+  "confidence": "verified",
+  "confidenceReason": "Declared and corroborated by 1 discovered code file(s).",
+  "declared": true,
+  "declaredConfidence": "verified",
+  "dependedOnBy": [
+    "r4c-web"
+  ],
+  "dependsOn": [],
+  "discovery": {
+    "codeFiles": [
+      "packages/contracts/src/index.ts"
+    ],
+    "discovered": true,
+    "entryPoints": [],
+    "languages": [
+      "json",
+      "typescript"
+    ],
+    "parseErrors": [],
+    "publicSymbols": [],
+    "sourceFiles": [
+      "packages/contracts/kaaf.module.json",
+      "packages/contracts/package.json",
+      "packages/contracts/src/index.ts",
+      "packages/contracts/tsconfig.json"
+    ]
+  },
+  "driftFindings": [],
+  "externalIntegrations": [],
+  "id": "r4c-contracts",
+  "ownedEntities": [
+    "api-contract"
+  ],
+  "owner": "Backend",
+  "path": "packages/contracts",
+  "permissions": [],
+  "publicEntryPoints": [
+    "packages/contracts/package.json"
+  ],
+  "purpose": "Define the typed contracts shared between the API and the web client.",
+  "readNext": [
+    "packages/contracts/package.json"
+  ],
+  "sourceManifest": "packages/contracts/kaaf.module.json"
+}

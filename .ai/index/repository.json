@@ -1,0 +1,141 @@
+{
+  "_meta": {
+    "artifact": "index/repository.json",
+    "bodyDigest": "f973ae4d3e3478401cf0414fdfa6f035a1ce6692d1b5337d5213f4c9eea1f4ef",
+    "confidence": "derived",
+    "doNotEdit": true,
+    "generator": "kaaf",
+    "generatorVersion": "0.7.0",
+    "inputDigest": "f262c6d224273eba3467246171de5fbd5f5495332290d3256d3959079f23c48d",
+    "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
+    "schemaVersion": "1.0.0"
+  },
+  "apis": [],
+  "externalIntegrations": [
+    {
+      "criticality": "required",
+      "kind": "database",
+      "module": "r4c-api",
+      "name": "PostgreSQL (Prisma)"
+    },
+    {
+      "criticality": "required",
+      "kind": "api",
+      "module": "r4c-web",
+      "name": "R4C API"
+    }
+  ],
+  "health": {
+    "confidenceByLevel": {
+      "verified": 6
+    },
+    "driftCounts": {
+      "error": 0,
+      "info": 0,
+      "warning": 0
+    },
+    "hasDriftErrors": false,
+    "moduleCount": 6,
+    "modulesUndeclared": 0,
+    "modulesWithoutOwner": [],
+    "note": "No publication timestamp is embedded: it would break byte-identical regeneration. Time-based staleness is computed at aggregation time from publication metadata supplied to the aggregator.",
+    "ownershipCoverage": 1.0
+  },
+  "indexSchemaVersion": "1.1.0",
+  "kaafGeneratorVersion": "0.7.0",
+  "modules": [
+    {
+      "confidence": "verified",
+      "consumes": [],
+      "declared": true,
+      "dependsOn": [],
+      "id": "r4c-api",
+      "ownedEntities": [
+        "approval",
+        "design-document",
+        "progress-record",
+        "project",
+        "wbs-node"
+      ],
+      "owner": "Backend",
+      "path": "apps/api",
+      "purpose": "Serve the governed R4C domain over HTTP: projects, WBS, documents, approvals and progress.",
+      "qualifiedId": "Islamce/R4C#r4c-api"
+    },
+    {
+      "confidence": "verified",
+      "consumes": [],
+      "declared": true,
+      "dependsOn": [],
+      "id": "r4c-bim-worker",
+      "ownedEntities": [
+        "ifc-extraction",
+        "model-geometry"
+      ],
+      "owner": "Data",
+      "path": "apps/bim-worker",
+      "purpose": "Extract geometry and metadata from IFC models so the platform can reason about them.",
+      "qualifiedId": "Islamce/R4C#r4c-bim-worker"
+    },
+    {
+      "confidence": "verified",
+      "consumes": [],
+      "declared": true,
+      "dependsOn": [],
+      "id": "r4c-contracts",
+      "ownedEntities": [
+        "api-contract"
+      ],
+      "owner": "Backend",
+      "path": "packages/contracts",
+      "purpose": "Define the typed contracts shared between the API and the web client.",
+      "qualifiedId": "Islamce/R4C#r4c-contracts"
+    },
+    {
+      "confidence": "verified",
+      "consumes": [],
+      "declared": true,
+      "dependsOn": [],
+      "id": "r4c-kaaf-tooling",
+      "ownedEntities": [],
+      "owner": "DevOps",
+      "path": "scripts/architecture",
+      "purpose": "Generate and validate this repository's KAAF architecture context.",
+      "qualifiedId": "Islamce/R4C#r4c-kaaf-tooling"
+    },
+    {
+      "confidence": "verified",
+      "consumes": [],
+      "declared": true,
+      "dependsOn": [],
+      "id": "r4c-scripts",
+      "ownedEntities": [],
+      "owner": "DevOps",
+      "path": "scripts",
+      "purpose": "Provision local development environments and generate production configuration.",
+      "qualifiedId": "Islamce/R4C#r4c-scripts"
+    },
+    {
+      "confidence": "verified",
+      "consumes": [],
+      "declared": true,
+      "dependsOn": [
+        "r4c-contracts"
+      ],
+      "id": "r4c-web",
+      "ownedEntities": [],
+      "owner": "Frontend",
+      "path": "apps/web",
+      "purpose": "Present the R4C platform to users, including the IFC model viewer and executive dashboards.",
+      "qualifiedId": "Islamce/R4C#r4c-web"
+    }
+  ],
+  "permissions": [],
+  "repository": {
+    "defaultBranch": "main",
+    "description": "R4C — a BIM-centered platform for governed real-estate development delivery, connecting projects, WBS, design documents, IFC models, approvals, progress and executive visibility.",
+    "kaafPhase": 7,
+    "name": "R4C",
+    "repository": "Islamce/R4C"
+  }
+}

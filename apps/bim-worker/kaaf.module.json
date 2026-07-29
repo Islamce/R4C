@@ -1,0 +1,21 @@
+{
+  "apis": [],
+  "confidence": "verified",
+  "consumes": [],
+  "dependsOn": [],
+  "externalIntegrations": [],
+  "flows": [],
+  "id": "r4c-bim-worker",
+  "ownedEntities": [
+    "ifc-extraction",
+    "model-geometry"
+  ],
+  "owner": "Data",
+  "permissions": [],
+  "publicEntryPoints": [
+    "apps/bim-worker/pyproject.toml",
+    "apps/bim-worker/r4c_bim_worker/main.py"
+  ],
+  "purpose": "Extract geometry and metadata from IFC models so the platform can reason about them.",
+  "schemaVersion": "1.0.0"
+}

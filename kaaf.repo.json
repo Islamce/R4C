@@ -1,0 +1,24 @@
+{
+  "conventions": {
+    "branchNaming": [
+      "chore/*",
+      "feat/*",
+      "fix/*"
+    ],
+    "generatedContextRoot": ".ai/",
+    "moduleManifestFile": "kaaf.module.json",
+    "monorepo": "apps/* are deployable applications; packages/* are shared libraries"
+  },
+  "defaultBranch": "main",
+  "deployment": {
+    "environments": [
+      "production"
+    ],
+    "note": "Caddy reverse proxy configuration lives in deploy/caddy. Deployment is described in the phase7-production-deployment workflow."
+  },
+  "description": "R4C \u2014 a BIM-centered platform for governed real-estate development delivery, connecting projects, WBS, design documents, IFC models, approvals, progress and executive visibility.",
+  "kaafPhase": 7,
+  "name": "R4C",
+  "repository": "Islamce/R4C",
+  "schemaVersion": "1.0.0"
+}
