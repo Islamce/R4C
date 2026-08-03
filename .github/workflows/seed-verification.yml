@@ -46,13 +46,13 @@ jobs:
       BIM_WORKER_URL: http://127.0.0.1:65535
       BIM_WORKER_TOKEN: seed-ci-worker-token
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6.0.9
         with:
           version: 10.13.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -76,7 +76,7 @@ jobs:
 
       - name: Retain seed verification evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: seed-verification-evidence
           path: seed-verification-evidence.txt
