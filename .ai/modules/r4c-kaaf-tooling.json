@@ -1,18 +1,18 @@
 {
   "_meta": {
     "artifact": "modules/r4c-kaaf-tooling.json",
-    "bodyDigest": "11b689b73d8fba5a9eeca202db660aa7b44e50b8846f68d6e46e73805e6c34b5",
+    "bodyDigest": "b81a75874f7a3c421b8d23756b40c3f9b1bb162f49dd7d196cce612e7553646a",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "f262c6d224273eba3467246171de5fbd5f5495332290d3256d3959079f23c48d",
+    "inputDigest": "9779f6ad4bdbbbbabc4770677ab025ea271013526f34c6416e298234ad73147b",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 31 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 32 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
   "dependedOnBy": [],
@@ -47,6 +47,7 @@
       "scripts/architecture/utils/mermaid.py",
       "scripts/architecture/utils/paths.py",
       "scripts/architecture/utils/provenance.py",
+      "scripts/architecture/validators/validate-structure.sh",
       "scripts/architecture/validators/validate_drift.py",
       "scripts/architecture/validators/validate_generated.py",
       "scripts/architecture/validators/validate_index.py"
@@ -57,6 +58,7 @@
       "scripts/architecture/compat.py",
       "scripts/architecture/generate.py",
       "scripts/architecture/generate.sh",
+      "scripts/architecture/validators/validate-structure.sh",
       "scripts/architecture/validators/validate_drift.py",
       "scripts/architecture/validators/validate_generated.py",
       "scripts/architecture/validators/validate_index.py"
@@ -100,6 +102,7 @@
       "scripts/architecture/utils/mermaid.py",
       "scripts/architecture/utils/paths.py",
       "scripts/architecture/utils/provenance.py",
+      "scripts/architecture/validators/validate-structure.sh",
       "scripts/architecture/validators/validate_drift.py",
       "scripts/architecture/validators/validate_generated.py",
       "scripts/architecture/validators/validate_index.py"

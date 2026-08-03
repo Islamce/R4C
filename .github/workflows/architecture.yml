@@ -23,6 +23,24 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  validate-structure:
+    name: Validate repository structure
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Runs the adopter check set: manifests, generated context and its markers,
+      # the vendored tooling, language coverage, and agent instructions. The
+      # framework checks — KAAF's own governance documents and execution prompts —
+      # are reported as skipped, because this repository adopts KAAF rather than
+      # being it.
+      - name: Validate KAAF structure
+        run: sh ./scripts/architecture/validators/validate-structure.sh
+
   verify-generated-context:
     name: Verify generated AI context
     runs-on: ubuntu-latest
