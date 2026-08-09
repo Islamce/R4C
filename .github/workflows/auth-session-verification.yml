@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   verify:
+    name: auth-session
     runs-on: ubuntu-latest
     services:
       postgres:

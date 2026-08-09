@@ -19,11 +19,11 @@ Required status checks for the launch baseline:
 1. `CI / validate`
 2. `Security / supply-chain`
 3. `Seed verification / verify-seed`
-4. `Auth session verification / verify`
-5. `Phase 5 cost dashboard verification / verify`
-6. `Phase 6 progress workspace verification / verify`
-7. `Phase 6.5 UX loop closers verification / verify`
-8. `Phase 7 production deployment verification / verify`
+4. `Auth session verification / auth-session`
+5. `Phase 5 cost dashboard verification / cost-dashboard`
+6. `Phase 6 progress workspace verification / progress-workspace`
+7. `Phase 6.5 UX loop closers verification / ux-loop-closers`
+8. `Phase 7 production deployment verification / production-deployment`
 9. `KAAF Architecture / Validate repository structure`
 10. `KAAF Architecture / Verify generated AI context`
 11. `KAAF Architecture / Report declared-versus-discovered drift`
