@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   verify:
+    name: cost-dashboard
     runs-on: ubuntu-latest
     services:
       postgres:

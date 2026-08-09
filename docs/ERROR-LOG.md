@@ -286,3 +286,16 @@ PR #33 (`feat/local-development-runtime`) added personal-computer bootstrap scri
 - Fix: export the committed tree with `git archive`, run the official KAAF generator in that clean LF checkout, and copy only its generated `.ai` artifacts back to the branch.
 - Validation: run `generate.py --check` and all KAAF validators in a second clean Git-archive checkout, then confirm the pull-request KAAF workflow is green.
 - Recurrence prevention: generate and validate KAAF artifacts from canonical Git bytes on Windows until the upstream vendored tooling normalizes source line endings before hashing.
+
+### Failure 12 — five required workflows publish one shared protection context
+
+- Date/time: 2026-08-09 23:10 Asia/Riyadh.
+- Environment: GitHub repository administration UI after PR #41 and post-merge `main` workflows passed.
+- Branch/SHA: `main` at `0f69ccdfcc5f47646d97c384c21fe41e2b7e39d5`.
+- Command/workflow: configure the documented required checks in the classic `main` branch protection rule.
+- Exact error: GitHub exposed only one selectable `verify` context for Auth, Phase 5, Phase 6, Phase 6.5, and Phase 7, despite displaying them as five `Workflow / verify` checks on pull requests.
+- Earliest causal failure: all five workflow files used the same implicit job display name, `verify`; branch protection operates on the underlying check-run name and therefore could not require the workflows independently.
+- Classification: CI defect.
+- Fix: give each workflow job a stable unique display name and update the governed required-check list to those exact contexts.
+- Validation: confirm all five uniquely named checks pass on the correction pull request, then select each independently in `main` protection and verify the saved rule.
+- Recurrence prevention: every independently required GitHub Actions workflow must publish a repository-unique job display name.

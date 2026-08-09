@@ -18,6 +18,7 @@ permissions:
 
 jobs:
   verify:
+    name: ux-loop-closers
     runs-on: ubuntu-latest
     services:
       postgres:

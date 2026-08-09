@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   verify:
+    name: progress-workspace
     runs-on: ubuntu-latest
     services:
       postgres:
