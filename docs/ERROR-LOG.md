@@ -156,3 +156,120 @@ PR #33 (`feat/local-development-runtime`) added personal-computer bootstrap scri
 - Fix: delimit the variable as `"Checking ${Name}: $Url"`.
 - Verification: rerun PowerShell parser validation with zero parse errors.
 - Recurrence prevention: parse Windows scripts in CI or a static preflight even when Docker-backed execution is unavailable.
+
+## 2026-08-09 20:31 +03:00 — Windows Local UAT setup on main
+
+### Context
+
+- Environment: Windows 10 build 26200.8973, Node.js 24.19.0, pnpm 10.13.1, Docker Desktop 4.85.0 with Linux/WSL2 engine 29.6.2.
+- Branch at failure: `main`
+- SHA: `cb663ce0ff3676359afb6d2cfab7302b44d15ca7`
+
+### Failure 1 — Alomran UAT seed cannot spawn pnpm on Windows
+
+- Command: `powershell -ExecutionPolicy Bypass -File scripts/local-setup.ps1`, failing at `pnpm --filter @r4c/api seed:uat`.
+- Exact error: `R4C UAT seed failed: spawn EINVAL` followed by `ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL`.
+- Earliest causal failure: `apps/api/prisma/seed-uat.ts` directly spawned `pnpm.cmd` on Windows without command-shell handling.
+- Classification: Product defect.
+- Fix: run the existing static `pnpm.cmd seed` command through `cmd.exe /d /s /c` only on Windows; Linux behavior is unchanged and no dynamic user input enters the command string.
+- Validation: rerun the Alomran UAT seed, then rerun the full setup and Windows verification gates.
+- Recurrence prevention: exercise `seed:uat` on Windows and retain platform-specific child-process handling.
+
+### Failure 2 — setup reports readiness after a failed required command
+
+- Command: `powershell -ExecutionPolicy Bypass -File scripts/local-setup.ps1`.
+- Exact error: the UAT seed exited 1, but the setup script printed `R4C local environment is ready.` and itself exited 0.
+- Earliest causal failure: `$ErrorActionPreference = 'Stop'` does not convert non-zero native-process exit codes into terminating PowerShell errors.
+- Classification: Test defect.
+- Fix: route every required external setup command through `Invoke-RequiredCommand`, check `$LASTEXITCODE`, and throw immediately on failure.
+- Validation: parse the PowerShell script, prove a failing required command produces a non-zero setup exit, then rerun the complete supported setup successfully.
+- Recurrence prevention: all mandatory native commands in Windows setup must have explicit exit-code enforcement.
+
+### Failure 3 — local environment template omits the SoD submitter
+
+- Command: successful rerun of `scripts/local-setup.ps1`, at the Alomran UAT seed result.
+- Exact error: `R4C UAT progress submitter skipped: SEED_UAT_SUBMIT_PASSWORD is not configured`.
+- Earliest causal failure: `.env.example` did not define `SEED_UAT_SUBMIT_EMAIL`, `SEED_UAT_SUBMIT_DISPLAY_NAME`, or `SEED_UAT_SUBMIT_PASSWORD`, although the production template and governed Local UAT require the separate submitter identity.
+- Classification: Documentation defect.
+- Fix: add the non-secret local submitter identity and a distinct local placeholder password to `.env.example`; update the ignored local `.env` for this rehearsal.
+- Validation: rerun `seed:uat` and confirm creation of `PROGRESS_SUBMITTER` with `progress:submit` and without `progress:review`.
+- Recurrence prevention: keep local and production UAT identity variable sets aligned whenever governed journeys require those identities.
+
+### Failure 4 — direct PowerShell seed rerun selected a blocked script shim
+
+- Command: direct `pnpm --filter @r4c/api seed:uat` diagnostic rerun from the current PowerShell host.
+- Exact error: `pnpm.ps1 cannot be loaded because running scripts is disabled on this system`.
+- Earliest causal failure: PowerShell command precedence selected Corepack's `pnpm.ps1` shim while the host execution policy disallows script shims.
+- Classification: Environment defect.
+- Fix: use the adjacent `pnpm.cmd` shim for direct commands; do not weaken the machine execution policy.
+- Validation: rerun the same seed through `pnpm.cmd`.
+- Recurrence prevention: use `.cmd` Corepack shims in restricted PowerShell hosts or invoke repository scripts with their documented `-ExecutionPolicy Bypass` process scope.
+
+### Failure 5 — Windows verifier does not load the configured local environment
+
+- Command: `pnpm local:verify:windows`, failing at Prisma schema validation.
+- Exact error: Prisma `P1012`, `Environment variable not found: DATABASE_URL` at `prisma/schema.prisma:7`.
+- Earliest causal failure: `scripts/local-verify.ps1` runs in the documented second PowerShell session but did not load the root `.env` created by local setup.
+- Classification: Test defect.
+- Fix: require `.env` and load its non-comment assignments into the verifier process before Docker, Prisma, build, and endpoint checks.
+- Validation: rerun the complete Windows verifier from its first stage.
+- Recurrence prevention: standalone verification scripts must initialize their own required environment rather than depend on another shell process's transient variables.
+
+### Failure 6 — documented runtime order locks Prisma generation on Windows
+
+- Command: `pnpm local:verify:windows`, failing at Prisma client generation while `pnpm local:dev` was active as documented.
+- Exact error: `EPERM: operation not permitted, rename ... query_engine-windows.dll.node.tmp... -> query_engine-windows.dll.node`.
+- Earliest causal failure: the running API had loaded Prisma's Windows query-engine DLL before the verifier attempted to regenerate the client.
+- Classification: Test defect.
+- Fix: run all static verifier gates before runtime startup; if Web/API are not already ready afterward, start `pnpm local:dev` as a hidden background process, wait for readiness, print temporary log paths, and leave it active for manual UAT.
+- Validation: stop the pre-existing runtime and rerun the complete verifier through Web, API, and MinIO readiness.
+- Recurrence prevention: Windows verification must not regenerate native binaries after the application has loaded them.
+
+### Failure 7 — verifier forces development mode into the production build
+
+- Command: `pnpm local:verify:windows`, failing at `pnpm build` after lint, typecheck, and standalone tests passed.
+- Exact error: Next.js warned about a non-standard `NODE_ENV`, then failed prerendering `/500` with `<Html> should not be imported outside of pages/_document`.
+- Earliest causal failure: the verifier correctly loaded `.env` for Prisma and runtime configuration but also carried `NODE_ENV=development` into the production-build subprocess.
+- Classification: Test defect.
+- Fix: scope `NODE_ENV=production` around the production build only and restore the configured runtime value in a `finally` block before starting the development runtime.
+- Validation: rerun the production build boundary, then rerun the complete Windows verifier.
+- Recurrence prevention: verification scripts must separate build-mode environment from runtime-mode environment when one command exercises both.
+
+### Failure 8 — Windows blocks Next standalone-build symlink creation
+
+- Command: production-build boundary rerun with `NODE_ENV=production`.
+- Exact error: Next completed compilation and static-page generation, then failed copying standalone traced files with `EPERM: operation not permitted, symlink ...`.
+- Earliest causal failure: Windows Developer Mode is not enabled, so the non-elevated build process lacks unprivileged symbolic-link creation rights required by Next standalone output tracing.
+- Classification: Environment defect.
+- Fix: enable Windows Developer Mode (`AllowDevelopmentWithoutDevLicense=1`) with administrator approval; do not alter the repository's production output mode.
+- Validation: rerun the production build as the normal user and confirm standalone trace copying succeeds.
+- Recurrence prevention: list Windows Developer Mode as a local build/UAT prerequisite when standalone Next output is enabled.
+
+### Failure 9 — successful project creation renders a false failure state
+
+- Command/workflow: manual Local UAT, Alomran administrator project creation through `/projects`.
+- Exact error: the UI displayed `Project created and added to the portfolio.` and `The record could not be loaded` simultaneously after the API returned HTTP 201.
+- Earliest causal failure: `ProjectsJourney.createProject` dereferenced `event.currentTarget` after awaiting the API request; the async React event no longer guaranteed that `currentTarget` remained available, and the resulting reset error was caught as if the API operation had failed.
+- Classification: Product defect.
+- Fix: capture the form element before the async boundary and reset that stable reference after successful creation.
+- Validation: reload the project portfolio, create another project, and verify success without the false error state; open project detail.
+- Recurrence prevention: do not dereference React synthetic-event targets after an `await`; retain required DOM references before asynchronous work.
+
+### Failure 10 — progress journey hard-codes the submitter display name
+
+- Command/workflow: explicit local `test:progress-workspace` against the seeded Alomran runtime.
+- Exact error: submitted and approved history assertions expected `Phase 6 Submitter` but received the correctly configured `Alomran UAT Progress Submitter` after successful authentication, submission, and approval.
+- Earliest causal failure: the journey accepted configurable submitter email/password but asserted a fixed display name from its CI fixture.
+- Classification: Test defect.
+- Fix: add `JOURNEY_SUBMIT_DISPLAY_NAME` with the existing Phase 6 value as its default and assert the configured identity.
+- Validation: rerun the complete progress workspace journey with the Alomran submitter email, password, and display name.
+- Recurrence prevention: all identity attributes asserted by environment-portable E2E journeys must derive from the same configurable fixture contract.
+
+### Verification result
+
+- `scripts/local-setup.ps1`: PASS, including frozen install, migrations, bootstrap seed, Alomran administrator, and submit-only SoD identity.
+- `pnpm local:verify:windows`: PASS from Docker/Prisma through lint, typecheck, standalone tests, production build, background runtime startup, and Web/API/MinIO readiness.
+- `test:cost-dashboard`: PASS against local Alomran runtime, including bilingual direction and populated/partial 5D states.
+- `test:progress-workspace`: PASS against local Alomran identities, including submit, HTTP 403 SoD enforcement, independent approval, EV `0.00` to `42500.00`, and conflict normalization.
+- Manual non-BIM browser journeys: PASS for authentication, EN/LTR, AR/RTL, tenant identity, project create/list/detail, 5D, progress evidence, and logout.
+- BIM Local UAT: BLOCKED because local Compose defines no BIM worker and the repository contains no approved IFC fixture; no result is inferred from CI.

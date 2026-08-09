@@ -36,21 +36,23 @@ These names come from the workflow and job definitions under `.github/workflows/
 ### Preparation
 
 1. Install Git, Docker Desktop, and Node.js 22 or later.
-2. Ensure ports 3000, 4000, 5432, 6379, 8000, 9000, and 9001 are available.
-3. Clone the repository and open PowerShell in the repository root.
+2. Enable Windows Developer Mode so the Next.js standalone production build can create symbolic links without running as administrator.
+3. Ensure ports 3000, 4000, 5432, 6379, 8000, 9000, and 9001 are available.
+4. Clone the repository and open PowerShell in the repository root.
 
 ### Setup and start
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/local-setup.ps1
-pnpm local:dev
 ```
 
-Keep the application process running. In a second PowerShell window, run:
+Then run:
 
 ```powershell
 pnpm local:verify:windows
 ```
+
+The verifier completes dependency, Prisma, lint, typecheck, test, and build gates before starting the Web/API runtime in the background for readiness checks. It leaves that runtime active for the governed manual journeys. Runtime logs are written to the user temporary directory and their exact paths are printed by the verifier.
 
 The automated verification must pass:
 
@@ -72,20 +74,20 @@ Record Pass, Fail, or Blocked for every item. Automated phase workflows may be c
 
 | Journey | Expected result | Result | Evidence |
 |---|---|---|---|
-| Web login | Seed administrator can authenticate |  |  |
-| Arabic toggle | Page switches to Arabic and RTL |  |  |
-| English toggle | Page returns to English and LTR |  |  |
-| Alomran tenant | `alomran.r4c.local:3000` resolves correct tenant |  |  |
-| Projects | Project list and project details load |  |  |
-| 5D dashboard | BAC, PV, EV, AC, CPI, SPI and forecast values display |  |  |
-| Progress submission | Authorized submitter creates a progress update |  |  |
-| Separation of duties | Submitter cannot approve own update |  |  |
-| Progress approval | Independent reviewer approves update |  |  |
-| Earned value refresh | Approved progress updates cost-control results |  |  |
-| IFC upload | Valid IFC upload is accepted |  |  |
-| BIM processing | Worker produces semantic data and GLB artifact |  |  |
-| Invalid BIM input | Invalid or oversized input is rejected safely |  |  |
-| Logout | Session and refresh state are cleared |  |  |
+| Web login | Seed administrator can authenticate | PASS | Local browser login as Alomran UAT administrator; protected projects route loaded |
+| Arabic toggle | Page switches to Arabic and RTL | PASS | Browser DOM confirmed `lang=ar`, `dir=rtl`; non-secret screenshot captured outside source control |
+| English toggle | Page returns to English and LTR | PASS | Browser DOM confirmed `lang=en`, `dir=ltr` |
+| Alomran tenant | Local runtime resolves correct tenant | PASS | Login and authenticated header resolved `Alomran Development` / `ALOMRAN` |
+| Projects | Project list and project details load | PASS | Created `LOCAL-UAT-001` and regression project; portfolio and detail loaded |
+| 5D dashboard | BAC, PV, EV, AC, CPI, SPI and forecast values display | PASS | Phase 5 journey passed; browser showed populated P5 dashboard and forecast values |
+| Progress submission | Authorized submitter creates a progress update | PASS | Phase 6 journey passed and browser showed Alomran submitter duties/history |
+| Separation of duties | Submitter cannot approve own update | PASS | Submitter received HTTP 403; UI showed review not assigned |
+| Progress approval | Independent reviewer approves update | PASS | Phase 6 journey and browser history showed independent administrator approval |
+| Earned value refresh | Approved progress updates cost-control results | PASS | Phase 6 verified EV changed from `0.00` to `42500.00`; browser showed SAR 42,500 EV |
+| IFC upload | Valid IFC upload is accepted | BLOCKED | Local Compose has no BIM worker service and repository has no approved IFC fixture |
+| BIM processing | Worker produces semantic data and GLB artifact | BLOCKED | Requires external IFC fixture and a supported local BIM worker runtime procedure |
+| Invalid BIM input | Invalid or oversized input is rejected safely | BLOCKED | No repository-supported local BIM upload fixture/procedure is available |
+| Logout | Session and refresh state are cleared | PASS | Logout redirected protected session to `/login`; Phase 6.5/session contracts cover cookie clearing |
 
 ## 4. Evidence package
 

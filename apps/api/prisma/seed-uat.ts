@@ -14,8 +14,10 @@ function requiredPassword(name: string) {
 
 async function runBootstrapSeed() {
   const adminPassword = requiredPassword("SEED_UAT_ADMIN_PASSWORD");
-  const command = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
-  const child = spawn(command, ["seed"], {
+  const isWindows = process.platform === "win32";
+  const command = isWindows ? process.env.ComSpec || "cmd.exe" : "pnpm";
+  const args = isWindows ? ["/d", "/s", "/c", "pnpm.cmd seed"] : ["seed"];
+  const child = spawn(command, args, {
     cwd: process.cwd(),
     stdio: "inherit",
     env: {
