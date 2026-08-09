@@ -42,3 +42,5 @@ jobs:
           git add .ai
           git commit -m "chore(kaaf): refresh generated context for local UAT test contract"
           git push origin HEAD:fix/launch-local-uat-test-contract
+
+# rerun after API standalone test contract correction
