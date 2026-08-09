@@ -50,7 +50,7 @@ jobs:
       CORS_ORIGINS: http://127.0.0.1:3000
       TENANT_DEFAULT_CODE: PH4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Reject committed secrets
         run: |
@@ -71,11 +71,11 @@ jobs:
           docker logs r4c-minio
           exit 1
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6.0.9
         with:
           version: 10.13.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -110,7 +110,7 @@ jobs:
           cat rate-limit-verification.txt
 
       - name: Retain rate-limit verification evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rate-limit-verification-evidence
           path: rate-limit-verification.txt
@@ -168,7 +168,7 @@ jobs:
 
       - name: Retain frontend journey evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-journey-verification-evidence
           path: |
@@ -183,7 +183,7 @@ jobs:
           test -f phase4-web-runtime.pid && kill $(cat phase4-web-runtime.pid) || true
           test -f phase4-api-runtime.pid && kill $(cat phase4-api-runtime.pid) || true
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
