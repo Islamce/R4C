@@ -57,6 +57,7 @@ The verifier completes dependency, Prisma, lint, typecheck, test, and build gate
 The automated verification must pass:
 
 - Docker/PostgreSQL/Redis readiness.
+- BIM worker readiness.
 - frozen dependency installation.
 - Prisma schema validation and client generation.
 - lint and typecheck.
@@ -65,6 +66,7 @@ The automated verification must pass:
 - Web login endpoint.
 - API readiness endpoint.
 - MinIO readiness endpoint.
+- Repository-owned synthetic IFC processing through semantic extraction and stored GLB validation.
 
 `pnpm test` deliberately excludes the Web environment-dependent E2E journeys. Those journeys have explicit scripts and require the seeded runtime and credentials prepared for the relevant verification phase. This prevents helper scripts and UAT journeys from being auto-discovered as standalone tests.
 
@@ -84,8 +86,8 @@ Record Pass, Fail, or Blocked for every item. Automated phase workflows may be c
 | Separation of duties | Submitter cannot approve own update | PASS | Submitter received HTTP 403; UI showed review not assigned |
 | Progress approval | Independent reviewer approves update | PASS | Phase 6 journey and browser history showed independent administrator approval |
 | Earned value refresh | Approved progress updates cost-control results | PASS | Phase 6 verified EV changed from `0.00` to `42500.00`; browser showed SAR 42,500 EV |
-| IFC upload | Valid IFC upload is accepted | BLOCKED | Local Compose has no BIM worker service and repository has no approved IFC fixture |
-| BIM processing | Worker produces semantic data and GLB artifact | BLOCKED | Requires external IFC fixture and a supported local BIM worker runtime procedure |
+| IFC upload | Valid IFC upload is accepted | PASS | Repository-owned synthetic IFC uploaded through the API-issued MinIO URL; document confirmation and BIM processing request succeeded |
+| BIM processing | Worker produces semantic data and GLB artifact | PASS | Automated verifier model `7e5a4828-7ceb-4224-9415-122bacbb92ef`: IFC4, 4 spatial nodes, 1 semantic wall, 1,024-byte GLB; authenticated browser viewer also rendered the same fixture geometry |
 | Invalid BIM input | Invalid or oversized input is rejected safely | BLOCKED | No repository-supported local BIM upload fixture/procedure is available |
 | Logout | Session and refresh state are cleared | PASS | Logout redirected protected session to `/login`; Phase 6.5/session contracts cover cookie clearing |
 

@@ -29,7 +29,7 @@ Get-Content '.env' | ForEach-Object {
   }
 }
 
-Invoke-RequiredCommand 'Local infrastructure startup' { docker compose up -d postgres redis minio }
+Invoke-RequiredCommand 'Local infrastructure startup' { docker compose up -d postgres redis minio minio-init bim-worker }
 
 Write-Host 'Waiting for PostgreSQL...'
 $ready = $false
@@ -57,3 +57,4 @@ Write-Host 'Run: pnpm local:dev'
 Write-Host "Web: http://localhost:$webPort"
 Write-Host "API: http://localhost:$apiPort/api/v1"
 Write-Host 'MinIO console: http://localhost:9001'
+Write-Host 'BIM worker: http://localhost:8000/health'

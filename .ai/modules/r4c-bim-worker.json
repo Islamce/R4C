@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-bim-worker.json",
-    "bodyDigest": "e0e3dd7d6df69bfd87dca31ad5a0ebc2e405b2b1298711e440542535ab681066",
+    "bodyDigest": "6397169ed783bcfece674bbb80ee0402ee1a01b38971e72f8b3a4a4d1dde2241",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "ca26dca5588d867b48220a1c974ddff27773284d42bb671c84ee0541f6325906",
+    "inputDigest": "a480d3982a26b193e7c8b44deb3e4d9f733f48d1e3e146c85b1f314c004d9812",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -30,6 +30,7 @@
     "entryPoints": [],
     "languages": [
       "json",
+      "markdown",
       "python"
     ],
     "parseErrors": [],
@@ -46,6 +47,7 @@
       "apps/bim-worker/r4c_bim_worker/geometry.py",
       "apps/bim-worker/r4c_bim_worker/main.py",
       "apps/bim-worker/r4c_bim_worker/settings.py",
+      "apps/bim-worker/tests/fixtures/README.md",
       "apps/bim-worker/tests/test_extractor.py"
     ]
   },
