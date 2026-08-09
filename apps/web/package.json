@@ -12,7 +12,8 @@
     "test:journey": "node --test test/frontend-journey-e2e.mjs",
     "test:cost-dashboard": "node test/run-date-safe-e2e.mjs test/cost-dashboard-e2e.mjs",
     "test:progress-workspace": "node test/run-date-safe-e2e.mjs test/progress-workspace-e2e.mjs",
-    "test:ux-loop-closers": "node --test test/ux-loop-closers-e2e.mjs"
+    "test:ux-loop-closers": "node --test test/ux-loop-closers-e2e.mjs",
+    "test:bim-local-uat": "node --test test/bim-local-uat-e2e.mjs"
   },
   "dependencies": {
     "next": "^15.5.21",

@@ -299,3 +299,128 @@ PR #33 (`feat/local-development-runtime`) added personal-computer bootstrap scri
 - Fix: give each workflow job a stable unique display name and update the governed required-check list to those exact contexts.
 - Validation: confirm all five uniquely named checks pass on the correction pull request, then select each independently in `main` protection and verify the saved rule.
 - Recurrence prevention: every independently required GitHub Actions workflow must publish a repository-unique job display name.
+
+### Failure 13 — Local UAT cannot execute the BIM processing boundary
+
+- Date/time: 2026-08-09 23:40 Asia/Riyadh.
+- Environment: Windows 11 Local UAT with Docker Desktop and the host API/Web runtime.
+- Branch/SHA: `main` at `91d935c51d5078b4c3e68a255b6cf5617b314e8f`.
+- Command/workflow: governed manual BIM Local UAT journey.
+- Exact error: local Compose started only PostgreSQL, Redis, and MinIO; no supported BIM worker was reachable at `BIM_WORKER_URL`, and the repository supplied no licensed IFC fixture with renderable geometry.
+- Earliest causal failure: the local environment contract omitted both the BIM worker service and a container-reachable presigned MinIO endpoint, so the production IFC processing boundary could not execute locally.
+- Classification: Environment defect.
+- Fix: add the existing production worker image to local Compose, provide a local-only presign endpoint reachable from its container, and add a repository-authored synthetic IFC fixture with real extruded geometry.
+- Validation: execute the fixture through upload, queue, worker extraction, GLB generation/upload, API persistence, manifest download, and the browser viewer; retain the deterministic journey as a Windows verifier gate.
+- Recurrence prevention: local setup and verification must start and exercise every runtime required by governed Local UAT, including container-to-object-storage connectivity.
+
+### Failure 14 — local API signs MinIO uploads with the wrong development secret
+
+- Date/time: 2026-08-09 23:25 Asia/Riyadh.
+- Environment: Windows 11 Local UAT, host API and Docker Compose MinIO.
+- Branch/SHA: `codex/fix-bim-local-uat` from `91d935c51d5078b4c3e68a255b6cf5617b314e8f`.
+- Command/workflow: `pnpm --filter @r4c/web test:bim-local-uat`.
+- Exact error: the IFC PUT to the API-generated presigned MinIO URL returned HTTP 403.
+- Earliest causal failure: local Compose configures `MINIO_ROOT_PASSWORD=change-me-now`, while `.env.example` configured `S3_SECRET_KEY=change-me`, so the host API generated an invalid signature.
+- Classification: Environment defect.
+- Fix: align the local API storage secret placeholder with the existing local Compose MinIO password; production secret configuration is unchanged.
+- Validation: restart the host runtime and rerun the complete BIM Local UAT journey from upload through viewer.
+- Recurrence prevention: the deterministic BIM journey now crosses the real presigned upload boundary and will fail on future local credential drift.
+
+### Failure 15 — local MinIO starts without provisioning the configured bucket
+
+- Date/time: 2026-08-09 23:30 Asia/Riyadh.
+- Environment: Windows 11 Local UAT, Docker Compose MinIO.
+- Branch/SHA: `codex/fix-bim-local-uat` from `91d935c51d5078b4c3e68a255b6cf5617b314e8f`.
+- Command/workflow: second `test:bim-local-uat` run after credential correction.
+- Exact error: the signed IFC upload reached MinIO and returned HTTP 404.
+- Earliest causal failure: local setup started MinIO but never created the configured `S3_BUCKET`; only test and production stacks had explicit bucket provisioning.
+- Classification: Environment defect.
+- Fix: add an idempotent local `minio-init` Compose service and require it before starting the BIM worker.
+- Validation: run `minio-init`, verify the private bucket exists, and rerun the complete BIM Local UAT journey.
+- Recurrence prevention: local setup now provisions object storage declaratively before dependent runtimes start.
+
+### Failure 16 — synthetic IFC wall arguments initially prevented geometry extraction
+
+- Date/time: 2026-08-09 23:35 Asia/Riyadh.
+- Environment: Windows 11 Local UAT, local BIM worker container.
+- Branch/SHA: `codex/fix-bim-local-uat` from `91d935c51d5078b4c3e68a255b6cf5617b314e8f`.
+- Command/workflow: direct extraction and GLB generation of `r4c-synthetic-box.ifc`.
+- Exact error: semantic extraction found the wall, but GLB generation reported `no renderable geometry`.
+- Earliest causal failure: the repository-authored fixture placed `ObjectPlacement` and `Representation` one position late in `IFCWALL`, leaving the wall without its intended shape representation.
+- Classification: Test defect.
+- Fix: correct the IFC4 `IFCWALL` positional attributes so the local placement and product definition shape are valid.
+- Validation: the worker extracted one `IfcWall` and generated a 1,024-byte GLB whose header is `glTF`.
+- Recurrence prevention: the BIM-worker test now requires both the expected semantics and one renderable geometry element from the fixture.
+
+### Failure 17 — shell resolved an unsupported pnpm installation during verification
+
+- Date/time: 2026-08-09 23:36 Asia/Riyadh.
+- Environment: Windows 11 local PowerShell session.
+- Branch/SHA: `codex/fix-bim-local-uat` from `91d935c51d5078b4c3e68a255b6cf5617b314e8f`.
+- Command/workflow: local dependency and application verification.
+- Exact error: the fresh shell resolved a different pnpm installation and dependency preparation aborted with `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`.
+- Earliest causal failure: the shell PATH did not prioritize the repository-approved Node runtime and Corepack-managed pnpm `10.13.1`.
+- Classification: Environment defect.
+- Fix: run verification with `C:\Users\Islam\AppData\Local\Programs\node-v24.19.0-win-x64` first on PATH and its pnpm `10.13.1` shim.
+- Validation: API build and Web typecheck passed with Node `24.19.0` and pnpm `10.13.1`.
+- Recurrence prevention: `local-setup.ps1` continues to activate the pinned package manager before repository commands.
+
+### Failure 18 — stale local runtime processes occupied the Web and API ports
+
+- Date/time: 2026-08-09 23:38 Asia/Riyadh.
+- Environment: Windows 11 Local UAT host runtime.
+- Branch/SHA: `codex/fix-bim-local-uat` from `91d935c51d5078b4c3e68a255b6cf5617b314e8f`.
+- Command/workflow: `pnpm local:dev`.
+- Exact error: the new Web and API processes exited with `EADDRINUSE` because earlier local UAT processes still listened on ports 3000 and 3001.
+- Earliest causal failure: a prior runtime wrapper exited without terminating its child application processes.
+- Classification: Environment defect.
+- Fix: identify and stop only the two stale listener processes, then start one clean repository runtime.
+- Validation: Web and API readiness passed and the authenticated BIM journey completed against the clean runtime.
+- Recurrence prevention: retain runtime ownership and stop the process tree when a local verification session ends.
+
+### BIM Local UAT closure result
+
+- Exact tested base SHA: `91d935c51d5078b4c3e68a255b6cf5617b314e8f` plus the focused remediation on `codex/fix-bim-local-uat`.
+- Deterministic journey: PASS — presigned IFC upload, confirmation, BullMQ dispatch, BIM-worker download/extraction, semantic persistence, GLB upload, manifest download, and authenticated browser rendering.
+- Automated verifier model evidence: `7e5a4828-7ceb-4224-9415-122bacbb92ef`; IFC4; 4 spatial nodes; 1 `IfcWall`; GLB size 1,024 bytes.
+- Fixture provenance: repository-authored synthetic IFC; no third-party model or data was used.
+- Sensitive-free viewer screenshot: retained outside source control in the local UAT evidence directory.
+
+### Failure 19 — active API process locked Prisma's Windows query engine
+
+- Date/time: 2026-08-09 23:49 Asia/Riyadh.
+- Environment: Windows 11 Local UAT host runtime.
+- Branch/SHA: `codex/fix-bim-local-uat` from `91d935c51d5078b4c3e68a255b6cf5617b314e8f`.
+- Command/workflow: `pnpm local:verify:windows`, Prisma client generation stage.
+- Exact error: `EPERM: operation not permitted, rename ...query_engine-windows.dll.node.tmp... -> ...query_engine-windows.dll.node`.
+- Earliest causal failure: the API used for the preceding browser journey was still running and held the generated Prisma query-engine DLL open while `prisma generate` attempted its atomic replacement.
+- Classification: Environment defect.
+- Fix: stop only the owned local Web/API runtime process tree before starting the clean verifier; leave Docker infrastructure running.
+- Validation: rerun `pnpm local:verify:windows` from its beginning and require every stage, including its own runtime startup and BIM journey, to pass.
+- Recurrence prevention: execute the verifier from a clean host-runtime state on Windows when Prisma client regeneration is required.
+
+### Failure 20 — container test-tool scripts were outside PATH
+
+- Date/time: 2026-08-09 23:53 Asia/Riyadh.
+- Environment: disposable local BIM-worker test container.
+- Branch/SHA: `codex/fix-bim-local-uat` from `91d935c51d5078b4c3e68a255b6cf5617b314e8f`.
+- Command/workflow: BIM-worker Ruff and pytest verification using the production image plus declared development dependencies.
+- Exact error: development tools installed under `/home/r4c/.local/bin`, then the shell returned `ruff: not found`.
+- Earliest causal failure: the non-root image correctly used a user installation, but its user binary directory was not on the disposable shell PATH.
+- Classification: Environment defect.
+- Fix: invoke the installed tools as Python modules instead of depending on shell-script PATH discovery.
+- Validation: run `python -m ruff check .` and `python -m pytest -q` in the same disposable image.
+- Recurrence prevention: container-local verification commands must use module invocation for user-installed Python tools.
+
+### Failure 21 — Windows bind mount presents every Python file as executable
+
+- Date/time: 2026-08-09 23:54 Asia/Riyadh.
+- Environment: Linux BIM-worker container with the Windows checkout bind-mounted into `/workspace`.
+- Branch/SHA: `codex/fix-bim-local-uat` from `91d935c51d5078b4c3e68a255b6cf5617b314e8f`.
+- Command/workflow: `python -m ruff check .` in the disposable container.
+- Exact error: Ruff emitted `EXE002 The file is executable but no shebang is present` for all Python source and test files.
+- Earliest causal failure: Docker Desktop's Windows bind mount exposed regular repository files with executable Unix mode bits; the canonical Git tree does not mark those files executable.
+- Classification: Environment defect.
+- Fix: ignore only `EXE002` for this bind-mount lint pass, while retaining all other Ruff rules; rely on canonical GitHub CI for the unmodified Linux mode-bit check.
+- Validation: require the remaining Ruff rules and the complete worker pytest suite to pass locally, then require the pull-request CI BIM-worker job to pass without an ignore.
+- Recurrence prevention: use a canonical Git archive or CI checkout when validating Unix executable bits from Windows.

@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "c96e389c45b177b64e9cb04bb31fb756dd09561bfd6d41a5b0effa6d52a57ef0",
+    "bodyDigest": "9a9da9a94ea042e52326882bf3639f9fdcdbff937b59ec96787a1e19a40058ff",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "ca26dca5588d867b48220a1c974ddff27773284d42bb671c84ee0541f6325906",
+    "inputDigest": "a480d3982a26b193e7c8b44deb3e4d9f733f48d1e3e146c85b1f314c004d9812",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -123,6 +123,7 @@
         "entryPoints": [],
         "languages": [
           "json",
+          "markdown",
           "python"
         ],
         "parseErrors": [],
@@ -132,7 +133,7 @@
           "process_ifc",
           "validate_storage_url"
         ],
-        "sourceFileCount": 7
+        "sourceFileCount": 8
       },
       "id": "r4c-bim-worker",
       "ownedEntities": [
@@ -255,7 +256,7 @@
     },
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 43 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 44 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
@@ -263,7 +264,7 @@
         "r4c-contracts"
       ],
       "discovery": {
-        "codeFileCount": 43,
+        "codeFileCount": 44,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -273,7 +274,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 46
+        "sourceFileCount": 47
       },
       "id": "r4c-web",
       "ownedEntities": [],

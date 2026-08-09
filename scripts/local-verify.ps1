@@ -81,6 +81,7 @@ function Start-R4cRuntimeIfNeeded {
 Invoke-RequiredCommand 'Docker Compose status' { docker compose ps }
 Invoke-RequiredCommand 'PostgreSQL readiness' { docker compose exec -T postgres pg_isready -U r4c -d r4c }
 Invoke-RequiredCommand 'Redis readiness' { docker compose exec -T redis redis-cli ping }
+Test-HttpEndpoint 'BIM worker readiness' 'http://127.0.0.1:8000/health'
 Invoke-RequiredCommand 'Frozen dependency installation' { pnpm install --frozen-lockfile }
 Invoke-RequiredCommand 'Prisma schema validation' { pnpm --filter @r4c/api prisma:validate }
 Invoke-RequiredCommand 'Prisma client generation' { pnpm --filter @r4c/api prisma:generate }
@@ -103,6 +104,7 @@ Start-R4cRuntimeIfNeeded $webUrl $apiUrl
 Test-HttpEndpoint 'Web application' $webUrl
 Test-HttpEndpoint 'API readiness' $apiUrl
 Test-HttpEndpoint 'MinIO readiness' 'http://127.0.0.1:9000/minio/health/ready'
+Invoke-RequiredCommand 'BIM Local UAT journey' { pnpm --filter @r4c/web test:bim-local-uat }
 
 Write-Host "`nAutomated Windows local acceptance checks passed."
 Write-Host 'Frontend business journeys are intentionally not auto-discovered by pnpm test.'
