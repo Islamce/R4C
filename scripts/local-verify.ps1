@@ -10,7 +10,7 @@ function Invoke-RequiredCommand {
 
 function Test-HttpEndpoint {
   param([string]$Name, [string]$Url)
-  Write-Host "Checking $Name: $Url"
+  Write-Host "Checking ${Name}: $Url"
   try {
     $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 20
     if ($response.StatusCode -lt 200 -or $response.StatusCode -ge 400) {

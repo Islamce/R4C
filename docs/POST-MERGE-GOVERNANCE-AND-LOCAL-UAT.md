@@ -18,11 +18,18 @@ Required status checks for the launch baseline:
 
 1. `CI / validate`
 2. `Security / supply-chain`
-3. `Seed verification / verify`
+3. `Seed verification / verify-seed`
 4. `Auth session verification / verify`
-5. `KAAF Architecture / architecture`
+5. `Phase 5 cost dashboard verification / verify`
+6. `Phase 6 progress workspace verification / verify`
+7. `Phase 6.5 UX loop closers verification / verify`
+8. `Phase 7 production deployment verification / verify`
+9. `KAAF Architecture / Validate repository structure`
+10. `KAAF Architecture / Verify generated AI context`
+11. `KAAF Architecture / Report declared-versus-discovered drift`
+12. `KAAF Architecture / Check contract compatibility`
 
-Phase-specific verification workflows remain mandatory when their changed paths or release scope make them applicable, including Phase 5 cost dashboard, Phase 6 progress workspace, Phase 6.5 UX loop closers, and Phase 7 production deployment verification.
+These names come from the workflow and job definitions under `.github/workflows/`. Confirm the names against successful check runs on the release-candidate pull request before applying branch protection; GitHub only allows checks that have run recently to be selected.
 
 ## 2. Windows local acceptance procedure
 
