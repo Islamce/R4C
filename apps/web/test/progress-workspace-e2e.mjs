@@ -9,6 +9,7 @@ const adminEmail = process.env.JOURNEY_ADMIN_EMAIL ?? "phase6.admin@r4c.test";
 const adminPassword = process.env.JOURNEY_ADMIN_PASSWORD ?? "Phase6-Admin-Correct-Horse-Battery-Staple";
 const submitEmail = process.env.JOURNEY_SUBMIT_EMAIL ?? "phase6.submit@r4c.test";
 const submitPassword = process.env.JOURNEY_SUBMIT_PASSWORD ?? "Phase6-Submit-Correct-Horse-Battery-Staple";
+const submitDisplayName = process.env.JOURNEY_SUBMIT_DISPLAY_NAME ?? "Phase 6 Submitter";
 const tenantId = process.env.JOURNEY_TENANT_ID;
 const asOf = "2026-07-21";
 
@@ -167,7 +168,7 @@ test("progress workspace closes submit, review, history, and earned-value loop",
   assert.equal(submittedHistory.body.length, 1);
   assert.equal(submittedHistory.body[0].status, "SUBMITTED");
   assert.equal(submittedHistory.body[0].percent, "42.5");
-  assert.equal(submittedHistory.body[0].reportedBy.displayName, "Phase 6 Submitter");
+  assert.equal(submittedHistory.body[0].reportedBy.displayName, submitDisplayName);
   assert.equal(submittedHistory.body[0].reviewedBy, null);
 
   const beforeApproval = await webRequest(
@@ -197,7 +198,7 @@ test("progress workspace closes submit, review, history, and earned-value loop",
   const approvedHistory = await webRequest(adminJar, `/api/wbs/${wbs.id}/progress`);
   assert.equal(approvedHistory.response.status, 200);
   assert.equal(approvedHistory.body[0].status, "APPROVED");
-  assert.equal(approvedHistory.body[0].reportedBy.displayName, "Phase 6 Submitter");
+  assert.equal(approvedHistory.body[0].reportedBy.displayName, submitDisplayName);
   assert.equal(approvedHistory.body[0].reviewedBy.displayName, "R4C Administrator");
   assert.equal(approvedHistory.body[0].reviewComment, "Independent reviewer confirms installed progress");
   assert.ok(approvedHistory.body[0].reviewedAt);

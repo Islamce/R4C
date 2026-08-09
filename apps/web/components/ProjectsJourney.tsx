@@ -48,7 +48,8 @@ export function ProjectsJourney() {
     setCreating(true);
     setFailed(false);
     setCreated(false);
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const payload = {
       code: String(form.get("code") ?? ""),
       name: String(form.get("name") ?? ""),
@@ -68,7 +69,7 @@ export function ProjectsJourney() {
       ]);
       setCreated(true);
       setShowCreate(false);
-      event.currentTarget.reset();
+      formElement.reset();
     } catch {
       setFailed(true);
     } finally {
