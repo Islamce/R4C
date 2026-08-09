@@ -1,0 +1,36 @@
+name: External launch KAAF refresh
+
+on:
+  push:
+    branches:
+      - ops/launch-kaaf-regenerator
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate-target:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout target remediation branch
+        uses: actions/checkout@v7
+        with:
+          ref: fix/launch-security-nanoid
+
+      - name: Regenerate KAAF context
+        run: ./scripts/architecture/generate.sh
+
+      - name: Validate generated KAAF context
+        run: python3 ./scripts/architecture/generate.py --check
+
+      - name: Commit generated artifacts to target branch
+        run: |
+          if git diff --quiet -- .ai; then
+            echo "Generated KAAF context already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .ai
+          git commit -m "chore(kaaf): refresh generated context after launch workflow cleanup"
+          git push origin HEAD:fix/launch-security-nanoid
