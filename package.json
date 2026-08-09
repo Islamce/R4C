@@ -14,6 +14,7 @@
     "local:setup": "node -e \"console.log(process.platform === 'win32' ? 'Run: powershell -ExecutionPolicy Bypass -File scripts/local-setup.ps1' : 'Run: bash scripts/local-setup.sh')\"",
     "local:dev": "pnpm -r --parallel dev",
     "local:services": "docker compose up -d postgres redis minio",
+    "local:verify:windows": "powershell -ExecutionPolicy Bypass -File scripts/local-verify.ps1",
     "local:stop": "docker compose down",
     "local:reset": "docker compose down -v"
   },

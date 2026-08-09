@@ -8,7 +8,7 @@
     "build": "next build",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "node --test",
+    "test": "node -e \"console.log('Web runtime journeys are E2E-only; run the explicit test:journey, test:cost-dashboard, test:progress-workspace, and test:ux-loop-closers scripts against their seeded runtime.')\"",
     "test:journey": "node --test test/frontend-journey-e2e.mjs",
     "test:cost-dashboard": "node test/run-date-safe-e2e.mjs test/cost-dashboard-e2e.mjs",
     "test:progress-workspace": "node test/run-date-safe-e2e.mjs test/progress-workspace-e2e.mjs",
