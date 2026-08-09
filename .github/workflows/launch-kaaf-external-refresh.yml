@@ -15,13 +15,21 @@ jobs:
       - name: Checkout target remediation branch
         uses: actions/checkout@v7
         with:
-          ref: fix/launch-security-nanoid
+          ref: fix/launch-local-uat-test-contract
 
       - name: Regenerate KAAF context
         run: ./scripts/architecture/generate.sh
 
       - name: Validate generated KAAF context
         run: python3 ./scripts/architecture/generate.py --check
+
+      - name: Verify standalone workspace test contract
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.13.1 --activate
+          pnpm install --frozen-lockfile
+          pnpm --filter @r4c/api prisma:generate
+          pnpm test
 
       - name: Commit generated artifacts to target branch
         run: |
@@ -32,5 +40,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .ai
-          git commit -m "chore(kaaf): refresh generated context after launch workflow cleanup"
-          git push origin HEAD:fix/launch-security-nanoid
+          git commit -m "chore(kaaf): refresh generated context for local UAT test contract"
+          git push origin HEAD:fix/launch-local-uat-test-contract
