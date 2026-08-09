@@ -273,3 +273,16 @@ PR #33 (`feat/local-development-runtime`) added personal-computer bootstrap scri
 - `test:progress-workspace`: PASS against local Alomran identities, including submit, HTTP 403 SoD enforcement, independent approval, EV `0.00` to `42500.00`, and conflict normalization.
 - Manual non-BIM browser journeys: PASS for authentication, EN/LTR, AR/RTL, tenant identity, project create/list/detail, 5D, progress evidence, and logout.
 - BIM Local UAT: BLOCKED because local Compose defines no BIM worker and the repository contains no approved IFC fixture; no result is inferred from CI.
+
+### Failure 11 — Windows-generated KAAF digests differ from the canonical Git checkout
+
+- Date/time: 2026-08-09 23:00 Asia/Riyadh.
+- Environment: Windows 11 local checkout with Git `core.autocrlf=true`; GitHub Actions Ubuntu pull-request runner.
+- Branch/SHA: `codex/fix-windows-uat-setup` at `618b6bb0091e61e9bb8ab5a7c9b4d07f6608110d`.
+- Command/workflow: `KAAF Architecture / Verify generated AI context`, running `python3 ./scripts/architecture/generate.py --check`.
+- Exact error: `KAAF-E006-generated-output-stale`; all 11 generated context artifacts were reported out of date.
+- Earliest causal failure: the official generator was run against the CRLF-normalized Windows working tree, while GitHub Actions checked the LF bytes committed to Git; KAAF source digests are byte-sensitive, so local `--check` passed but the canonical clean checkout did not.
+- Classification: CI defect.
+- Fix: export the committed tree with `git archive`, run the official KAAF generator in that clean LF checkout, and copy only its generated `.ai` artifacts back to the branch.
+- Validation: run `generate.py --check` and all KAAF validators in a second clean Git-archive checkout, then confirm the pull-request KAAF workflow is green.
+- Recurrence prevention: generate and validate KAAF artifacts from canonical Git bytes on Windows until the upstream vendored tooling normalizes source line endings before hashing.
