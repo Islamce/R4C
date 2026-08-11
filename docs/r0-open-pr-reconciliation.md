@@ -31,6 +31,6 @@ PR #44 is not a blocker to defining R0, but its final merge should still satisfy
 
 PR #47 is the only open PR that blocks authorization to begin C01. The other open PRs require their own review but do not need to be merged into, or resolved by, the Product Reset.
 
-The local 2026-08-12 investigation reproduced `KAAF-E006-generated-output-stale` and classified it as legitimate source-fingerprint staleness caused by newly added Markdown paths. The official generator refreshed 11 artifacts, changing only provenance/input digests; it did not add or reclassify a module or claim Commercial implementation. Generator freshness, drift, provenance and index validation pass locally. GitHub CI on the pushed head remains the merge-gate authority.
+The 2026-08-12 investigation reproduced `KAAF-E006-generated-output-stale`. New Markdown paths legitimately changed the source fingerprint. A first Windows-workspace regeneration also exposed a vendored-tooling input-boundary defect: excluded local `apps/api/dist` output influenced import resolution and produced a machine-specific digest. No vendored tooling was edited. The official generator was rerun against a clean worktree matching the PR merge tree and refreshed 11 artifacts, changing only provenance/input digests; it did not add or reclassify a module or claim Commercial implementation. Clean-tree generator freshness, drift, provenance and index validation pass. GitHub CI on the pushed head remains the merge-gate authority.
 
 No PR was merged, closed, rebased or deployed by this reconciliation.
