@@ -127,6 +127,20 @@ Do not add in C01:
 - contract/collections;
 - new BIM/4D/5D capabilities;
 - new materials/quality/HSE/commissioning capabilities.
+- quotations, discount approval or contracting;
+- invoices, ZATCA/FATOORA integration or ERP posting;
+- buyer payment ledger or collection allocation;
+- `FinancialDimensionMapping` or cost-center posting;
+- `RegulatoryProfile`, `TaxTreatment` or regulatory decision automation;
+- sales SLA or sales KPI engines.
+
+The enterprise and regulatory boundaries governing these exclusions are defined in `docs/r0-1-enterprise-regulatory-architecture.md`.
+
+## Approval and evidence gate
+
+C01 is **not authorized by documentation alone**. Before implementation, the Founder/Product owner must approve the exact C01 scope after PR #47 is merged to a validated `main`. The implementation branch must start from that updated `main`, not from this documentation branch.
+
+The approved brief must retain the non-goals above and identify the migration owner, hierarchy uniqueness scopes, UI inclusion, permission map and acceptance evidence. Any proposal to add Customer/Lead, reservations, financial integration or regulatory automation returns to product/legal/business approval rather than expanding C01 implicitly.
 
 ## Branching rule
 
