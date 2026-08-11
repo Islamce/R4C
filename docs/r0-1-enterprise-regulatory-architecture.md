@@ -1,8 +1,10 @@
 # R4C R0.1 Enterprise and Regulatory Architecture Addendum
 
-**Status:** proposed governing addendum; documentation only  
-**Date:** 2026-08-12  
-**Applies to:** R0 Product Reset and the C01 scope gate  
+**Status:** proposed governing addendum; documentation only
+
+**Date:** 2026-08-12
+
+**Applies to:** R0 Product Reset and the C01 scope gate
 **Evidence boundary:** repository state and official-source review; not legal or tax advice
 
 ## 1. Executive decision
