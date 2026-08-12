@@ -1,18 +1,18 @@
 {
   "_meta": {
     "artifact": "modules/r4c-api.json",
-    "bodyDigest": "59371efe9e4bbee890bd9d0c4b818c95dafaeea11b331741ab00fe7ffbbce39a",
+    "bodyDigest": "3bfcb6fbb0f312a7ba75833cb270bb6b8619741aa82a16a0cf532b753d11431f",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "89a2561a6d755d14f2ae0a2091f4e8aff7c530bd31781d49cee376ef20f37e9b",
+    "inputDigest": "0a6b0b9bfbfa4f090c303451221bceac2536cd9018d14903b0e5d9fef2108bb2",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 77 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 81 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
   "dependedOnBy": [],
@@ -35,6 +35,10 @@
       "apps/api/src/bim/bim.module.ts",
       "apps/api/src/bim/bim.processor.ts",
       "apps/api/src/bim/bim.service.ts",
+      "apps/api/src/commercial/commercial.controller.ts",
+      "apps/api/src/commercial/commercial.dto.ts",
+      "apps/api/src/commercial/commercial.module.ts",
+      "apps/api/src/commercial/commercial.service.ts",
       "apps/api/src/common/auth-context.ts",
       "apps/api/src/common/authorization.ts",
       "apps/api/src/common/domain-policies.ts",
@@ -126,6 +130,10 @@
       "apps/api/src/bim/bim.module.ts",
       "apps/api/src/bim/bim.processor.ts",
       "apps/api/src/bim/bim.service.ts",
+      "apps/api/src/commercial/commercial.controller.ts",
+      "apps/api/src/commercial/commercial.dto.ts",
+      "apps/api/src/commercial/commercial.module.ts",
+      "apps/api/src/commercial/commercial.service.ts",
       "apps/api/src/common/auth-context.ts",
       "apps/api/src/common/authorization.ts",
       "apps/api/src/common/domain-policies.ts",
@@ -202,19 +210,44 @@
   "id": "r4c-api",
   "ownedEntities": [
     "approval",
+    "building",
     "design-document",
+    "development-phase",
+    "floor",
     "progress-record",
     "project",
+    "unit",
+    "unit-type",
     "wbs-node"
   ],
   "owner": "Backend",
   "path": "apps/api",
-  "permissions": [],
+  "permissions": [
+    {
+      "key": "commercial:manage",
+      "roles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "key": "commercial:read",
+      "roles": [
+        "ADMIN",
+        "VIEWER"
+      ]
+    },
+    {
+      "key": "commercial:status",
+      "roles": [
+        "ADMIN"
+      ]
+    }
+  ],
   "publicEntryPoints": [
     "apps/api/package.json",
     "apps/api/src/main.ts"
   ],
-  "purpose": "Serve the governed R4C domain over HTTP: projects, WBS, documents, approvals and progress.",
+  "purpose": "Serve the governed R4C domain over HTTP: commercial inventory, projects, WBS, documents, approvals and progress.",
   "readNext": [
     "apps/api/package.json",
     "apps/api/src/main.ts"

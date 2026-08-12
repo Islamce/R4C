@@ -21,6 +21,6 @@
   "publicEntryPoints": [
     "apps/web/package.json"
   ],
-  "purpose": "Present the R4C platform to users, including the IFC model viewer and executive dashboards.",
+  "purpose": "Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards.",
   "schemaVersion": "1.0.0"
 }

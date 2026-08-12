@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "index/repository.json",
-    "bodyDigest": "f973ae4d3e3478401cf0414fdfa6f035a1ce6692d1b5337d5213f4c9eea1f4ef",
+    "bodyDigest": "0b3da940683fb1d10861d4bb6118f1cf2121a2a84529dd1ac22df4b0d8cbde50",
     "confidence": "derived",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "89a2561a6d755d14f2ae0a2091f4e8aff7c530bd31781d49cee376ef20f37e9b",
+    "inputDigest": "0a6b0b9bfbfa4f090c303451221bceac2536cd9018d14903b0e5d9fef2108bb2",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -52,14 +52,19 @@
       "id": "r4c-api",
       "ownedEntities": [
         "approval",
+        "building",
         "design-document",
+        "development-phase",
+        "floor",
         "progress-record",
         "project",
+        "unit",
+        "unit-type",
         "wbs-node"
       ],
       "owner": "Backend",
       "path": "apps/api",
-      "purpose": "Serve the governed R4C domain over HTTP: projects, WBS, documents, approvals and progress.",
+      "purpose": "Serve the governed R4C domain over HTTP: commercial inventory, projects, WBS, documents, approvals and progress.",
       "qualifiedId": "Islamce/R4C#r4c-api"
     },
     {
@@ -84,7 +89,8 @@
       "dependsOn": [],
       "id": "r4c-contracts",
       "ownedEntities": [
-        "api-contract"
+        "api-contract",
+        "commercial-inventory-contract"
       ],
       "owner": "Backend",
       "path": "packages/contracts",
@@ -126,11 +132,37 @@
       "ownedEntities": [],
       "owner": "Frontend",
       "path": "apps/web",
-      "purpose": "Present the R4C platform to users, including the IFC model viewer and executive dashboards.",
+      "purpose": "Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards.",
       "qualifiedId": "Islamce/R4C#r4c-web"
     }
   ],
-  "permissions": [],
+  "permissions": [
+    {
+      "confidence": "verified",
+      "key": "commercial:manage",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:read",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "VIEWER"
+      ]
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:status",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN"
+      ]
+    }
+  ],
   "repository": {
     "defaultBranch": "main",
     "description": "R4C — a BIM-centered platform for governed real-estate development delivery, connecting projects, WBS, design documents, IFC models, approvals, progress and executive visibility.",

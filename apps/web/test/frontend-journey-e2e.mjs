@@ -162,10 +162,42 @@ test("frontend foundation completes the real bilingual project journey", { timeo
   assert.equal(detail.body.wbs.length, 1);
   assert.equal(detail.body.wbs[0].code, "01");
 
+  const phase = await webRequest(jar, "/api/backend/commercial/phases", {
+    method: "POST",
+    body: { projectId: created.body.id, code: "P01", name: "Launch phase", sequence: 1 },
+  });
+  assert.equal(phase.response.status, 200, JSON.stringify(phase.body));
+  const building = await webRequest(jar, "/api/backend/commercial/buildings", {
+    method: "POST",
+    body: { projectId: created.body.id, phaseId: phase.body.id, code: "B01", name: "Building 01" },
+  });
+  assert.equal(building.response.status, 200, JSON.stringify(building.body));
+  const floor = await webRequest(jar, "/api/backend/commercial/floors", {
+    method: "POST",
+    body: { buildingId: building.body.id, code: "F01", name: "First floor", floorNumber: 1 },
+  });
+  assert.equal(floor.response.status, 200, JSON.stringify(floor.body));
+  const unitType = await webRequest(jar, "/api/backend/commercial/unit-types", {
+    method: "POST",
+    body: { projectId: created.body.id, code: "2BR", name: "Two bedroom", bedrooms: 2, bathrooms: 2 },
+  });
+  assert.equal(unitType.response.status, 200, JSON.stringify(unitType.body));
+  const unit = await webRequest(jar, "/api/backend/commercial/units", {
+    method: "POST",
+    body: { projectId: created.body.id, phaseId: phase.body.id, buildingId: building.body.id, floorId: floor.body.id, unitTypeId: unitType.body.id, code: "U-101", number: "101", grossArea: "120.00", bedrooms: 2, bathrooms: 2 },
+  });
+  assert.equal(unit.response.status, 200, JSON.stringify(unit.body));
+  const inventory = await webRequest(jar, `/api/backend/commercial/units?projectId=${created.body.id}&status=DRAFT`);
+  assert.equal(inventory.response.status, 200, JSON.stringify(inventory.body));
+  assert.equal(inventory.body.total, 1);
+
   const english = await webRequest(jar, "/projects");
   assert.equal(english.response.status, 200);
   assert.match(english.text, /<html[^>]*lang="en"[^>]*dir="ltr"/);
   assert.match(english.text, />Projects</);
+  const commercialEnglish = await webRequest(jar, "/commercial");
+  assert.equal(commercialEnglish.response.status, 200);
+  assert.match(commercialEnglish.text, /Commercial inventory/);
 
   const arabicToggle = await webRequest(jar, "/api/locale", {
     method: "POST",
@@ -176,6 +208,9 @@ test("frontend foundation completes the real bilingual project journey", { timeo
   assert.equal(arabic.response.status, 200);
   assert.match(arabic.text, /<html[^>]*lang="ar"[^>]*dir="rtl"/);
   assert.match(arabic.text, /المشاريع/);
+  const commercialArabic = await webRequest(jar, "/commercial");
+  assert.equal(commercialArabic.response.status, 200);
+  assert.match(commercialArabic.text, /المخزون التجاري/);
 
   const previousRefresh = jar.get("r4c_refresh_token");
   jar.set("r4c_access_token", "expired.invalid.access-token");
@@ -204,6 +239,7 @@ test("frontend foundation completes the real bilingual project journey", { timeo
   console.log(`PHASE4_STORAGE browserStorageReferences=0 viewerServerSession=true files=${files.length}`);
   console.log(`PHASE4_PROJECTS list=${listed.response.status} create=${created.response.status} code=${code}`);
   console.log(`PHASE4_DETAIL status=${detail.response.status} project=${created.body.id} wbsNodes=${detail.body.wbs.length}`);
+  console.log(`C01_COMMERCIAL phase=${phase.body.id} building=${building.body.id} floor=${floor.body.id} unit=${unit.body.id} filtered=${inventory.body.total}`);
   console.log("PHASE4_LTR lang=en dir=ltr projectsHeading=rendered");
   console.log("PHASE4_RTL lang=ar dir=rtl projectsHeading=rendered");
   console.log("PHASE4_REFRESH forced401=true refreshCount=1 retry=success rotatedRefreshPersisted=true");

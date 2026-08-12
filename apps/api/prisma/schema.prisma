@@ -21,6 +21,25 @@ enum ProjectStatus {
   ARCHIVED
 }
 
+enum DevelopmentPhaseStatus {
+  DRAFT
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+}
+
+enum UnitStatus {
+  DRAFT
+  UNRELEASED
+  AVAILABLE
+  HELD
+  RESERVED
+  SOLD
+  BLOCKED
+  WITHDRAWN
+}
+
 enum WorkflowStatus {
   DRAFT
   ASSIGNED
@@ -309,6 +328,11 @@ model Tenant {
   auditEvents     AuditEvent[]
   documents       Document[]
   notifications   NotificationOutbox[]
+  developmentPhases DevelopmentPhase[]
+  buildings         Building[]
+  floors            Floor[]
+  unitTypes         UnitType[]
+  units             Unit[]
 }
 
 model User {
@@ -449,9 +473,135 @@ model Project {
   activeCommissioningPlan CommissioningPlan? @relation("ActiveCommissioningPlan", fields: [activeCommissioningPlanId], references: [id], onDelete: SetNull)
   commissioningTests CommissioningTest[]
   handoverPackages  HandoverPackage[]
+  developmentPhases DevelopmentPhase[]
+  buildings         Building[]
+  unitTypes         UnitType[]
+  units             Unit[]
 
   @@unique([tenantId, code])
+  @@unique([id, tenantId])
   @@index([tenantId, status])
+}
+
+model DevelopmentPhase {
+  id                     String                 @id @default(uuid())
+  tenantId               String
+  projectId              String
+  code                   String
+  name                   String
+  description            String?
+  status                 DevelopmentPhaseStatus @default(DRAFT)
+  sequence               Int                    @default(0)
+  launchDate             DateTime?
+  expectedCompletionDate DateTime?
+  salesOpenAt            DateTime?
+  salesCloseAt           DateTime?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  tenant                 Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project                Project                @relation(fields: [projectId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  buildings              Building[]
+  units                  Unit[]
+
+  @@unique([projectId, code])
+  @@unique([id, projectId, tenantId])
+  @@index([tenantId, projectId, status, sequence])
+}
+
+model Building {
+  id        String   @id @default(uuid())
+  tenantId  String
+  projectId String
+  phaseId   String
+  code      String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  phase     DevelopmentPhase @relation(fields: [phaseId, projectId, tenantId], references: [id, projectId, tenantId], onDelete: Restrict)
+  floors    Floor[]
+  units     Unit[]
+
+  @@unique([projectId, code])
+  @@unique([id, projectId, tenantId])
+  @@unique([id, projectId, phaseId, tenantId])
+  @@unique([id, tenantId])
+  @@index([tenantId, projectId, phaseId])
+}
+
+model Floor {
+  id          String   @id @default(uuid())
+  tenantId    String
+  buildingId  String
+  code        String
+  name        String
+  floorNumber Int
+  sequence    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  building    Building @relation(fields: [buildingId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  units       Unit[]
+
+  @@unique([buildingId, code])
+  @@unique([buildingId, floorNumber])
+  @@unique([id, buildingId, tenantId])
+  @@index([tenantId, buildingId, sequence])
+}
+
+model UnitType {
+  id          String   @id @default(uuid())
+  tenantId    String
+  projectId   String
+  code        String
+  name        String
+  bedrooms    Int
+  bathrooms   Int
+  defaultArea Decimal? @db.Decimal(12, 2)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project     Project  @relation(fields: [projectId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  units       Unit[]
+
+  @@unique([projectId, code])
+  @@unique([id, projectId, tenantId])
+  @@index([tenantId, projectId])
+}
+
+model Unit {
+  id           String     @id @default(uuid())
+  tenantId     String
+  projectId    String
+  phaseId      String
+  buildingId   String
+  floorId      String
+  unitTypeId   String
+  code         String
+  number       String
+  status       UnitStatus @default(DRAFT)
+  grossArea    Decimal    @db.Decimal(12, 2)
+  netArea      Decimal?   @db.Decimal(12, 2)
+  bedrooms     Int
+  bathrooms    Int
+  orientation  String?
+  view         String?
+  parkingCount Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project      Project    @relation(fields: [projectId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  phase        DevelopmentPhase @relation(fields: [phaseId, projectId, tenantId], references: [id, projectId, tenantId], onDelete: Restrict)
+  building     Building   @relation(fields: [buildingId, projectId, phaseId, tenantId], references: [id, projectId, phaseId, tenantId], onDelete: Restrict)
+  floor        Floor      @relation(fields: [floorId, buildingId, tenantId], references: [id, buildingId, tenantId], onDelete: Restrict)
+  unitType     UnitType   @relation(fields: [unitTypeId, projectId, tenantId], references: [id, projectId, tenantId], onDelete: Restrict)
+
+  @@unique([projectId, code])
+  @@unique([floorId, number])
+  @@index([tenantId, projectId, phaseId, buildingId, floorId])
+  @@index([tenantId, projectId, status, unitTypeId])
 }
 
 model ProjectMember {

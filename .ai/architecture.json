@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "9a9da9a94ea042e52326882bf3639f9fdcdbff937b59ec96787a1e19a40058ff",
+    "bodyDigest": "df86dd0251de145af0b73ac3ce7e298d34b95dd2194752ee4ae06d0ae005013d",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "89a2561a6d755d14f2ae0a2091f4e8aff7c530bd31781d49cee376ef20f37e9b",
+    "inputDigest": "0a6b0b9bfbfa4f090c303451221bceac2536cd9018d14903b0e5d9fef2108bb2",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -75,13 +75,13 @@
   "modules": [
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 77 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 81 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
       "dependsOn": [],
       "discovery": {
-        "codeFileCount": 77,
+        "codeFileCount": 81,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -91,14 +91,19 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 81
+        "sourceFileCount": 85
       },
       "id": "r4c-api",
       "ownedEntities": [
         "approval",
+        "building",
         "design-document",
+        "development-phase",
+        "floor",
         "progress-record",
         "project",
+        "unit",
+        "unit-type",
         "wbs-node"
       ],
       "owner": "Backend",
@@ -107,7 +112,7 @@
         "apps/api/package.json",
         "apps/api/src/main.ts"
       ],
-      "purpose": "Serve the governed R4C domain over HTTP: projects, WBS, documents, approvals and progress.",
+      "purpose": "Serve the governed R4C domain over HTTP: commercial inventory, projects, WBS, documents, approvals and progress.",
       "sourceManifest": "apps/api/kaaf.module.json"
     },
     {
@@ -172,7 +177,8 @@
       },
       "id": "r4c-contracts",
       "ownedEntities": [
-        "api-contract"
+        "api-contract",
+        "commercial-inventory-contract"
       ],
       "owner": "Backend",
       "path": "packages/contracts",
@@ -256,7 +262,7 @@
     },
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 44 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 46 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
@@ -264,7 +270,7 @@
         "r4c-contracts"
       ],
       "discovery": {
-        "codeFileCount": 44,
+        "codeFileCount": 46,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -274,7 +280,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 47
+        "sourceFileCount": 49
       },
       "id": "r4c-web",
       "ownedEntities": [],
@@ -283,11 +289,40 @@
       "publicEntryPoints": [
         "apps/web/package.json"
       ],
-      "purpose": "Present the R4C platform to users, including the IFC model viewer and executive dashboards.",
+      "purpose": "Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards.",
       "sourceManifest": "apps/web/kaaf.module.json"
     }
   ],
-  "permissions": [],
+  "permissions": [
+    {
+      "confidence": "verified",
+      "key": "commercial:manage",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:read",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "VIEWER"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:status",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    }
+  ],
   "repository": {
     "defaultBranch": "main",
     "kaafPhase": 7,

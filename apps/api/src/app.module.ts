@@ -12,6 +12,7 @@ import { ProxyAwareThrottlerGuard } from "./common/proxy-aware-throttler.guard";
 import { Public } from "./common/public";
 import { positiveInteger, RATE_LIMIT_WINDOW_MS } from "./common/rate-limit";
 import { CostModule } from "./cost/cost.module";
+import { CommercialModule } from "./commercial/commercial.module";
 import { DocumentsModule } from "./documents/documents.module";
 import { HseModule } from "./hse/hse.module";
 import { MaterialsModule } from "./materials/materials.module";
@@ -79,6 +80,7 @@ class HealthController {
     TurnoverModule,
     AuthModule,
     TenantsModule,
+    CommercialModule,
     CostModule,
     DocumentsModule,
     HseModule,

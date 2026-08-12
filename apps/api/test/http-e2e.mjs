@@ -131,6 +131,9 @@ test(
       "document:download",
       "bim:process",
       "bim:read",
+      "commercial:read",
+      "commercial:manage",
+      "commercial:status",
     ];
     await prisma.permission.createMany({
       data: permissions.map((code) => ({ code, name: code })),
@@ -216,6 +219,9 @@ test(
           new Promise((resolve) => setTimeout(resolve, 5_000)),
         ]);
       }
+      if (apiProcess.exitCode === null) {
+        apiProcess.kill("SIGKILL");
+      }
       await queue.close();
       s3.destroy();
       await prisma.$disconnect();
@@ -295,6 +301,77 @@ test(
         },
       });
       assert.ok(projectAudit, "Project creation must produce an audit event");
+
+      await t.test("commercial hierarchy is tenant-isolated, governed, and filterable", async () => {
+        const phase = await request("/commercial/phases", {
+          token: adminToken,
+          method: "POST",
+          body: { projectId: createdProject.body.id, code: "P01", name: "Launch phase", sequence: 1 },
+        });
+        assert.equal(phase.response.status, 201, JSON.stringify(phase.body));
+
+        const building = await request("/commercial/buildings", {
+          token: adminToken,
+          method: "POST",
+          body: { projectId: createdProject.body.id, phaseId: phase.body.id, code: "B01", name: "Building 01" },
+        });
+        assert.equal(building.response.status, 201, JSON.stringify(building.body));
+
+        const floor = await request("/commercial/floors", {
+          token: adminToken,
+          method: "POST",
+          body: { buildingId: building.body.id, code: "F01", name: "First floor", floorNumber: 1, sequence: 1 },
+        });
+        assert.equal(floor.response.status, 201, JSON.stringify(floor.body));
+
+        const unitType = await request("/commercial/unit-types", {
+          token: adminToken,
+          method: "POST",
+          body: { projectId: createdProject.body.id, code: "2BR", name: "Two bedroom", bedrooms: 2, bathrooms: 2, defaultArea: "120.00" },
+        });
+        assert.equal(unitType.response.status, 201, JSON.stringify(unitType.body));
+
+        const tenantBPhase = await prisma.developmentPhase.create({
+          data: { tenantId: tenantB.id, projectId: tenantBProject.id, code: "SECRET", name: "Secret phase" },
+        });
+        const hidden = await request(`/commercial/phases/${tenantBPhase.id}`, { token: adminToken });
+        assert.equal(hidden.response.status, 404);
+
+        const invalidHierarchy = await request("/commercial/units", {
+          token: adminToken,
+          method: "POST",
+          body: { projectId: createdProject.body.id, phaseId: tenantBPhase.id, buildingId: building.body.id, floorId: floor.body.id, unitTypeId: unitType.body.id, code: "BAD", number: "BAD", grossArea: "120.00", bedrooms: 2, bathrooms: 2 },
+        });
+        assert.equal(invalidHierarchy.response.status, 400);
+
+        const unit = await request("/commercial/units", {
+          token: adminToken,
+          method: "POST",
+          body: { projectId: createdProject.body.id, phaseId: phase.body.id, buildingId: building.body.id, floorId: floor.body.id, unitTypeId: unitType.body.id, code: "U-101", number: "101", grossArea: "120.00", netArea: "105.00", bedrooms: 2, bathrooms: 2, parkingCount: 1 },
+        });
+        assert.equal(unit.response.status, 201, JSON.stringify(unit.body));
+        assert.equal(unit.body.status, "DRAFT");
+
+        const filtered = await request(`/commercial/units?projectId=${createdProject.body.id}&phaseId=${phase.body.id}&bedrooms=2&status=DRAFT`, { token: adminToken });
+        assert.equal(filtered.response.status, 200, JSON.stringify(filtered.body));
+        assert.equal(filtered.body.total, 1);
+        assert.equal(filtered.body.items[0].id, unit.body.id);
+
+        const readerDenied = await request(`/commercial/units/${unit.body.id}`, { token: readerLogin.body.accessToken });
+        assert.equal(readerDenied.response.status, 403);
+        const genericStatusWrite = await request(`/commercial/units/${unit.body.id}`, { token: adminToken, method: "PATCH", body: { status: "SOLD" } });
+        assert.equal(genericStatusWrite.response.status, 400);
+
+        const released = await request(`/commercial/units/${unit.body.id}/release`, { token: adminToken, method: "POST" });
+        assert.equal(released.response.status, 201, JSON.stringify(released.body));
+        assert.equal(released.body.status, "AVAILABLE");
+        const blocked = await request(`/commercial/units/${unit.body.id}/block`, { token: adminToken, method: "POST" });
+        assert.equal(blocked.response.status, 201, JSON.stringify(blocked.body));
+        assert.equal(blocked.body.status, "BLOCKED");
+
+        const audits = await prisma.auditEvent.count({ where: { tenantId: tenantA.id, entityId: { in: [phase.body.id, building.body.id, floor.body.id, unitType.body.id, unit.body.id] }, action: { startsWith: "COMMERCIAL_" } } });
+        assert.equal(audits, 7);
+      });
 
       const pdfDocument = await request(
         `/projects/${createdProject.body.id}/documents`,

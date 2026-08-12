@@ -1,0 +1,19 @@
+.commercial-workspace select{width:100%;min-height:44px;border:1px solid var(--line-strong);border-radius:7px;padding:.72rem .82rem;background:#fff;color:var(--ink)}
+.commercial-selector label{display:grid;gap:.45rem;font-weight:750;color:var(--blueprint-navy)}
+.commercial-admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.commercial-admin-grid .create-panel{box-shadow:none}
+.hierarchy-review small{color:var(--steel)}
+.hierarchy-columns{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;margin:1rem 0}
+.hierarchy-columns>div{display:grid;align-content:start;gap:.45rem;padding:1rem;background:#f7f9fa;border:1px solid var(--line)}
+.hierarchy-columns h3{margin-bottom:.3rem;color:var(--blueprint-navy)}
+.hierarchy-columns button{border:0;border-inline-start:3px solid var(--survey-blue);padding:.55rem;text-align:start;background:#fff;color:var(--ink);cursor:pointer}
+.inventory-filters{display:grid;grid-template-columns:minmax(220px,1fr) minmax(180px,.5fr) auto;gap:.75rem;margin:1rem 0}
+.inventory-table{display:grid;border-top:1px solid var(--line)}
+.inventory-table article{display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,.7fr) auto;align-items:center;gap:1rem;padding:1rem;border-bottom:1px solid var(--line)}
+.inventory-table article>div{display:flex;align-items:center;flex-wrap:wrap;gap:.65rem}
+.inventory-table article>div:first-child{display:grid;grid-template-columns:auto 1fr;align-items:baseline}
+.inventory-table article>div:first-child span{grid-column:1/-1;color:var(--steel);font-size:.8rem}
+.inventory-actions{justify-content:flex-end}
+.status-available{color:var(--permit-green);background:#eef8f4}.status-blocked,.status-withdrawn{color:var(--danger);background:#fff2f2}.status-unreleased,.status-held,.status-reserved{color:#8a641d;background:#fff7e7}.status-sold{color:var(--blueprint-navy);background:#eaf2f6}
+@media(max-width:980px){.commercial-admin-grid{grid-template-columns:1fr}.hierarchy-columns{grid-template-columns:repeat(2,minmax(0,1fr))}.inventory-table article{grid-template-columns:1fr}.inventory-actions{justify-content:flex-start}}
+@media(max-width:680px){.hierarchy-columns,.inventory-filters{grid-template-columns:1fr}}
