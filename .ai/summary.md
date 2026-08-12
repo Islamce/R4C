@@ -10,7 +10,7 @@ R4C — a BIM-centered platform for governed real-estate development delivery, c
 - Modules: 6 declared, 0 discovered only
 - Drift: 0 error, 0 warning, 0 info
 - Generator: `kaaf` v0.7.0
-- Input digest: `89a2561a6d755d14…`
+- Input digest: `c38bc5760dd5d981…`
 
 ## Modules
 
@@ -20,12 +20,12 @@ check against, `derived` = discovered with no declaration.
 
 | Module | Path | Owner | Purpose | Confidence |
 |---|---|---|---|---|
-| `r4c-api` | `apps/api` | Backend | Serve the governed R4C domain over HTTP: projects, WBS, documents, approvals and progress. | `verified` |
+| `r4c-api` | `apps/api` | Backend | Serve the governed R4C domain over HTTP: commercial inventory, projects, WBS, documents, approvals and progress. | `verified` |
 | `r4c-bim-worker` | `apps/bim-worker` | Data | Extract geometry and metadata from IFC models so the platform can reason about them. | `verified` |
 | `r4c-contracts` | `packages/contracts` | Backend | Define the typed contracts shared between the API and the web client. | `verified` |
 | `r4c-kaaf-tooling` | `scripts/architecture` | DevOps | Generate and validate this repository's KAAF architecture context. | `verified` |
 | `r4c-scripts` | `scripts` | DevOps | Provision local development environments and generate production configuration. | `verified` |
-| `r4c-web` | `apps/web` | Frontend | Present the R4C platform to users, including the IFC model viewer and executive dashboards. | `verified` |
+| `r4c-web` | `apps/web` | Frontend | Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards. | `verified` |
 
 ## Dependencies
 
@@ -49,7 +49,11 @@ No declared public contracts.
 
 ## Permissions
 
-No declared permissions.
+| Key | Module | Roles | Enforced at |
+|---|---|---|---|
+| `commercial:manage` | `r4c-api` | ADMIN | — |
+| `commercial:read` | `r4c-api` | ADMIN, VIEWER | — |
+| `commercial:status` | `r4c-api` | ADMIN | — |
 
 ## External integrations
 
@@ -73,4 +77,4 @@ No drift: every declaration matches what discovery found in the source.
 Declarations come from `kaaf.repo.json` and `kaaf.module.json`. Discovery is a static
 read of the source: dynamic imports and runtime wiring are invisible to it, so the
 absence of a drift finding is not proof that none exists.
-<!-- kaaf:bodyDigest=e88ae0880bc849e8f4161ec80aa55e59179c2f22ccc94717cbe91da2a42c39d4 -->
+<!-- kaaf:bodyDigest=ed27b7d76471539515cef84b83090d970d15c915e2d3b48f0ebaa0849b6b4563 -->

@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "ai-context.json",
-    "bodyDigest": "2e213fe3b5da71617aa02789c3d18afe96f463a5c404f5e85df4f05518e62395",
+    "bodyDigest": "cfd1d6a4b3858acc7d8d3f0e304f9d1e20ae131aae79e83863a9d977f8ba4a62",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "89a2561a6d755d14f2ae0a2091f4e8aff7c530bd31781d49cee376ef20f37e9b",
+    "inputDigest": "c38bc5760dd5d981c3d9ad768a5a0470b654e1350e9c9ceea4c2e662728e9dd2",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -26,7 +26,7 @@
     "modules": 6,
     "modulesDeclared": 6,
     "modulesUndeclared": 0,
-    "permissions": 0
+    "permissions": 3
   },
   "drift": {
     "counts": {
@@ -53,7 +53,7 @@
         "apps/api/package.json",
         "apps/api/src/main.ts"
       ],
-      "purpose": "Serve the governed R4C domain over HTTP: projects, WBS, documents, approvals and progress."
+      "purpose": "Serve the governed R4C domain over HTTP: commercial inventory, projects, WBS, documents, approvals and progress."
     },
     {
       "confidence": "verified",
@@ -131,7 +131,7 @@
       "publicEntryPoints": [
         "apps/web/package.json"
       ],
-      "purpose": "Present the R4C platform to users, including the IFC model viewer and executive dashboards."
+      "purpose": "Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards."
     }
   ],
   "pointers": {

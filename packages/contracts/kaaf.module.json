@@ -7,7 +7,8 @@
   "flows": [],
   "id": "r4c-contracts",
   "ownedEntities": [
-    "api-contract"
+    "api-contract",
+    "commercial-inventory-contract"
   ],
   "owner": "Backend",
   "permissions": [],

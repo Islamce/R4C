@@ -91,7 +91,7 @@ test("tenant-owned Prisma models declare tenantId", async () => {
 });
 
 test("sensitive controllers protect every route with permissions", async () => {
-  const controllers = ["cost", "materials", "quality", "hse", "turnover"];
+  const controllers = ["commercial", "cost", "materials", "quality", "hse", "turnover"];
   for (const moduleName of controllers) {
     const source = await readFile(
       new URL(`../src/${moduleName}/${moduleName}.controller.ts`, import.meta.url),

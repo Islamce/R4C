@@ -14,18 +14,27 @@
   "flows": [],
   "id": "r4c-api",
   "ownedEntities": [
+    "building",
+    "development-phase",
+    "floor",
     "project",
+    "unit",
+    "unit-type",
     "wbs-node",
     "design-document",
     "approval",
     "progress-record"
   ],
   "owner": "Backend",
-  "permissions": [],
+  "permissions": [
+    { "key": "commercial:manage", "roles": ["ADMIN"] },
+    { "key": "commercial:read", "roles": ["ADMIN", "VIEWER"] },
+    { "key": "commercial:status", "roles": ["ADMIN"] }
+  ],
   "publicEntryPoints": [
     "apps/api/package.json",
     "apps/api/src/main.ts"
   ],
-  "purpose": "Serve the governed R4C domain over HTTP: projects, WBS, documents, approvals and progress.",
+  "purpose": "Serve the governed R4C domain over HTTP: commercial inventory, projects, WBS, documents, approvals and progress.",
   "schemaVersion": "1.0.0"
 }

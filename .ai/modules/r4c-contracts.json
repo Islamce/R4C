@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-contracts.json",
-    "bodyDigest": "15e2f41649144e1f43d99196eb56617acaf0ddd993d1d3f9f1da529bd3dd34f6",
+    "bodyDigest": "e3e170cbfbe6f26bb2dc4006d5b2e78ce1fb3adb83482d275d65a289deee369a",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "89a2561a6d755d14f2ae0a2091f4e8aff7c530bd31781d49cee376ef20f37e9b",
+    "inputDigest": "c38bc5760dd5d981c3d9ad768a5a0470b654e1350e9c9ceea4c2e662728e9dd2",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -42,7 +42,8 @@
   "externalIntegrations": [],
   "id": "r4c-contracts",
   "ownedEntities": [
-    "api-contract"
+    "api-contract",
+    "commercial-inventory-contract"
   ],
   "owner": "Backend",
   "path": "packages/contracts",

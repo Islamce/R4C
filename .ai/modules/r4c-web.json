@@ -1,18 +1,18 @@
 {
   "_meta": {
     "artifact": "modules/r4c-web.json",
-    "bodyDigest": "dbaf3a55177fbc9edb2ffe7a6b445431cbf9be70783e6b3dbd02c2649e6ce25b",
+    "bodyDigest": "30b0fff3a75a5365ca1e8932582e8c9263b60cabb60b8a7ba87b476ef8f43cdd",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "89a2561a6d755d14f2ae0a2091f4e8aff7c530bd31781d49cee376ef20f37e9b",
+    "inputDigest": "c38bc5760dd5d981c3d9ad768a5a0470b654e1350e9c9ceea4c2e662728e9dd2",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 44 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 46 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
   "dependedOnBy": [],
@@ -21,6 +21,7 @@
   ],
   "discovery": {
     "codeFiles": [
+      "apps/web/app/(authenticated)/commercial/page.tsx",
       "apps/web/app/(authenticated)/cost-control/page.tsx",
       "apps/web/app/(authenticated)/layout.tsx",
       "apps/web/app/(authenticated)/progress/page.tsx",
@@ -43,6 +44,7 @@
       "apps/web/app/page.tsx",
       "apps/web/components/AppShell.tsx",
       "apps/web/components/BimViewer.tsx",
+      "apps/web/components/CommercialInventory.tsx",
       "apps/web/components/CostControlDashboard.tsx",
       "apps/web/components/I18nProvider.tsx",
       "apps/web/components/LoginForm.tsx",
@@ -76,6 +78,7 @@
     "parseErrors": [],
     "publicSymbols": [],
     "sourceFiles": [
+      "apps/web/app/(authenticated)/commercial/page.tsx",
       "apps/web/app/(authenticated)/cost-control/page.tsx",
       "apps/web/app/(authenticated)/layout.tsx",
       "apps/web/app/(authenticated)/progress/page.tsx",
@@ -98,6 +101,7 @@
       "apps/web/app/page.tsx",
       "apps/web/components/AppShell.tsx",
       "apps/web/components/BimViewer.tsx",
+      "apps/web/components/CommercialInventory.tsx",
       "apps/web/components/CostControlDashboard.tsx",
       "apps/web/components/I18nProvider.tsx",
       "apps/web/components/LoginForm.tsx",
@@ -142,7 +146,7 @@
   "publicEntryPoints": [
     "apps/web/package.json"
   ],
-  "purpose": "Present the R4C platform to users, including the IFC model viewer and executive dashboards.",
+  "purpose": "Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards.",
   "readNext": [
     "apps/web/package.json"
   ],
