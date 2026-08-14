@@ -162,6 +162,8 @@ jobs:
           cat uat-seed-verification.txt
 
       - name: Start production API and Next.js
+        env:
+          HOLD_EXPIRY_SWEEP_INTERVAL_MS: 300000
         run: |
           node apps/api/dist/main.js > phase65-api-runtime.log 2>&1 &
           echo $! > phase65-api-runtime.pid
