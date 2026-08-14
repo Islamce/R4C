@@ -1,22 +1,27 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { Prisma, UnitPriceRevisionStatus, UnitStatus } from "@prisma/client";
+import { LeadStatus, Prisma, SalesActivityType, UnitPriceRevisionStatus, UnitStatus } from "@prisma/client";
 import { AuthContext } from "../common/auth-context";
 import { PrismaService } from "../prisma/prisma.service";
 import {
   AttachCommercialMediaDto,
   BuildingQueryDto,
   CreateBuildingDto,
+  CreateCustomerDto,
+  CreateLeadDto,
+  CreateSalesActivityDto,
   CreatePaymentPlanDto,
   CreateUnitPriceRevisionDto,
   CreateFloorDto,
   CreatePhaseDto,
   CreateUnitDto,
   CreateUnitTypeDto,
+  LeadQueryDto,
   UnitQueryDto,
   UpdateBuildingDto,
   UpdateFloorDto,
@@ -448,6 +453,298 @@ export class CommercialService {
   async removeProjectMedia(user: AuthContext, id: string) { return this.removeMedia(user, "ProjectMedia", id, (tx) => tx.projectMedia); }
   async removeBuildingMedia(user: AuthContext, id: string) { return this.removeMedia(user, "BuildingMedia", id, (tx) => tx.buildingMedia); }
   async removeUnitMedia(user: AuthContext, id: string) { return this.removeMedia(user, "UnitMedia", id, (tx) => tx.unitMedia); }
+
+  async customer(tenantId: string, id: string) {
+    return this.customerView(await this.requireCustomer(tenantId, id));
+  }
+
+  async createCustomer(user: AuthContext, command: CreateCustomerDto) {
+    const phone = this.normalizeSaudiPhone(command.phone);
+    const email = this.normalizeEmail(command.email);
+    return this.prisma.$transaction(async (tx) => {
+      const exact = await tx.customer.findFirst({
+        where: { tenantId: user.tenantId, phoneNormalized: phone, emailNormalized: email },
+      });
+      if (exact) {
+        await this.audit(tx, user, "COMMERCIAL_CUSTOMER_REUSED", "Customer", exact.id, { deduplication: "exact-phone-email" });
+        return { customer: this.customerView(exact), reused: true };
+      }
+      const partial = await tx.customer.count({
+        where: { tenantId: user.tenantId, OR: [{ phoneNormalized: phone }, { emailNormalized: email }] },
+      });
+      if (partial > 0) {
+        await tx.customer.updateMany({
+          where: { tenantId: user.tenantId, OR: [{ phoneNormalized: phone }, { emailNormalized: email }] },
+          data: { dedupReviewRequired: true },
+        });
+      }
+      const customer = await tx.customer.create({
+        data: {
+          tenantId: user.tenantId,
+          firstName: command.firstName.trim(),
+          ...(command.lastName ? { lastName: command.lastName.trim() } : {}),
+          phone: phone,
+          phoneNormalized: phone,
+          email: command.email.trim(),
+          emailNormalized: email,
+          dedupReviewRequired: partial > 0,
+        },
+      });
+      await this.audit(tx, user, "COMMERCIAL_CUSTOMER_CREATED", "Customer", customer.id, {
+        deduplication: partial > 0 ? "partial-match-manual-review" : "no-match",
+      });
+      return { customer: this.customerView(customer), reused: false };
+    });
+  }
+
+  async ownLeads(user: AuthContext, query: LeadQueryDto) {
+    return this.leadPage(user.tenantId, query, user.userId);
+  }
+
+  async allLeads(tenantId: string, query: LeadQueryDto) {
+    return this.leadPage(tenantId, query);
+  }
+
+  async ownLead(user: AuthContext, id: string) {
+    return this.leadView(await this.requireLead(user.tenantId, id, user.userId));
+  }
+
+  async lead(tenantId: string, id: string) {
+    return this.leadView(await this.requireLead(tenantId, id));
+  }
+
+  async createLead(user: AuthContext, command: CreateLeadDto) {
+    const assigneeId = command.assignedToId ?? user.userId;
+    if (assigneeId !== user.userId && !user.permissions.includes("commercial:lead:reassign")) {
+      throw new ForbiddenException("Assigning a lead to another user requires commercial:lead:reassign");
+    }
+    this.assertLeadConsent(command);
+    return this.prisma.$transaction(async (tx) => {
+      const [customer, project, unit] = await Promise.all([
+        command.customerId ? this.requireCustomerTx(tx, user.tenantId, command.customerId) : undefined,
+        command.projectId ? this.requireProjectTx(tx, user.tenantId, command.projectId) : undefined,
+        command.unitId ? this.requireUnitTx(tx, user.tenantId, command.unitId) : undefined,
+      ]);
+      if (project && unit && unit.projectId !== project.id) {
+        throw new BadRequestException("Lead unit must belong to the selected project");
+      }
+      await this.requireTenantAssignee(tx, user.tenantId, assigneeId);
+      const lead = await tx.lead.create({
+        data: {
+          tenantId: user.tenantId,
+          ...(customer ? { customerId: customer.id } : {}),
+          ...(project ? { projectId: project.id } : {}),
+          ...(unit ? { unitId: unit.id } : {}),
+          assignedToId: assigneeId,
+          source: command.source.trim(),
+          isExternalEnquiry: command.isExternalEnquiry ?? false,
+          enquiryConsentGranted: command.enquiryConsentGranted ?? false,
+          ...(command.enquiryConsentAt ? { enquiryConsentAt: new Date(command.enquiryConsentAt) } : {}),
+          ...(command.enquiryConsentChannel ? { enquiryConsentChannel: command.enquiryConsentChannel.trim() } : {}),
+          ...(command.enquiryConsentPurpose ? { enquiryConsentPurpose: command.enquiryConsentPurpose.trim() } : {}),
+          marketingConsentGranted: command.marketingConsentGranted ?? false,
+          ...(command.marketingConsentAt ? { marketingConsentAt: new Date(command.marketingConsentAt) } : {}),
+          ...(command.marketingConsentChannel ? { marketingConsentChannel: command.marketingConsentChannel.trim() } : {}),
+          ...(command.marketingConsentPurpose ? { marketingConsentPurpose: command.marketingConsentPurpose.trim() } : {}),
+        },
+        include: this.leadInclude(),
+      });
+      await this.audit(tx, user, "COMMERCIAL_LEAD_CREATED", "Lead", lead.id, {
+        customerId: lead.customerId,
+        projectId: lead.projectId,
+        unitId: lead.unitId,
+        assignedToId: lead.assignedToId,
+        source: lead.source,
+        status: lead.status,
+        isExternalEnquiry: lead.isExternalEnquiry,
+      });
+      return this.leadView(lead);
+    });
+  }
+
+  async advanceLead(user: AuthContext, id: string, next: LeadStatus) {
+    if (next === LeadStatus.DISQUALIFIED) throw new BadRequestException("Use the dedicated disqualify operation");
+    const current = await this.requireLead(user.tenantId, id);
+    this.assertLeadOwnerOrManager(user, current.assignedToId);
+    this.assertLeadTransition(current.status, next);
+    return this.prisma.$transaction(async (tx) => {
+      const changed = await tx.lead.updateMany({
+        where: { id, tenantId: user.tenantId, status: current.status },
+        data: { status: next },
+      });
+      if (changed.count !== 1) throw new ConflictException("Lead state changed concurrently");
+      const lead = await tx.lead.findUniqueOrThrow({ where: { id }, include: this.leadInclude() });
+      await this.audit(tx, user, "COMMERCIAL_LEAD_STATUS_ADVANCED", "Lead", id, { from: current.status, to: next });
+      return this.leadView(lead);
+    });
+  }
+
+  async disqualifyLead(user: AuthContext, id: string) {
+    const current = await this.requireLead(user.tenantId, id);
+    this.assertLeadOwnerOrManager(user, current.assignedToId);
+    const eligible: LeadStatus[] = [LeadStatus.NEW, LeadStatus.CONTACTED, LeadStatus.QUALIFIED, LeadStatus.APPOINTMENT, LeadStatus.NEGOTIATION];
+    if (!eligible.includes(current.status)) throw new ConflictException(`Lead cannot be disqualified from ${current.status}`);
+    return this.prisma.$transaction(async (tx) => {
+      const changed = await tx.lead.updateMany({
+        where: { id, tenantId: user.tenantId, status: current.status },
+        data: { status: LeadStatus.DISQUALIFIED },
+      });
+      if (changed.count !== 1) throw new ConflictException("Lead state changed concurrently");
+      const lead = await tx.lead.findUniqueOrThrow({ where: { id }, include: this.leadInclude() });
+      await this.audit(tx, user, "COMMERCIAL_LEAD_DISQUALIFIED", "Lead", id, { from: current.status, to: LeadStatus.DISQUALIFIED });
+      return this.leadView(lead);
+    });
+  }
+
+  async reassignLead(user: AuthContext, id: string, assignedToId: string) {
+    const before = await this.requireLead(user.tenantId, id);
+    await this.requireTenantAssignee(this.prisma, user.tenantId, assignedToId);
+    if (before.assignedToId === assignedToId) return this.leadView(before);
+    return this.prisma.$transaction(async (tx) => {
+      const lead = await tx.lead.update({ where: { id }, data: { assignedToId }, include: this.leadInclude() });
+      await this.audit(tx, user, "COMMERCIAL_LEAD_REASSIGNED", "Lead", id, { fromAssignedToId: before.assignedToId, toAssignedToId: assignedToId });
+      return this.leadView(lead);
+    });
+  }
+
+  async activities(tenantId: string, leadId: string) {
+    await this.requireLead(tenantId, leadId);
+    const activities = await this.prisma.salesActivity.findMany({
+      where: { tenantId, leadId }, orderBy: { createdAt: "asc" }, include: { actor: { select: { id: true, displayName: true } } },
+    });
+    return activities.map((activity) => this.activityView(activity));
+  }
+
+  async logActivity(user: AuthContext, leadId: string, command: CreateSalesActivityDto) {
+    const lead = await this.requireLead(user.tenantId, leadId);
+    const hasManagerVisibility = user.permissions.includes("commercial:lead:view-all");
+    if (lead.assignedToId !== user.userId && !hasManagerVisibility) {
+      throw new ForbiddenException("Only the assigned owner or a manager-tier viewer may log a Lead activity");
+    }
+    return this.prisma.$transaction(async (tx) => {
+      const activity = await tx.salesActivity.create({
+        data: { tenantId: user.tenantId, leadId, actorId: user.userId, type: command.type, notes: command.notes.trim() },
+        include: { actor: { select: { id: true, displayName: true } } },
+      });
+      await this.audit(tx, user, "COMMERCIAL_SALES_ACTIVITY_LOGGED", "SalesActivity", activity.id, { leadId, type: activity.type });
+      return this.activityView(activity);
+    });
+  }
+
+  private async leadPage(tenantId: string, query: LeadQueryDto, assignedToId?: string) {
+    const where: Prisma.LeadWhereInput = {
+      tenantId,
+      ...(assignedToId ? { assignedToId } : {}),
+      ...(query.customerId ? { customerId: query.customerId } : {}),
+      ...(query.projectId ? { projectId: query.projectId } : {}),
+      ...(query.unitId ? { unitId: query.unitId } : {}),
+      ...(query.status ? { status: query.status } : {}),
+    };
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.lead.findMany({
+        where,
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
+        orderBy: { createdAt: "desc" },
+        include: this.leadInclude(),
+      }),
+      this.prisma.lead.count({ where }),
+    ]);
+    return { items: items.map((lead) => this.leadView(lead)), total, page: query.page, pageSize: query.pageSize };
+  }
+
+  private assertLeadConsent(command: CreateLeadDto) {
+    const assertPurpose = (label: string, granted: boolean | undefined, at: string | undefined, channel: string | undefined, purpose: string | undefined, required: boolean) => {
+      if (required && granted !== true) throw new BadRequestException(`${label} consent must be granted for an externally sourced Lead`);
+      if (granted === true && (!at || !channel || !purpose)) throw new BadRequestException(`${label} consent timestamp, channel, and purpose are required when consent is granted`);
+      if (granted !== true && (at || channel || purpose)) throw new BadRequestException(`${label} consent metadata requires consent to be granted`);
+    };
+    assertPurpose("Enquiry-response", command.enquiryConsentGranted, command.enquiryConsentAt, command.enquiryConsentChannel, command.enquiryConsentPurpose, command.isExternalEnquiry === true);
+    assertPurpose("Marketing", command.marketingConsentGranted, command.marketingConsentAt, command.marketingConsentChannel, command.marketingConsentPurpose, false);
+  }
+
+  private assertLeadOwnerOrManager(user: AuthContext, assignedToId: string) {
+    if (assignedToId !== user.userId && !user.permissions.includes("commercial:lead:view-all")) {
+      throw new ForbiddenException("Only the assigned owner or a manager-tier viewer may update Lead status");
+    }
+  }
+
+  private assertLeadTransition(current: LeadStatus, next: LeadStatus) {
+    const allowed: Record<LeadStatus, LeadStatus[]> = {
+      [LeadStatus.NEW]: [LeadStatus.CONTACTED],
+      [LeadStatus.CONTACTED]: [LeadStatus.QUALIFIED],
+      [LeadStatus.QUALIFIED]: [LeadStatus.APPOINTMENT],
+      [LeadStatus.APPOINTMENT]: [LeadStatus.NEGOTIATION],
+      [LeadStatus.NEGOTIATION]: [LeadStatus.RESERVED],
+      [LeadStatus.RESERVED]: [LeadStatus.WON, LeadStatus.LOST],
+      [LeadStatus.WON]: [],
+      [LeadStatus.LOST]: [],
+      [LeadStatus.DISQUALIFIED]: [],
+    };
+    if (!allowed[current].includes(next)) throw new ConflictException(`Lead cannot transition from ${current} to ${next}`);
+  }
+
+  private async requireTenantAssignee(tx: { tenantMembership: { findFirst: Function } }, tenantId: string, userId: string) {
+    const membership = await tx.tenantMembership.findFirst({ where: { tenantId, userId, user: { isActive: true } } });
+    if (!membership) throw new BadRequestException("Lead assignee is not an active member of this tenant");
+  }
+
+  private requireCustomer(tenantId: string, id: string) {
+    return this.found(this.prisma.customer.findFirst({ where: { id, tenantId } }), "Customer");
+  }
+
+  private requireCustomerTx(tx: Prisma.TransactionClient, tenantId: string, id: string) {
+    return this.found(tx.customer.findFirst({ where: { id, tenantId } }), "Customer");
+  }
+
+  private requireProjectTx(tx: Prisma.TransactionClient, tenantId: string, id: string) {
+    return this.found(tx.project.findFirst({ where: { id, tenantId } }), "Project");
+  }
+
+  private requireUnitTx(tx: Prisma.TransactionClient, tenantId: string, id: string) {
+    return this.found(tx.unit.findFirst({ where: { id, tenantId } }), "Unit");
+  }
+
+  private requireLead(tenantId: string, id: string, assignedToId?: string) {
+    return this.found(this.prisma.lead.findFirst({ where: { id, tenantId, ...(assignedToId ? { assignedToId } : {}) }, include: this.leadInclude() }), "Lead");
+  }
+
+  private leadInclude() {
+    return {
+      customer: { select: { id: true, firstName: true, lastName: true, phone: true, email: true } },
+      project: { select: { id: true, code: true, name: true } },
+      unit: { select: { id: true, code: true, number: true } },
+      assignedTo: { select: { id: true, displayName: true } },
+    } as const;
+  }
+
+  private customerView(customer: { id: string; firstName: string; lastName: string | null; phone: string; email: string; dedupReviewRequired: boolean; createdAt: Date; updatedAt: Date }) {
+    return { id: customer.id, firstName: customer.firstName, lastName: customer.lastName, phone: customer.phone, email: customer.email, dedupReviewRequired: customer.dedupReviewRequired, createdAt: customer.createdAt, updatedAt: customer.updatedAt };
+  }
+
+  private leadView(lead: { id: string; customerId: string | null; projectId: string | null; unitId: string | null; assignedToId: string; source: string; status: LeadStatus; isExternalEnquiry: boolean; enquiryConsentGranted: boolean; enquiryConsentAt: Date | null; enquiryConsentChannel: string | null; enquiryConsentPurpose: string | null; marketingConsentGranted: boolean; marketingConsentAt: Date | null; marketingConsentChannel: string | null; marketingConsentPurpose: string | null; createdAt: Date; updatedAt: Date; customer: { id: string; firstName: string; lastName: string | null; phone: string; email: string } | null; project: { id: string; code: string; name: string } | null; unit: { id: string; code: string; number: string } | null; assignedTo: { id: string; displayName: string } }) {
+    return {
+      id: lead.id, customerId: lead.customerId, projectId: lead.projectId, unitId: lead.unitId, assignedToId: lead.assignedToId,
+      source: lead.source, status: lead.status, isExternalEnquiry: lead.isExternalEnquiry,
+      enquiryConsent: { granted: lead.enquiryConsentGranted, at: lead.enquiryConsentAt, channel: lead.enquiryConsentChannel, purpose: lead.enquiryConsentPurpose },
+      marketingConsent: { granted: lead.marketingConsentGranted, at: lead.marketingConsentAt, channel: lead.marketingConsentChannel, purpose: lead.marketingConsentPurpose },
+      customer: lead.customer, project: lead.project, unit: lead.unit, assignedTo: lead.assignedTo,
+      createdAt: lead.createdAt, updatedAt: lead.updatedAt,
+    };
+  }
+
+  private activityView(activity: { id: string; leadId: string; actorId: string; type: SalesActivityType; notes: string; createdAt: Date; actor: { id: string; displayName: string } }) {
+    return { id: activity.id, leadId: activity.leadId, actorId: activity.actorId, actor: activity.actor, type: activity.type, notes: activity.notes, createdAt: activity.createdAt };
+  }
+
+  private normalizeSaudiPhone(value: string) {
+    const compact = value.trim().replace(/[\s()-]/g, "");
+    const local = compact.startsWith("+966") ? compact.slice(4) : compact.startsWith("00966") ? compact.slice(5) : compact.startsWith("966") ? compact.slice(3) : compact.startsWith("0") ? compact.slice(1) : compact;
+    if (!/^5\d{8}$/.test(local)) throw new BadRequestException("Phone must be a Saudi mobile number");
+    return `+966${local}`;
+  }
+
+  private normalizeEmail(value: string) { return value.trim().toLowerCase(); }
 
   private async removeMedia(user: AuthContext, entityType: string, id: string, delegate: (tx: Prisma.TransactionClient) => { findFirst: Function; delete: Function }) {
     return this.prisma.$transaction(async (tx) => {

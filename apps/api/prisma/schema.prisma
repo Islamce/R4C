@@ -47,6 +47,28 @@ enum UnitPriceRevisionStatus {
   WITHDRAWN
 }
 
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  APPOINTMENT
+  NEGOTIATION
+  RESERVED
+  WON
+  LOST
+  DISQUALIFIED
+}
+
+enum SalesActivityType {
+  CALL
+  EMAIL
+  WHATSAPP
+  MEETING
+  SITE_VISIT
+  FOLLOW_UP
+  NOTE
+}
+
 enum WorkflowStatus {
   DRAFT
   ASSIGNED
@@ -346,6 +368,9 @@ model Tenant {
   projectMedia       ProjectMedia[]
   buildingMedia      BuildingMedia[]
   unitMedia          UnitMedia[]
+  customers          Customer[]
+  leads              Lead[]
+  salesActivities    SalesActivity[]
 }
 
 model User {
@@ -402,6 +427,8 @@ model User {
   handoverPackagesReviewed     HandoverPackage[] @relation("HandoverPackageReviewer")
   handoverRequirementsProvided HandoverRequirement[] @relation("HandoverRequirementProvider")
   unitPriceRevisionsCreated UnitPriceRevision[] @relation("UnitPriceRevisionCreator")
+  assignedLeads             Lead[]              @relation("LeadAssignee")
+  salesActivities           SalesActivity[]     @relation("SalesActivityActor")
 }
 
 model Role {
@@ -493,6 +520,7 @@ model Project {
   units             Unit[]
   paymentPlans      PaymentPlan[]
   projectMedia      ProjectMedia[]
+  leads             Lead[]
 
   @@unique([tenantId, code])
   @@unique([id, tenantId])
@@ -616,11 +644,81 @@ model Unit {
   unitType     UnitType   @relation(fields: [unitTypeId, projectId, tenantId], references: [id, projectId, tenantId], onDelete: Restrict)
   priceRevisions UnitPriceRevision[]
   media        UnitMedia[]
+  leads        Lead[]
 
   @@unique([projectId, code])
   @@unique([floorId, number])
+  @@unique([id, tenantId])
   @@index([tenantId, projectId, phaseId, buildingId, floorId])
   @@index([tenantId, projectId, status, unitTypeId])
+}
+
+model Customer {
+  id              String   @id @default(uuid())
+  tenantId        String
+  firstName       String
+  lastName        String?
+  phone           String   @db.VarChar(32)
+  phoneNormalized String   @db.VarChar(32)
+  email           String   @db.VarChar(320)
+  emailNormalized String   @db.VarChar(320)
+  dedupReviewRequired Boolean @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  leads           Lead[]
+
+  @@unique([tenantId, phoneNormalized, emailNormalized])
+  @@unique([id, tenantId])
+  @@index([tenantId, createdAt])
+}
+
+model Lead {
+  id                       String     @id @default(uuid())
+  tenantId                 String
+  customerId               String?
+  projectId                String?
+  unitId                   String?
+  assignedToId             String
+  source                   String
+  status                   LeadStatus @default(NEW)
+  isExternalEnquiry        Boolean    @default(false)
+  enquiryConsentGranted    Boolean    @default(false)
+  enquiryConsentAt         DateTime?
+  enquiryConsentChannel    String?
+  enquiryConsentPurpose    String?
+  marketingConsentGranted  Boolean    @default(false)
+  marketingConsentAt       DateTime?
+  marketingConsentChannel  String?
+  marketingConsentPurpose  String?
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+  tenant                   Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer                 Customer?  @relation(fields: [customerId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  project                  Project?   @relation(fields: [projectId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  unit                     Unit?      @relation(fields: [unitId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  assignedTo               User       @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: Restrict)
+  activities               SalesActivity[]
+
+  @@unique([id, tenantId])
+  @@index([tenantId, assignedToId, status, createdAt])
+  @@index([tenantId, customerId, createdAt])
+  @@index([tenantId, projectId, unitId])
+}
+
+model SalesActivity {
+  id        String            @id @default(uuid())
+  tenantId  String
+  leadId    String
+  actorId   String
+  type      SalesActivityType
+  notes     String            @db.Text
+  createdAt DateTime          @default(now())
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lead      Lead              @relation(fields: [leadId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  actor     User              @relation("SalesActivityActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, leadId, createdAt])
 }
 
 model UnitPriceRevision {

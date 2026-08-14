@@ -2,9 +2,14 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from "@
 import { AuthContext, CurrentUser } from "../common/auth-context";
 import { RequirePermissions } from "../common/authorization";
 import {
+  AdvanceLeadDto,
+  AssignLeadDto,
   AttachCommercialMediaDto,
   BuildingQueryDto,
   CreateBuildingDto,
+  CreateCustomerDto,
+  CreateLeadDto,
+  CreateSalesActivityDto,
   CreatePaymentPlanDto,
   CreateUnitPriceRevisionDto,
   CreateFloorDto,
@@ -12,6 +17,7 @@ import {
   CreateUnitDto,
   CreateUnitTypeDto,
   FloorQueryDto,
+  LeadQueryDto,
   ProjectQueryDto,
   UnitQueryDto,
   UpdateBuildingDto,
@@ -204,5 +210,65 @@ export class CommercialController {
   @Delete("unit-media/:id") @RequirePermissions("commercial:media:manage")
   removeUnitMedia(@CurrentUser() user: AuthContext, @Param("id") id: string) {
     return this.commercial.removeUnitMedia(user, id);
+  }
+
+  @Post("customers") @RequirePermissions("commercial:customer:create")
+  createCustomer(@CurrentUser() user: AuthContext, @Body() body: CreateCustomerDto) {
+    return this.commercial.createCustomer(user, body);
+  }
+
+  @Get("customers/:id") @RequirePermissions("commercial:customer:view")
+  customer(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.customer(user.tenantId, id);
+  }
+
+  @Get("leads") @RequirePermissions("commercial:lead:view-own")
+  ownLeads(@CurrentUser() user: AuthContext, @Query() query: LeadQueryDto) {
+    return this.commercial.ownLeads(user, query);
+  }
+
+  @Get("leads/all") @RequirePermissions("commercial:lead:view-all")
+  allLeads(@CurrentUser() user: AuthContext, @Query() query: LeadQueryDto) {
+    return this.commercial.allLeads(user.tenantId, query);
+  }
+
+  @Get("leads/all/:id") @RequirePermissions("commercial:lead:view-all")
+  lead(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.lead(user.tenantId, id);
+  }
+
+  @Get("leads/:id") @RequirePermissions("commercial:lead:view-own")
+  ownLead(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.ownLead(user, id);
+  }
+
+  @Post("leads") @RequirePermissions("commercial:lead:create")
+  createLead(@CurrentUser() user: AuthContext, @Body() body: CreateLeadDto) {
+    return this.commercial.createLead(user, body);
+  }
+
+  @Patch("leads/:id/status") @RequirePermissions("commercial:lead:qualify")
+  advanceLead(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: AdvanceLeadDto) {
+    return this.commercial.advanceLead(user, id, body.status);
+  }
+
+  @Post("leads/:id/disqualify") @RequirePermissions("commercial:lead:disqualify")
+  disqualifyLead(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.disqualifyLead(user, id);
+  }
+
+  @Patch("leads/:id/assignee") @RequirePermissions("commercial:lead:reassign")
+  reassignLead(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: AssignLeadDto) {
+    return this.commercial.reassignLead(user, id, body.assignedToId);
+  }
+
+  @Get("leads/:id/activities") @RequirePermissions("commercial:activity:view")
+  activities(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.activities(user.tenantId, id);
+  }
+
+  @Post("leads/:id/activities") @RequirePermissions("commercial:activity:log")
+  logActivity(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: CreateSalesActivityDto) {
+    return this.commercial.logActivity(user, id, body);
   }
 }
