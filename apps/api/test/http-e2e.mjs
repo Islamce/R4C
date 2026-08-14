@@ -134,6 +134,12 @@ test(
       "commercial:read",
       "commercial:manage",
       "commercial:status",
+      "commercial:price:create-draft",
+      "commercial:price:publish",
+      "commercial:price:view-published",
+      "commercial:price:view-draft",
+      "commercial:payment-plan:manage",
+      "commercial:media:manage",
     ];
     await prisma.permission.createMany({
       data: permissions.map((code) => ({ code, name: code })),
@@ -302,6 +308,8 @@ test(
       });
       assert.ok(projectAudit, "Project creation must produce an audit event");
 
+      let commercialUnitId;
+      let commercialBuildingId;
       await t.test("commercial hierarchy is tenant-isolated, governed, and filterable", async () => {
         const phase = await request("/commercial/phases", {
           token: adminToken,
@@ -351,6 +359,8 @@ test(
         });
         assert.equal(unit.response.status, 201, JSON.stringify(unit.body));
         assert.equal(unit.body.status, "DRAFT");
+        commercialUnitId = unit.body.id;
+        commercialBuildingId = building.body.id;
 
         const filtered = await request(`/commercial/units?projectId=${createdProject.body.id}&phaseId=${phase.body.id}&bedrooms=2&status=DRAFT`, { token: adminToken });
         assert.equal(filtered.response.status, 200, JSON.stringify(filtered.body));
@@ -408,6 +418,75 @@ test(
           Buffer.from(await object.arrayBuffer()),
           pdfBytes,
         );
+      });
+
+      await t.test("C02 pricing, payment plans, and media preserve commercial controls", async () => {
+        const forbiddenDraft = await request(`/commercial/units/${commercialUnitId}/prices`, {
+          token: readerLogin.body.accessToken,
+          method: "POST",
+          body: { basePriceMinor: "10000000", listPriceMinor: "11000000", currency: "SAR" },
+        });
+        assert.equal(forbiddenDraft.response.status, 403);
+
+        const firstDraft = await request(`/commercial/units/${commercialUnitId}/prices`, {
+          token: adminToken,
+          method: "POST",
+          body: { basePriceMinor: "10000000", listPriceMinor: "11000000", currency: "SAR", validFrom: "2030-01-01T00:00:00.000Z" },
+        });
+        assert.equal(firstDraft.response.status, 201, JSON.stringify(firstDraft.body));
+        assert.equal(firstDraft.body.status, "DRAFT");
+
+        const firstPublished = await request(`/commercial/unit-prices/${firstDraft.body.id}/publish`, { token: adminToken, method: "POST" });
+        assert.equal(firstPublished.response.status, 201, JSON.stringify(firstPublished.body));
+        assert.equal(firstPublished.body.status, "PUBLISHED");
+        assert.equal(firstPublished.body.validFrom, "2030-01-01T00:00:00.000Z");
+
+        const secondDraft = await request(`/commercial/units/${commercialUnitId}/prices`, {
+          token: adminToken,
+          method: "POST",
+          body: { basePriceMinor: "12000000", listPriceMinor: "12500000", currency: "SAR", validFrom: "2030-02-01T00:00:00.000Z" },
+        });
+        assert.equal(secondDraft.response.status, 201, JSON.stringify(secondDraft.body));
+        const secondPublished = await request(`/commercial/unit-prices/${secondDraft.body.id}/publish`, { token: adminToken, method: "POST" });
+        assert.equal(secondPublished.response.status, 201, JSON.stringify(secondPublished.body));
+        assert.equal(secondPublished.body.status, "PUBLISHED");
+
+        const firstPersisted = await prisma.unitPriceRevision.findUnique({ where: { id: firstDraft.body.id } });
+        assert.equal(firstPersisted.status, "SUPERSEDED");
+        assert.equal(firstPersisted.validTo.toISOString(), "2030-02-01T00:00:00.000Z");
+        assert.equal(firstPersisted.listPriceMinor.toString(), "11000000");
+
+        const published = await request(`/commercial/units/${commercialUnitId}/prices`, { token: adminToken });
+        assert.equal(published.response.status, 200, JSON.stringify(published.body));
+        assert.equal(published.body.length, 2);
+        assert.ok(published.body.every((revision) => revision.status !== "DRAFT"));
+
+        const invalidPlan = await request(`/commercial/projects/${createdProject.body.id}/payment-plans`, {
+          token: adminToken,
+          method: "POST",
+          body: { installments: [{ sequence: 1, shareBasisPoints: 7000 }, { sequence: 2, shareBasisPoints: 2000 }] },
+        });
+        assert.equal(invalidPlan.response.status, 400);
+
+        const paymentPlan = await request(`/commercial/projects/${createdProject.body.id}/payment-plans`, {
+          token: adminToken,
+          method: "POST",
+          body: { installments: [{ sequence: 1, shareBasisPoints: 2500, label: "Booking" }, { sequence: 2, shareBasisPoints: 7500, label: "Completion" }] },
+        });
+        assert.equal(paymentPlan.response.status, 201, JSON.stringify(paymentPlan.body));
+        assert.equal(paymentPlan.body.installments.reduce((sum, installment) => sum + installment.shareBasisPoints, 0), 10000);
+
+        const media = await request(`/commercial/units/${commercialUnitId}/media`, {
+          token: adminToken,
+          method: "POST",
+          body: { documentVersionId: pdfVersion.id, sortOrder: 1 },
+        });
+        assert.equal(media.response.status, 201, JSON.stringify(media.body));
+        assert.equal(media.body.documentVersionId, pdfVersion.id);
+
+        const mediaAudit = await prisma.auditEvent.findFirst({ where: { tenantId: tenantA.id, entityId: media.body.id, action: "COMMERCIAL_UNIT_MEDIA_ATTACHED" } });
+        assert.ok(mediaAudit, "Commercial media attachment must produce an audit event");
+        assert.ok(commercialBuildingId, "Commercial hierarchy must retain the created building identity");
       });
 
       const ifcDocument = await request(

@@ -1,6 +1,8 @@
 import { Type } from "class-transformer";
 import { DevelopmentPhaseStatus, UnitStatus } from "@prisma/client";
 import {
+  ArrayMinSize,
+  IsArray,
   IsDateString,
   IsDecimal,
   IsEnum,
@@ -9,8 +11,10 @@ import {
   IsString,
   IsUUID,
   Length,
+  Matches,
   Max,
   Min,
+  ValidateNested,
 } from "class-validator";
 
 export class ProjectQueryDto {
@@ -177,4 +181,27 @@ export class UnitQueryDto {
   @IsOptional() @IsString() @Length(1, 80) q?: string;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) page: number = 1;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) pageSize: number = 25;
+}
+
+export class CreateUnitPriceRevisionDto {
+  @Matches(/^\d+$/) basePriceMinor!: string;
+  @Matches(/^\d+$/) listPriceMinor!: string;
+  @IsString() @Matches(/^[A-Z]{3}$/) currency!: string;
+  @IsOptional() @IsDateString() validFrom?: string;
+}
+
+export class CreatePaymentPlanInstallmentDto {
+  @Type(() => Number) @IsInt() @Min(1) @Max(100000) sequence!: number;
+  @Type(() => Number) @IsInt() @Min(1) @Max(10000) shareBasisPoints!: number;
+  @IsOptional() @IsString() @Length(1, 160) label?: string;
+}
+
+export class CreatePaymentPlanDto {
+  @IsArray() @ArrayMinSize(1) @ValidateNested({ each: true }) @Type(() => CreatePaymentPlanInstallmentDto)
+  installments!: CreatePaymentPlanInstallmentDto[];
+}
+
+export class AttachCommercialMediaDto {
+  @IsUUID() documentVersionId!: string;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(0) @Max(100000) sortOrder?: number;
 }

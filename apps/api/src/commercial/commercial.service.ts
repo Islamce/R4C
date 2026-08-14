@@ -4,12 +4,15 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { Prisma, UnitStatus } from "@prisma/client";
+import { Prisma, UnitPriceRevisionStatus, UnitStatus } from "@prisma/client";
 import { AuthContext } from "../common/auth-context";
 import { PrismaService } from "../prisma/prisma.service";
 import {
+  AttachCommercialMediaDto,
   BuildingQueryDto,
   CreateBuildingDto,
+  CreatePaymentPlanDto,
+  CreateUnitPriceRevisionDto,
   CreateFloorDto,
   CreatePhaseDto,
   CreateUnitDto,
@@ -267,6 +270,238 @@ export class CommercialService {
       await this.audit(tx, user, command === "release" ? "COMMERCIAL_UNIT_RELEASED" : "COMMERCIAL_UNIT_BLOCKED", "Unit", id, { from: current.status, to: next });
       return unit;
     });
+  }
+
+  async publishedPrices(tenantId: string, unitId: string) {
+    await this.requireUnit(tenantId, unitId);
+    const revisions = await this.prisma.unitPriceRevision.findMany({
+      where: { tenantId, unitId, status: { in: [UnitPriceRevisionStatus.PUBLISHED, UnitPriceRevisionStatus.SUPERSEDED] } },
+      orderBy: [{ validFrom: "desc" }, { revision: "desc" }],
+    });
+    return revisions.map((revision) => this.priceView(revision));
+  }
+
+  async draftPrices(tenantId: string, unitId: string) {
+    await this.requireUnit(tenantId, unitId);
+    const revisions = await this.prisma.unitPriceRevision.findMany({
+      where: { tenantId, unitId, status: UnitPriceRevisionStatus.DRAFT },
+      orderBy: { revision: "desc" },
+    });
+    return revisions.map((revision) => this.priceView(revision));
+  }
+
+  async createPriceDraft(user: AuthContext, unitId: string, command: CreateUnitPriceRevisionDto) {
+    await this.requireUnit(user.tenantId, unitId);
+    const basePriceMinor = this.minorUnits(command.basePriceMinor, "Base price");
+    const listPriceMinor = this.minorUnits(command.listPriceMinor, "List price");
+    if (listPriceMinor < basePriceMinor) throw new BadRequestException("List price cannot be lower than base price");
+    const created = await this.unique("Price revision already exists; retry draft creation", () => this.prisma.$transaction(async (tx) => {
+      const latest = await tx.unitPriceRevision.findFirst({
+        where: { tenantId: user.tenantId, unitId },
+        orderBy: { revision: "desc" },
+        select: { revision: true },
+      });
+      const revision = await tx.unitPriceRevision.create({
+        data: {
+          tenantId: user.tenantId,
+          unitId,
+          revision: (latest?.revision ?? 0) + 1,
+          basePriceMinor,
+          listPriceMinor,
+          currency: command.currency,
+          ...(command.validFrom ? { validFrom: new Date(command.validFrom) } : {}),
+          createdById: user.userId,
+        },
+      });
+      await this.audit(tx, user, "COMMERCIAL_UNIT_PRICE_DRAFT_CREATED", "UnitPriceRevision", revision.id, {
+        unitId, revision: revision.revision, currency: revision.currency,
+      });
+      return revision;
+    }));
+    return this.priceView(created);
+  }
+
+  async publishPrice(user: AuthContext, id: string) {
+    const draft = await this.found(this.prisma.unitPriceRevision.findFirst({
+      where: { id, tenantId: user.tenantId },
+    }), "Unit price revision");
+    if (draft.status !== UnitPriceRevisionStatus.DRAFT) throw new ConflictException("Only a draft price revision can be published");
+    const published = await this.unique("A current published price already exists; retry publishing", () => this.prisma.$transaction(async (tx) => {
+      const revision = await tx.unitPriceRevision.findFirst({ where: { id, tenantId: user.tenantId } });
+      if (!revision || revision.status !== UnitPriceRevisionStatus.DRAFT) throw new ConflictException("Price revision state changed concurrently");
+      const publishedAt = new Date();
+      const validFrom = revision.validFrom ?? publishedAt;
+      const current = await tx.unitPriceRevision.findFirst({
+        where: { tenantId: user.tenantId, unitId: revision.unitId, status: UnitPriceRevisionStatus.PUBLISHED },
+      });
+      if (current?.validFrom && validFrom <= current.validFrom) {
+        throw new ConflictException("A successor price must begin after the current price validity start");
+      }
+      if (current) {
+        await tx.unitPriceRevision.update({
+          where: { id: current.id },
+          data: { status: UnitPriceRevisionStatus.SUPERSEDED, validTo: validFrom },
+        });
+      }
+      const published = await tx.unitPriceRevision.update({
+        where: { id: revision.id },
+        data: { status: UnitPriceRevisionStatus.PUBLISHED, validFrom, validTo: null, publishedAt },
+      });
+      await this.audit(tx, user, "COMMERCIAL_UNIT_PRICE_PUBLISHED", "UnitPriceRevision", published.id, {
+        unitId: published.unitId,
+        revision: published.revision,
+        supersededRevisionId: current?.id ?? null,
+      });
+      return published;
+    }));
+    return this.priceView(published);
+  }
+
+  async withdrawPrice(user: AuthContext, id: string) {
+    const draft = await this.found(this.prisma.unitPriceRevision.findFirst({ where: { id, tenantId: user.tenantId } }), "Unit price revision");
+    if (draft.status !== UnitPriceRevisionStatus.DRAFT) throw new ConflictException("Only a draft price revision can be withdrawn");
+    const withdrawn = await this.prisma.$transaction(async (tx) => {
+      const changed = await tx.unitPriceRevision.updateMany({
+        where: { id, tenantId: user.tenantId, status: UnitPriceRevisionStatus.DRAFT },
+        data: { status: UnitPriceRevisionStatus.WITHDRAWN },
+      });
+      if (changed.count !== 1) throw new ConflictException("Price revision state changed concurrently");
+      const withdrawn = await tx.unitPriceRevision.findUniqueOrThrow({ where: { id } });
+      await this.audit(tx, user, "COMMERCIAL_UNIT_PRICE_WITHDRAWN", "UnitPriceRevision", id, { unitId: withdrawn.unitId, revision: withdrawn.revision });
+      return withdrawn;
+    });
+    return this.priceView(withdrawn);
+  }
+
+  async paymentPlans(tenantId: string, projectId: string) {
+    await this.requireProject(tenantId, projectId);
+    return this.prisma.paymentPlan.findMany({
+      where: { tenantId, projectId },
+      include: { installments: { orderBy: { sequence: "asc" } } },
+      orderBy: { createdAt: "asc" },
+    });
+  }
+
+  async createPaymentPlan(user: AuthContext, projectId: string, command: CreatePaymentPlanDto) {
+    await this.requireProject(user.tenantId, projectId);
+    this.assertInstallments(command.installments);
+    return this.prisma.$transaction(async (tx) => {
+      const plan = await tx.paymentPlan.create({
+        data: {
+          tenantId: user.tenantId,
+          projectId,
+          installments: { create: this.installments(user.tenantId, command) },
+        },
+        include: { installments: { orderBy: { sequence: "asc" } } },
+      });
+      await this.audit(tx, user, "COMMERCIAL_PAYMENT_PLAN_CREATED", "PaymentPlan", plan.id, { projectId, installmentCount: plan.installments.length });
+      return plan;
+    });
+  }
+
+  async replacePaymentPlan(user: AuthContext, id: string, command: CreatePaymentPlanDto) {
+    const before = await this.found(this.prisma.paymentPlan.findFirst({ where: { id, tenantId: user.tenantId } }), "Payment plan");
+    this.assertInstallments(command.installments);
+    return this.prisma.$transaction(async (tx) => {
+      const plan = await tx.paymentPlan.update({
+        where: { id },
+        data: { installments: { deleteMany: {}, create: this.installments(user.tenantId, command) } },
+        include: { installments: { orderBy: { sequence: "asc" } } },
+      });
+      await this.audit(tx, user, "COMMERCIAL_PAYMENT_PLAN_REPLACED", "PaymentPlan", plan.id, {
+        projectId: before.projectId, installmentCount: plan.installments.length,
+      });
+      return plan;
+    });
+  }
+
+  async attachProjectMedia(user: AuthContext, projectId: string, command: AttachCommercialMediaDto) {
+    await this.requireProject(user.tenantId, projectId);
+    return this.prisma.$transaction(async (tx) => {
+      await this.requireDocumentVersion(tx, user.tenantId, projectId, command.documentVersionId);
+      const media = await tx.projectMedia.create({ data: { tenantId: user.tenantId, projectId, documentVersionId: command.documentVersionId, ...(command.sortOrder !== undefined ? { sortOrder: command.sortOrder } : {}) } });
+      await this.audit(tx, user, "COMMERCIAL_PROJECT_MEDIA_ATTACHED", "ProjectMedia", media.id, { projectId, documentVersionId: command.documentVersionId });
+      return media;
+    });
+  }
+
+  async attachBuildingMedia(user: AuthContext, buildingId: string, command: AttachCommercialMediaDto) {
+    const building = await this.requireBuilding(user.tenantId, buildingId);
+    return this.prisma.$transaction(async (tx) => {
+      await this.requireDocumentVersion(tx, user.tenantId, building.projectId, command.documentVersionId);
+      const media = await tx.buildingMedia.create({ data: { tenantId: user.tenantId, buildingId, documentVersionId: command.documentVersionId, ...(command.sortOrder !== undefined ? { sortOrder: command.sortOrder } : {}) } });
+      await this.audit(tx, user, "COMMERCIAL_BUILDING_MEDIA_ATTACHED", "BuildingMedia", media.id, { projectId: building.projectId, buildingId, documentVersionId: command.documentVersionId });
+      return media;
+    });
+  }
+
+  async attachUnitMedia(user: AuthContext, unitId: string, command: AttachCommercialMediaDto) {
+    const unit = await this.requireUnit(user.tenantId, unitId);
+    return this.prisma.$transaction(async (tx) => {
+      await this.requireDocumentVersion(tx, user.tenantId, unit.projectId, command.documentVersionId);
+      const media = await tx.unitMedia.create({ data: { tenantId: user.tenantId, unitId, documentVersionId: command.documentVersionId, ...(command.sortOrder !== undefined ? { sortOrder: command.sortOrder } : {}) } });
+      await this.audit(tx, user, "COMMERCIAL_UNIT_MEDIA_ATTACHED", "UnitMedia", media.id, { projectId: unit.projectId, unitId, documentVersionId: command.documentVersionId });
+      return media;
+    });
+  }
+
+  async removeProjectMedia(user: AuthContext, id: string) { return this.removeMedia(user, "ProjectMedia", id, (tx) => tx.projectMedia); }
+  async removeBuildingMedia(user: AuthContext, id: string) { return this.removeMedia(user, "BuildingMedia", id, (tx) => tx.buildingMedia); }
+  async removeUnitMedia(user: AuthContext, id: string) { return this.removeMedia(user, "UnitMedia", id, (tx) => tx.unitMedia); }
+
+  private async removeMedia(user: AuthContext, entityType: string, id: string, delegate: (tx: Prisma.TransactionClient) => { findFirst: Function; delete: Function }) {
+    return this.prisma.$transaction(async (tx) => {
+      const media = await delegate(tx).findFirst({ where: { id, tenantId: user.tenantId } });
+      if (!media) throw new NotFoundException(`${entityType} not found`);
+      await delegate(tx).delete({ where: { id } });
+      await this.audit(tx, user, "COMMERCIAL_MEDIA_REMOVED", entityType, id, {});
+      return media;
+    });
+  }
+
+  private priceView(revision: { id: string; unitId: string; revision: number; basePriceMinor: bigint; listPriceMinor: bigint; currency: string; validFrom: Date | null; validTo: Date | null; status: UnitPriceRevisionStatus; createdById: string; publishedAt: Date | null; createdAt: Date; updatedAt: Date }) {
+    return {
+      id: revision.id,
+      unitId: revision.unitId,
+      revision: revision.revision,
+      basePriceMinor: revision.basePriceMinor.toString(),
+      listPriceMinor: revision.listPriceMinor.toString(),
+      currency: revision.currency,
+      validFrom: revision.validFrom,
+      validTo: revision.validTo,
+      status: revision.status,
+      publishedAt: revision.publishedAt,
+      createdAt: revision.createdAt,
+      updatedAt: revision.updatedAt,
+    };
+  }
+
+  private assertInstallments(installments: CreatePaymentPlanDto["installments"]) {
+    const sequences = new Set(installments.map((installment) => installment.sequence));
+    if (sequences.size !== installments.length) throw new BadRequestException("Installment sequences must be unique");
+    const total = installments.reduce((sum, installment) => sum + installment.shareBasisPoints, 0);
+    if (total !== 10000) throw new BadRequestException("Installment shares must total exactly 10000 basis points");
+  }
+
+  private installments(tenantId: string, command: CreatePaymentPlanDto) {
+    return command.installments.map((installment) => ({
+      tenant: { connect: { id: tenantId } },
+      sequence: installment.sequence,
+      shareBasisPoints: installment.shareBasisPoints,
+      ...(installment.label ? { label: installment.label.trim() } : {}),
+    }));
+  }
+
+  private minorUnits(value: string, field: string) {
+    const result = new Prisma.Decimal(value);
+    if (result.lt(0)) throw new BadRequestException(`${field} cannot be negative`);
+    return BigInt(value);
+  }
+
+  private async requireDocumentVersion(tx: Prisma.TransactionClient, tenantId: string, projectId: string, id: string) {
+    const version = await tx.documentVersion.findFirst({ where: { id, tenantId, document: { projectId, tenantId } } });
+    if (!version) throw new BadRequestException("Document version is not available for this commercial owner");
+    return version;
   }
 
   private async assertHierarchy(tenantId: string, value: { projectId: string; phaseId: string; buildingId: string; floorId: string; unitTypeId: string }) {

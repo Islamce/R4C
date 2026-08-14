@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "df86dd0251de145af0b73ac3ce7e298d34b95dd2194752ee4ae06d0ae005013d",
+    "bodyDigest": "481b6b68245d6f59e037b3d3997f0f8f00a5f1f8a3eedbd95af08adcd871b270",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "6beaa7d57c06706b0fc65cada6d491e24dfc0ec991fd475f89ea33a900dc32ee",
+    "inputDigest": "b9001a020badfe0c93cefe03cab58fe1d97fccc104fed899ce2b368e3e41263d",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -75,13 +75,13 @@
   "modules": [
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 81 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 82 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
       "dependsOn": [],
       "discovery": {
-        "codeFileCount": 81,
+        "codeFileCount": 82,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -91,7 +91,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 85
+        "sourceFileCount": 86
       },
       "id": "r4c-api",
       "ownedEntities": [
