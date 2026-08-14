@@ -167,6 +167,7 @@ test(
       env: {
         ...process.env,
         API_PORT: String(port),
+        HOLD_EXPIRY_SWEEP_INTERVAL_MS: process.env.HOLD_EXPIRY_SWEEP_INTERVAL_MS ?? "3600000",
         JWT_ACCESS_SECRET:
           process.env.JWT_ACCESS_SECRET ??
           "seed-e2e-secret-at-least-32-characters-long",

@@ -93,6 +93,7 @@ test(
       env: {
         ...process.env,
         API_PORT: String(port),
+        HOLD_EXPIRY_SWEEP_INTERVAL_MS: process.env.HOLD_EXPIRY_SWEEP_INTERVAL_MS ?? "3600000",
         BIM_WORKER_URL: process.env.BIM_WORKER_URL ?? "http://127.0.0.1:65535",
         BIM_WORKER_TOKEN: process.env.BIM_WORKER_TOKEN ?? "rate-limit-ci-worker-token",
         RATE_LIMIT_GLOBAL_PER_MINUTE: String(globalLimit),

@@ -91,6 +91,9 @@ test("C02 invariant-focused HTTP coverage", { timeout: 120_000 }, async (t) => {
     env: {
       ...process.env,
       API_PORT: String(port),
+      HOLD_EXPIRY_SWEEP_INTERVAL_MS: process.env.HOLD_EXPIRY_SWEEP_INTERVAL_MS ?? "3600000",
+      JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET ?? "c02-invariants-access-secret-that-is-long-enough",
+      JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET ?? "c02-invariants-refresh-secret-that-is-long-enough",
       BIM_WORKER_URL: process.env.BIM_WORKER_URL ?? "http://127.0.0.1:65535",
       BIM_WORKER_TOKEN: process.env.BIM_WORKER_TOKEN ?? "c02-invariants-worker-token",
       S3_ENDPOINT: process.env.S3_ENDPOINT ?? "http://127.0.0.1:9000",

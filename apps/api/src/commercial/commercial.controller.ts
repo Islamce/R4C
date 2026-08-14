@@ -8,6 +8,9 @@ import {
   BuildingQueryDto,
   CreateBuildingDto,
   CreateCustomerDto,
+  CreateTranslationDto,
+  CreateUnitHoldDto,
+  ConfirmReservationDto,
   CreateLeadDto,
   CreateSalesActivityDto,
   CreatePaymentPlanDto,
@@ -19,6 +22,7 @@ import {
   FloorQueryDto,
   LeadQueryDto,
   ProjectQueryDto,
+  TranslationQueryDto,
   UnitQueryDto,
   UpdateBuildingDto,
   UpdateFloorDto,
@@ -210,6 +214,31 @@ export class CommercialController {
   @Delete("unit-media/:id") @RequirePermissions("commercial:media:manage")
   removeUnitMedia(@CurrentUser() user: AuthContext, @Param("id") id: string) {
     return this.commercial.removeUnitMedia(user, id);
+  }
+
+  @Get("translations") @RequirePermissions("commercial:media:manage")
+  translations(@CurrentUser() user: AuthContext, @Query() query: TranslationQueryDto) {
+    return this.commercial.translations(user.tenantId, query);
+  }
+
+  @Post("translations") @RequirePermissions("commercial:media:manage")
+  createTranslation(@CurrentUser() user: AuthContext, @Body() body: CreateTranslationDto) {
+    return this.commercial.createTranslation(user, body);
+  }
+
+  @Post("holds") @RequirePermissions("commercial:hold:create")
+  createHold(@CurrentUser() user: AuthContext, @Body() body: CreateUnitHoldDto) {
+    return this.commercial.createHold(user, body);
+  }
+
+  @Post("holds/:id/cancel") @RequirePermissions("commercial:hold:release")
+  cancelHold(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.cancelHold(user, id);
+  }
+
+  @Post("holds/:id/confirm") @RequirePermissions("commercial:reservation:confirm")
+  confirmReservation(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: ConfirmReservationDto) {
+    return this.commercial.confirmReservation(user, id, body);
   }
 
   @Post("customers") @RequirePermissions("commercial:customer:create")

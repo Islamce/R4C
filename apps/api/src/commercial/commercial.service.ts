@@ -5,14 +5,17 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { LeadStatus, Prisma, SalesActivityType, UnitPriceRevisionStatus, UnitStatus } from "@prisma/client";
+import { LeadStatus, Prisma, SalesActivityType, TranslationLocale, UnitHoldStatus, UnitPriceRevisionStatus, UnitStatus } from "@prisma/client";
 import { AuthContext } from "../common/auth-context";
 import { PrismaService } from "../prisma/prisma.service";
 import {
   AttachCommercialMediaDto,
   BuildingQueryDto,
   CreateBuildingDto,
+  ConfirmReservationDto,
   CreateCustomerDto,
+  CreateTranslationDto,
+  CreateUnitHoldDto,
   CreateLeadDto,
   CreateSalesActivityDto,
   CreatePaymentPlanDto,
@@ -22,6 +25,7 @@ import {
   CreateUnitDto,
   CreateUnitTypeDto,
   LeadQueryDto,
+  TranslationQueryDto,
   UnitQueryDto,
   UpdateBuildingDto,
   UpdateFloorDto,
@@ -454,6 +458,202 @@ export class CommercialService {
   async removeBuildingMedia(user: AuthContext, id: string) { return this.removeMedia(user, "BuildingMedia", id, (tx) => tx.buildingMedia); }
   async removeUnitMedia(user: AuthContext, id: string) { return this.removeMedia(user, "UnitMedia", id, (tx) => tx.unitMedia); }
 
+  async translations(tenantId: string, query: TranslationQueryDto) {
+    this.assertTranslationTarget(query.entityType, query.field);
+    await this.requireTranslationEntity(this.prisma, tenantId, query.entityType, query.entityId);
+    const requestedLocale = query.locale ?? TranslationLocale.en;
+    const translations = await this.prisma.translation.findMany({
+      where: {
+        tenantId,
+        entityType: query.entityType,
+        entityId: query.entityId,
+        field: query.field,
+        locale: { in: requestedLocale === TranslationLocale.en ? [TranslationLocale.en] : [requestedLocale, TranslationLocale.en] },
+      },
+    });
+    const requested = translations.find((translation) => translation.locale === requestedLocale);
+    const english = translations.find((translation) => translation.locale === TranslationLocale.en);
+    const translation = requested ?? english;
+    if (!translation) throw new NotFoundException("No English translation exists for this commercial field");
+    return this.translationView(translation, requested === undefined && requestedLocale !== TranslationLocale.en);
+  }
+
+  async createTranslation(user: AuthContext, command: CreateTranslationDto) {
+    this.assertTranslationTarget(command.entityType, command.field);
+    return this.prisma.$transaction(async (tx) => {
+      await this.requireTranslationEntity(tx, user.tenantId, command.entityType, command.entityId);
+      const translation = await tx.translation.upsert({
+        where: {
+          tenantId_entityType_entityId_locale_field: {
+            tenantId: user.tenantId,
+            entityType: command.entityType,
+            entityId: command.entityId,
+            locale: command.locale,
+            field: command.field,
+          },
+        },
+        create: {
+          tenantId: user.tenantId,
+          entityType: command.entityType,
+          entityId: command.entityId,
+          locale: command.locale,
+          field: command.field,
+          value: command.value.trim(),
+        },
+        update: { value: command.value.trim() },
+      });
+      await this.audit(tx, user, "COMMERCIAL_TRANSLATION_UPSERTED", "Translation", translation.id, {
+        entityType: translation.entityType,
+        entityId: translation.entityId,
+        locale: translation.locale,
+        field: translation.field,
+      });
+      return this.translationView(translation, false);
+    });
+  }
+
+  async createHold(user: AuthContext, command: CreateUnitHoldDto) {
+    const holdExpiresAt = new Date(command.holdExpiresAt);
+    if (holdExpiresAt <= new Date()) throw new BadRequestException("Hold expiry must be in the future");
+    return this.prisma.$transaction(async (tx) => {
+      const [unit, lead] = await Promise.all([
+        this.requireUnitTx(tx, user.tenantId, command.unitId),
+        this.requireLeadTx(tx, user.tenantId, command.leadId),
+      ]);
+      if (lead.unitId && lead.unitId !== unit.id) {
+        throw new BadRequestException("Lead is linked to a different Unit");
+      }
+      if (lead.projectId && lead.projectId !== unit.projectId) {
+        throw new BadRequestException("Lead is linked to a different Project");
+      }
+      const held = await tx.unit.updateMany({
+        where: { id: unit.id, tenantId: user.tenantId, status: UnitStatus.AVAILABLE },
+        data: { status: UnitStatus.HELD },
+      });
+      if (held.count !== 1) throw new ConflictException("Unit is not available for a Hold");
+      const hold = await tx.unitHold.create({
+        data: {
+          tenantId: user.tenantId,
+          unitId: unit.id,
+          leadId: lead.id,
+          holdExpiresAt,
+          createdById: user.userId,
+        },
+      });
+      await this.audit(tx, user, "COMMERCIAL_UNIT_HOLD_CREATED", "UnitHold", hold.id, {
+        unitId: unit.id,
+        leadId: lead.id,
+        holdExpiresAt: hold.holdExpiresAt.toISOString(),
+        fromUnitStatus: UnitStatus.AVAILABLE,
+        toUnitStatus: UnitStatus.HELD,
+      });
+      return this.holdView(hold);
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  }
+
+  async cancelHold(user: AuthContext, id: string) {
+    const hold = await this.requireHold(user.tenantId, id);
+    return this.releaseHold(user.tenantId, hold.id, UnitHoldStatus.CANCELLED, user);
+  }
+
+  async confirmReservation(user: AuthContext, holdId: string, command: ConfirmReservationDto) {
+    return this.unique("Reservation confirmation conflicted; retry the operation", () => this.prisma.$transaction(async (tx) => {
+      const hold = await this.requireHoldTx(tx, user.tenantId, holdId);
+      if (hold.status !== UnitHoldStatus.ACTIVE || hold.holdExpiresAt <= new Date()) {
+        throw new ConflictException("Only an unexpired active Hold can be confirmed");
+      }
+      const [unit, lead] = await Promise.all([
+        this.requireUnitTx(tx, user.tenantId, hold.unitId),
+        this.requireLeadTx(tx, user.tenantId, hold.leadId),
+      ]);
+      if (unit.status !== UnitStatus.HELD) throw new ConflictException("Unit is no longer held by this Hold");
+      if (lead.status !== LeadStatus.NEGOTIATION) {
+        throw new ConflictException("Only a Negotiation Lead can be reserved by Reservation confirmation");
+      }
+      if (!lead.customerId) throw new ConflictException("Reservation confirmation requires the Lead to have a Customer");
+      if (lead.unitId && lead.unitId !== unit.id) throw new ConflictException("Lead is linked to a different Unit");
+      const [customer, paymentPlan, price] = await Promise.all([
+        this.requireCustomerTx(tx, user.tenantId, lead.customerId),
+        this.requirePaymentPlanTx(tx, user.tenantId, command.paymentPlanId),
+        tx.unitPriceRevision.findFirst({
+          where: { tenantId: user.tenantId, unitId: unit.id, status: UnitPriceRevisionStatus.PUBLISHED },
+        }),
+      ]);
+      if (paymentPlan.projectId !== unit.projectId) {
+        throw new BadRequestException("Reservation PaymentPlan must belong to the Unit Project");
+      }
+      if (!price) throw new ConflictException("Reservation confirmation requires a currently published Unit price");
+      const now = new Date();
+      const holdChanged = await tx.unitHold.updateMany({
+        where: { id: hold.id, tenantId: user.tenantId, status: UnitHoldStatus.ACTIVE, holdExpiresAt: { gt: now } },
+        data: { status: UnitHoldStatus.CONVERTED, convertedAt: now },
+      });
+      if (holdChanged.count !== 1) throw new ConflictException("Hold state changed concurrently");
+      const unitChanged = await tx.unit.updateMany({
+        where: { id: unit.id, tenantId: user.tenantId, status: UnitStatus.HELD },
+        data: { status: UnitStatus.RESERVED },
+      });
+      if (unitChanged.count !== 1) throw new ConflictException("Unit state changed concurrently");
+      const leadChanged = await tx.lead.updateMany({
+        where: { id: lead.id, tenantId: user.tenantId, status: LeadStatus.NEGOTIATION },
+        data: { status: LeadStatus.RESERVED },
+      });
+      if (leadChanged.count !== 1) throw new ConflictException("Lead state changed concurrently");
+      const reservation = await tx.reservation.create({
+        data: {
+          tenantId: user.tenantId,
+          holdId: hold.id,
+          unitId: unit.id,
+          leadId: lead.id,
+          customerId: customer.id,
+          paymentPlanId: paymentPlan.id,
+          sourcePriceRevisionId: price.id,
+          basePriceSnapshotMinor: price.basePriceMinor,
+          listPriceSnapshotMinor: price.listPriceMinor,
+          reservationAmountMinor: price.listPriceMinor,
+          currency: price.currency,
+          status: "CONFIRMED",
+          createdById: user.userId,
+          approvedById: user.userId,
+          confirmedAt: now,
+        },
+      });
+      await this.audit(tx, user, "COMMERCIAL_RESERVATION_CONFIRMED", "Reservation", reservation.id, {
+        holdId: hold.id,
+        unitId: unit.id,
+        leadId: lead.id,
+        paymentPlanId: paymentPlan.id,
+        sourcePriceRevisionId: price.id,
+        basePriceSnapshotMinor: price.basePriceMinor.toString(),
+        listPriceSnapshotMinor: price.listPriceMinor.toString(),
+        reservationAmountMinor: price.listPriceMinor.toString(),
+        currency: price.currency,
+      });
+      await this.audit(tx, user, "COMMERCIAL_LEAD_RESERVED_BY_RESERVATION", "Lead", lead.id, {
+        reservationId: reservation.id,
+        from: LeadStatus.NEGOTIATION,
+        to: LeadStatus.RESERVED,
+      });
+      return this.reservationView(reservation);
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
+  }
+
+  async expireHolds(now = new Date()) {
+    const candidates = await this.prisma.unitHold.findMany({
+      where: { status: UnitHoldStatus.ACTIVE, holdExpiresAt: { lte: now } },
+      select: { id: true, tenantId: true },
+      orderBy: { holdExpiresAt: "asc" },
+    });
+    let expired = 0;
+    let skipped = 0;
+    for (const candidate of candidates) {
+      const result = await this.releaseHold(candidate.tenantId, candidate.id, UnitHoldStatus.EXPIRED, undefined, now);
+      if (result) expired += 1;
+      else skipped += 1;
+    }
+    return { expired, skipped, inspected: candidates.length };
+  }
+
   async customer(tenantId: string, id: string) {
     return this.customerView(await this.requireCustomer(tenantId, id));
   }
@@ -564,6 +764,7 @@ export class CommercialService {
 
   async advanceLead(user: AuthContext, id: string, next: LeadStatus) {
     if (next === LeadStatus.DISQUALIFIED) throw new BadRequestException("Use the dedicated disqualify operation");
+    if (next === LeadStatus.RESERVED) throw new BadRequestException("Lead reservation is created only by Reservation confirmation");
     const current = await this.requireLead(user.tenantId, id);
     this.assertLeadOwnerOrManager(user, current.assignedToId);
     this.assertLeadTransition(current.status, next);
@@ -684,6 +885,104 @@ export class CommercialService {
     if (!allowed[current].includes(next)) throw new ConflictException(`Lead cannot transition from ${current} to ${next}`);
   }
 
+  private assertTranslationTarget(entityType: string, field: string) {
+    const allowed = new Set(["Project.description", "DevelopmentPhase.description", "UnitType.description"]);
+    if (!allowed.has(`${entityType}.${field}`)) {
+      throw new BadRequestException("This commercial field is not authorized for translation");
+    }
+  }
+
+  private async requireTranslationEntity(
+    tx: { project: { findFirst: Function }; developmentPhase: { findFirst: Function }; unitType: { findFirst: Function } },
+    tenantId: string,
+    entityType: string,
+    entityId: string,
+  ) {
+    const entity = entityType === "Project"
+      ? await tx.project.findFirst({ where: { id: entityId, tenantId } })
+      : entityType === "DevelopmentPhase"
+        ? await tx.developmentPhase.findFirst({ where: { id: entityId, tenantId } })
+        : await tx.unitType.findFirst({ where: { id: entityId, tenantId } });
+    if (!entity) throw new NotFoundException(`${entityType} not found`);
+    return entity;
+  }
+
+  private async releaseHold(
+    tenantId: string,
+    id: string,
+    next: "EXPIRED" | "CANCELLED",
+    user?: AuthContext,
+    now = new Date(),
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const hold = await tx.unitHold.findFirst({ where: { id, tenantId } });
+      if (!hold) {
+        if (user) throw new NotFoundException("UnitHold not found");
+        return null;
+      }
+      if (hold.status !== UnitHoldStatus.ACTIVE || (next === UnitHoldStatus.EXPIRED && hold.holdExpiresAt > now)) {
+        if (user) throw new ConflictException("Only an active Hold can be cancelled");
+        return null;
+      }
+      const timestamps = next === UnitHoldStatus.EXPIRED ? { expiredAt: now } : { cancelledAt: now };
+      const holdChanged = await tx.unitHold.updateMany({
+        where: { id, tenantId, status: UnitHoldStatus.ACTIVE },
+        data: { status: next, ...timestamps },
+      });
+      if (holdChanged.count !== 1) {
+        if (user) throw new ConflictException("Hold state changed concurrently");
+        return null;
+      }
+      const unitChanged = await tx.unit.updateMany({
+        where: { id: hold.unitId, tenantId, status: UnitStatus.HELD },
+        data: { status: UnitStatus.AVAILABLE },
+      });
+      if (unitChanged.count !== 1) throw new ConflictException("Unit is no longer held by this Hold");
+      if (user) {
+        await this.audit(tx, user, "COMMERCIAL_UNIT_HOLD_CANCELLED", "UnitHold", hold.id, {
+          unitId: hold.unitId,
+          leadId: hold.leadId,
+          fromUnitStatus: UnitStatus.HELD,
+          toUnitStatus: UnitStatus.AVAILABLE,
+        });
+      } else {
+        await tx.auditEvent.create({
+          data: {
+            tenantId,
+            actorId: null,
+            action: "COMMERCIAL_UNIT_HOLD_EXPIRED",
+            entityType: "UnitHold",
+            entityId: hold.id,
+            metadata: {
+              unitId: hold.unitId,
+              leadId: hold.leadId,
+              holdExpiresAt: hold.holdExpiresAt.toISOString(),
+              fromUnitStatus: UnitStatus.HELD,
+              toUnitStatus: UnitStatus.AVAILABLE,
+            },
+          },
+        });
+      }
+      return this.holdView({ ...hold, status: next, ...timestamps });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  }
+
+  private requireHold(tenantId: string, id: string) {
+    return this.found(this.prisma.unitHold.findFirst({ where: { id, tenantId } }), "UnitHold");
+  }
+
+  private requireHoldTx(tx: Prisma.TransactionClient, tenantId: string, id: string) {
+    return this.found(tx.unitHold.findFirst({ where: { id, tenantId } }), "UnitHold");
+  }
+
+  private requireLeadTx(tx: Prisma.TransactionClient, tenantId: string, id: string) {
+    return this.found(tx.lead.findFirst({ where: { id, tenantId } }), "Lead");
+  }
+
+  private requirePaymentPlanTx(tx: Prisma.TransactionClient, tenantId: string, id: string) {
+    return this.found(tx.paymentPlan.findFirst({ where: { id, tenantId } }), "PaymentPlan");
+  }
+
   private async requireTenantAssignee(tx: { tenantMembership: { findFirst: Function } }, tenantId: string, userId: string) {
     const membership = await tx.tenantMembership.findFirst({ where: { tenantId, userId, user: { isActive: true } } });
     if (!membership) throw new BadRequestException("Lead assignee is not an active member of this tenant");
@@ -716,6 +1015,18 @@ export class CommercialService {
       unit: { select: { id: true, code: true, number: true } },
       assignedTo: { select: { id: true, displayName: true } },
     } as const;
+  }
+
+  private translationView(translation: { id: string; entityType: string; entityId: string; locale: TranslationLocale; field: string; value: string; createdAt: Date; updatedAt: Date }, fallbackUsed: boolean) {
+    return { id: translation.id, entityType: translation.entityType, entityId: translation.entityId, locale: translation.locale, field: translation.field, value: translation.value, fallbackUsed, createdAt: translation.createdAt, updatedAt: translation.updatedAt };
+  }
+
+  private holdView(hold: { id: string; unitId: string; leadId: string; status: UnitHoldStatus; holdExpiresAt: Date; createdById: string; releasedAt: Date | null; cancelledAt: Date | null; expiredAt: Date | null; convertedAt: Date | null; createdAt: Date; updatedAt: Date }) {
+    return { id: hold.id, unitId: hold.unitId, leadId: hold.leadId, status: hold.status, holdExpiresAt: hold.holdExpiresAt, createdById: hold.createdById, releasedAt: hold.releasedAt, cancelledAt: hold.cancelledAt, expiredAt: hold.expiredAt, convertedAt: hold.convertedAt, createdAt: hold.createdAt, updatedAt: hold.updatedAt };
+  }
+
+  private reservationView(reservation: { id: string; holdId: string; unitId: string; leadId: string; customerId: string; paymentPlanId: string; sourcePriceRevisionId: string; basePriceSnapshotMinor: bigint; listPriceSnapshotMinor: bigint; reservationAmountMinor: bigint; currency: string; status: string; createdById: string; approvedById: string | null; confirmedAt: Date | null; createdAt: Date; updatedAt: Date }) {
+    return { id: reservation.id, holdId: reservation.holdId, unitId: reservation.unitId, leadId: reservation.leadId, customerId: reservation.customerId, paymentPlanId: reservation.paymentPlanId, sourcePriceRevisionId: reservation.sourcePriceRevisionId, basePriceSnapshotMinor: reservation.basePriceSnapshotMinor.toString(), listPriceSnapshotMinor: reservation.listPriceSnapshotMinor.toString(), reservationAmountMinor: reservation.reservationAmountMinor.toString(), currency: reservation.currency, status: reservation.status, createdById: reservation.createdById, approvedById: reservation.approvedById, confirmedAt: reservation.confirmedAt, createdAt: reservation.createdAt, updatedAt: reservation.updatedAt };
   }
 
   private customerView(customer: { id: string; firstName: string; lastName: string | null; phone: string; email: string; dedupReviewRequired: boolean; createdAt: Date; updatedAt: Date }) {

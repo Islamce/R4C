@@ -48,6 +48,7 @@ export async function startApi(t, port) {
     env: {
       ...process.env,
       API_PORT: String(port),
+      HOLD_EXPIRY_SWEEP_INTERVAL_MS: process.env.HOLD_EXPIRY_SWEEP_INTERVAL_MS ?? "3600000",
       JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET ?? "c03-test-access-secret-that-is-long-enough",
       JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET ?? "c03-test-refresh-secret-that-is-long-enough",
       BIM_WORKER_URL: process.env.BIM_WORKER_URL ?? "http://127.0.0.1:65535",
@@ -115,7 +116,7 @@ export async function createFixture(prisma, suffix, { withUnit = false } = {}) {
   const floor = await prisma.floor.create({ data: { tenantId: tenant.id, buildingId: building.id, code: "F01", name: "First Floor", floorNumber: 1 } });
   const unitType = await prisma.unitType.create({ data: { tenantId: tenant.id, projectId: project.id, code: "1BR", name: "One bedroom", bedrooms: 1, bathrooms: 1 } });
   const unit = await prisma.unit.create({ data: { tenantId: tenant.id, projectId: project.id, phaseId: phase.id, buildingId: building.id, floorId: floor.id, unitTypeId: unitType.id, code: "U101", number: "101", grossArea: "75.00", bedrooms: 1, bathrooms: 1, status: "AVAILABLE" } });
-  return { ...fixture, project, unit };
+  return { ...fixture, project, phase, building, floor, unitType, unit };
 }
 
 export function expectStatus(result, status, api) {

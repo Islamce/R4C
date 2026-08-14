@@ -122,6 +122,8 @@ jobs:
           NODE
 
       - name: Start production API and web servers
+        env:
+          HOLD_EXPIRY_SWEEP_INTERVAL_MS: 300000
         run: |
           node apps/api/dist/main.js > phase5-api-runtime.log 2>&1 &
           echo $! > phase5-api-runtime.pid

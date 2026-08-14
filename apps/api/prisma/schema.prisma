@@ -69,6 +69,28 @@ enum SalesActivityType {
   NOTE
 }
 
+enum TranslationLocale {
+  en
+  ar
+}
+
+enum UnitHoldStatus {
+  ACTIVE
+  EXPIRED
+  CONVERTED
+  RELEASED
+  CANCELLED
+}
+
+enum ReservationStatus {
+  DRAFT
+  PENDING
+  CONFIRMED
+  EXPIRED
+  CANCELLED
+  CONVERTED_TO_SALE
+}
+
 enum WorkflowStatus {
   DRAFT
   ASSIGNED
@@ -371,6 +393,9 @@ model Tenant {
   customers          Customer[]
   leads              Lead[]
   salesActivities    SalesActivity[]
+  translations       Translation[]
+  unitHolds          UnitHold[]
+  reservations       Reservation[]
 }
 
 model User {
@@ -429,6 +454,9 @@ model User {
   unitPriceRevisionsCreated UnitPriceRevision[] @relation("UnitPriceRevisionCreator")
   assignedLeads             Lead[]              @relation("LeadAssignee")
   salesActivities           SalesActivity[]     @relation("SalesActivityActor")
+  unitHoldsCreated          UnitHold[]          @relation("UnitHoldCreator")
+  reservationsCreated       Reservation[]       @relation("ReservationCreator")
+  reservationsApproved      Reservation[]       @relation("ReservationApprover")
 }
 
 model Role {
@@ -645,6 +673,8 @@ model Unit {
   priceRevisions UnitPriceRevision[]
   media        UnitMedia[]
   leads        Lead[]
+  holds        UnitHold[]
+  reservations Reservation[]
 
   @@unique([projectId, code])
   @@unique([floorId, number])
@@ -667,6 +697,7 @@ model Customer {
   updatedAt       DateTime @updatedAt
   tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   leads           Lead[]
+  reservations    Reservation[]
 
   @@unique([tenantId, phoneNormalized, emailNormalized])
   @@unique([id, tenantId])
@@ -699,6 +730,8 @@ model Lead {
   unit                     Unit?      @relation(fields: [unitId, tenantId], references: [id, tenantId], onDelete: Restrict)
   assignedTo               User       @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: Restrict)
   activities               SalesActivity[]
+  holds                    UnitHold[]
+  reservations             Reservation[]
 
   @@unique([id, tenantId])
   @@index([tenantId, assignedToId, status, createdAt])
@@ -721,6 +754,85 @@ model SalesActivity {
   @@index([tenantId, leadId, createdAt])
 }
 
+model Translation {
+  id         String            @id @default(uuid())
+  tenantId   String
+  entityType String            @db.VarChar(64)
+  entityId   String
+  locale     TranslationLocale
+  field      String            @db.VarChar(64)
+  value      String            @db.Text
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, entityType, entityId, locale, field])
+  @@index([tenantId, entityType, entityId, field])
+}
+
+model UnitHold {
+  id            String         @id @default(uuid())
+  tenantId      String
+  unitId        String
+  leadId        String
+  status        UnitHoldStatus @default(ACTIVE)
+  holdExpiresAt DateTime
+  createdById   String
+  releasedAt    DateTime?
+  cancelledAt   DateTime?
+  expiredAt     DateTime?
+  convertedAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  unit          Unit           @relation(fields: [unitId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  lead          Lead           @relation(fields: [leadId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  createdBy     User           @relation("UnitHoldCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  reservation   Reservation?
+
+  @@unique([id, tenantId])
+  @@index([tenantId, unitId, status, holdExpiresAt])
+  @@index([tenantId, leadId, status])
+}
+
+model Reservation {
+  id                      String                  @id @default(uuid())
+  tenantId                String
+  holdId                  String                  @unique
+  unitId                  String
+  leadId                  String
+  customerId              String
+  paymentPlanId           String
+  sourcePriceRevisionId   String
+  basePriceSnapshotMinor  BigInt
+  listPriceSnapshotMinor  BigInt
+  reservationAmountMinor  BigInt
+  currency                String                  @db.VarChar(3)
+  status                  ReservationStatus       @default(CONFIRMED)
+  createdById             String
+  approvedById            String?
+  confirmedAt             DateTime?
+  expiresAt               DateTime?
+  cancelledAt             DateTime?
+  convertedToSaleAt       DateTime?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  tenant                  Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  hold                    UnitHold                @relation(fields: [holdId], references: [id], onDelete: Restrict)
+  unit                    Unit                    @relation(fields: [unitId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  lead                    Lead                    @relation(fields: [leadId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  customer                Customer                @relation(fields: [customerId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  paymentPlan             PaymentPlan             @relation(fields: [paymentPlanId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  sourcePriceRevision     UnitPriceRevision       @relation(fields: [sourcePriceRevisionId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  createdBy               User                    @relation("ReservationCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  approvedBy              User?                   @relation("ReservationApprover", fields: [approvedById], references: [id], onDelete: Restrict)
+
+  @@unique([id, tenantId])
+  @@index([tenantId, unitId, status])
+  @@index([tenantId, leadId, status])
+  @@index([tenantId, customerId, status])
+}
+
 model UnitPriceRevision {
   id             String                  @id @default(uuid())
   tenantId       String
@@ -739,8 +851,10 @@ model UnitPriceRevision {
   tenant         Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   unit           Unit                    @relation(fields: [unitId], references: [id], onDelete: Restrict)
   createdBy      User                    @relation("UnitPriceRevisionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  reservations   Reservation[]
 
   @@unique([unitId, revision])
+  @@unique([id, tenantId])
   @@index([tenantId, unitId, status, validFrom])
 }
 
@@ -753,7 +867,9 @@ model PaymentPlan {
   tenant       Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   project      Project                  @relation(fields: [projectId, tenantId], references: [id, tenantId], onDelete: Cascade)
   installments PaymentPlanInstallment[]
+  reservations Reservation[]
 
+  @@unique([id, tenantId])
   @@index([tenantId, projectId])
 }
 
@@ -957,6 +1073,7 @@ model DocumentVersion {
   documentId        String
   versionNumber     Int
   revision          String
+  locale            TranslationLocale?
   fileName          String
   mimeType          String
   sizeBytes         BigInt

@@ -87,6 +87,9 @@ test("C02 real HTTP boundary enforces pricing, template, media, tenant, and audi
     env: {
       ...process.env,
       API_PORT: String(port),
+      HOLD_EXPIRY_SWEEP_INTERVAL_MS: process.env.HOLD_EXPIRY_SWEEP_INTERVAL_MS ?? "3600000",
+      JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET ?? "c02-http-access-secret-that-is-long-enough",
+      JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET ?? "c02-http-refresh-secret-that-is-long-enough",
       BIM_WORKER_URL: process.env.BIM_WORKER_URL ?? "http://127.0.0.1:65535",
       BIM_WORKER_TOKEN: process.env.BIM_WORKER_TOKEN ?? "c02-worker-token",
       S3_ENDPOINT: process.env.S3_ENDPOINT ?? "http://127.0.0.1:9000",
