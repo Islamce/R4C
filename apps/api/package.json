@@ -10,6 +10,7 @@
     "test": "pnpm build && node --test test/*.test.mjs",
     "test:e2e": "node --test test/http-e2e.mjs",
     "test:c02": "pnpm build && node --test test/c02-*.mjs",
+    "test:c03": "pnpm build && node --test test/c03-http-e2e.mjs test/c03-invariants-e2e.mjs",
     "test:seed": "node --test test/seed-e2e.mjs",
     "test:rate-limit": "node --test test/rate-limit-e2e.mjs",
     "test:auth-session": "node --test test/auth-session-e2e.mjs",

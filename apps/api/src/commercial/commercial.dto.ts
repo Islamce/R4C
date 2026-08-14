@@ -1,10 +1,12 @@
 import { Type } from "class-transformer";
-import { DevelopmentPhaseStatus, UnitStatus } from "@prisma/client";
+import { DevelopmentPhaseStatus, LeadStatus, SalesActivityType, UnitStatus } from "@prisma/client";
 import {
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsDateString,
   IsDecimal,
+  IsEmail,
   IsEnum,
   IsInt,
   IsOptional,
@@ -204,4 +206,50 @@ export class CreatePaymentPlanDto {
 export class AttachCommercialMediaDto {
   @IsUUID() documentVersionId!: string;
   @IsOptional() @Type(() => Number) @IsInt() @Min(0) @Max(100000) sortOrder?: number;
+}
+
+export class CreateCustomerDto {
+  @IsString() @Length(1, 160) firstName!: string;
+  @IsOptional() @IsString() @Length(1, 160) lastName?: string;
+  @IsString() @Length(9, 32) phone!: string;
+  @IsEmail() @Length(3, 320) email!: string;
+}
+
+export class CreateLeadDto {
+  @IsOptional() @IsUUID() customerId?: string;
+  @IsOptional() @IsUUID() projectId?: string;
+  @IsOptional() @IsUUID() unitId?: string;
+  @IsOptional() @IsUUID() assignedToId?: string;
+  @IsString() @Length(1, 160) source!: string;
+  @IsOptional() @IsBoolean() isExternalEnquiry?: boolean;
+  @IsOptional() @IsBoolean() enquiryConsentGranted?: boolean;
+  @IsOptional() @IsDateString() enquiryConsentAt?: string;
+  @IsOptional() @IsString() @Length(1, 80) enquiryConsentChannel?: string;
+  @IsOptional() @IsString() @Length(1, 240) enquiryConsentPurpose?: string;
+  @IsOptional() @IsBoolean() marketingConsentGranted?: boolean;
+  @IsOptional() @IsDateString() marketingConsentAt?: string;
+  @IsOptional() @IsString() @Length(1, 80) marketingConsentChannel?: string;
+  @IsOptional() @IsString() @Length(1, 240) marketingConsentPurpose?: string;
+}
+
+export class LeadQueryDto {
+  @IsOptional() @IsUUID() customerId?: string;
+  @IsOptional() @IsUUID() projectId?: string;
+  @IsOptional() @IsUUID() unitId?: string;
+  @IsOptional() @IsEnum(LeadStatus) status?: LeadStatus;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) page: number = 1;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) pageSize: number = 25;
+}
+
+export class AdvanceLeadDto {
+  @IsEnum(LeadStatus) status!: LeadStatus;
+}
+
+export class AssignLeadDto {
+  @IsUUID() assignedToId!: string;
+}
+
+export class CreateSalesActivityDto {
+  @IsEnum(SalesActivityType) type!: SalesActivityType;
+  @IsString() @Length(1, 4000) notes!: string;
 }
