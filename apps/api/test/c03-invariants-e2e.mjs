@@ -69,11 +69,14 @@ test("C03 invariants enforce capability, ownership, lifecycle, consent, tenant, 
     const skippedTransition = await local.request(`/commercial/leads/${lead.body.id}/status`, { token: agentToken, method: "PATCH", body: { status: "APPOINTMENT" } });
     expectStatus(skippedTransition, 409, api);
 
-    for (const status of ["QUALIFIED", "APPOINTMENT", "NEGOTIATION", "RESERVED"]) {
+    for (const status of ["QUALIFIED", "APPOINTMENT", "NEGOTIATION"]) {
       const transitioned = await local.request(`/commercial/leads/${lead.body.id}/status`, { token: agentToken, method: "PATCH", body: { status } });
       expectStatus(transitioned, 200, api);
       assert.equal(transitioned.body.status, status);
     }
+    const manualReserved = await local.request(`/commercial/leads/${lead.body.id}/status`, { token: agentToken, method: "PATCH", body: { status: "RESERVED" } });
+    expectStatus(manualReserved, 400, api);
+    await prisma.lead.update({ where: { id: lead.body.id }, data: { status: "RESERVED" } });
     const won = await local.request(`/commercial/leads/${lead.body.id}/status`, { token: agentToken, method: "PATCH", body: { status: "WON" } });
     expectStatus(won, 200, api);
     const reverseTerminal = await local.request(`/commercial/leads/${lead.body.id}/status`, { token: agentToken, method: "PATCH", body: { status: "LOST" } });
@@ -108,7 +111,7 @@ test("C03 invariants enforce capability, ownership, lifecycle, consent, tenant, 
 
     const foreignLeadRead = await local.request(`/commercial/leads/all/${lead.body.id}`, { token: outsiderLogin.body.accessToken });
     expectStatus(foreignLeadRead, 404, api);
-    const lifecycleAudit = await prisma.auditEvent.findFirst({ where: { tenantId: fixture.tenant.id, entityId: lead.body.id, action: "COMMERCIAL_LEAD_STATUS_ADVANCED", metadata: { path: ["to"], equals: "RESERVED" } } });
+    const lifecycleAudit = await prisma.auditEvent.findFirst({ where: { tenantId: fixture.tenant.id, entityId: lead.body.id, action: "COMMERCIAL_LEAD_STATUS_ADVANCED", metadata: { path: ["to"], equals: "NEGOTIATION" } } });
     assert.ok(lifecycleAudit, "Lifecycle mutation must emit a status audit event");
     const reassignmentAudit = await prisma.auditEvent.findFirst({ where: { tenantId: fixture.tenant.id, entityId: lead.body.id, action: "COMMERCIAL_LEAD_REASSIGNED" } });
     assert.ok(reassignmentAudit, "Reassignment must emit an audit event");

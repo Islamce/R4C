@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { DevelopmentPhaseStatus, LeadStatus, SalesActivityType, UnitStatus } from "@prisma/client";
+import { DevelopmentPhaseStatus, LeadStatus, SalesActivityType, TranslationLocale, UnitStatus } from "@prisma/client";
 import {
   ArrayMinSize,
   IsArray,
@@ -9,6 +9,7 @@ import {
   IsEmail,
   IsEnum,
   IsInt,
+  IsIn,
   IsOptional,
   IsString,
   IsUUID,
@@ -206,6 +207,55 @@ export class CreatePaymentPlanDto {
 export class AttachCommercialMediaDto {
   @IsUUID() documentVersionId!: string;
   @IsOptional() @Type(() => Number) @IsInt() @Min(0) @Max(100000) sortOrder?: number;
+}
+
+export class CreateTranslationDto {
+  @IsIn(["Project", "DevelopmentPhase", "UnitType"])
+  entityType!: "Project" | "DevelopmentPhase" | "UnitType";
+
+  @IsUUID()
+  entityId!: string;
+
+  @IsEnum(TranslationLocale)
+  locale!: TranslationLocale;
+
+  @IsIn(["description"])
+  field!: "description";
+
+  @IsString()
+  @Length(1, 10000)
+  value!: string;
+}
+
+export class TranslationQueryDto {
+  @IsIn(["Project", "DevelopmentPhase", "UnitType"])
+  entityType!: "Project" | "DevelopmentPhase" | "UnitType";
+
+  @IsUUID()
+  entityId!: string;
+
+  @IsIn(["description"])
+  field!: "description";
+
+  @IsOptional()
+  @IsEnum(TranslationLocale)
+  locale?: TranslationLocale;
+}
+
+export class CreateUnitHoldDto {
+  @IsUUID()
+  unitId!: string;
+
+  @IsUUID()
+  leadId!: string;
+
+  @IsDateString()
+  holdExpiresAt!: string;
+}
+
+export class ConfirmReservationDto {
+  @IsUUID()
+  paymentPlanId!: string;
 }
 
 export class CreateCustomerDto {
