@@ -74,38 +74,47 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
         <nav className="app-nav" aria-label={t("nav.controlHome")}>
-          <Link
-            className={projectsActive ? "nav-link nav-link-active" : "nav-link"}
-            href="/projects"
-            aria-current={projectsActive ? "page" : undefined}
-          >
-            <span className="nav-index" aria-hidden="true">01</span>
-            {t("nav.projects")}
-          </Link>
-          <Link
-            className={commercialActive ? "nav-link nav-link-active" : "nav-link"}
-            href="/commercial"
-            aria-current={commercialActive ? "page" : undefined}
-          >
-            <span className="nav-index" aria-hidden="true">02</span>
-            {locale === "ar" ? "المخزون التجاري" : "Commercial inventory"}
-          </Link>
-          <Link
-            className={costControlActive ? "nav-link nav-link-active" : "nav-link"}
-            href="/cost-control"
-            aria-current={costControlActive ? "page" : undefined}
-          >
-            <span className="nav-index" aria-hidden="true">03</span>
-            {t("nav.costControl")}
-          </Link>
-          <Link
-            className={progressActive ? "nav-link nav-link-active" : "nav-link"}
-            href="/progress"
-            aria-current={progressActive ? "page" : undefined}
-          >
-            <span className="nav-index" aria-hidden="true">04</span>
-            {t("nav.progress")}
-          </Link>
+          <section className="nav-group" aria-label={locale === "ar" ? "مساحة العمل التجارية" : "Commercial workspace"}>
+            <p className="nav-group-label">{locale === "ar" ? "المساحة التجارية" : "Commercial workspace"}</p>
+            <Link
+              className={projectsActive ? "nav-link nav-link-active" : "nav-link"}
+              href="/projects"
+              aria-current={projectsActive ? "page" : undefined}
+            >
+              <span className="nav-index" aria-hidden="true">01</span>
+              {locale === "ar" ? "المشروعات والتطوير" : "Developments"}
+            </Link>
+            <Link
+              className={commercialActive ? "nav-link nav-link-active" : "nav-link"}
+              href="/commercial"
+              aria-current={commercialActive ? "page" : undefined}
+            >
+              <span className="nav-index" aria-hidden="true">02</span>
+              {locale === "ar" ? "المخزون التجاري" : "Commercial inventory"}
+            </Link>
+          </section>
+          <section className="nav-group nav-group-frozen" aria-label={locale === "ar" ? "ذكاء التطوير المجمد" : "Frozen Development Intelligence"}>
+            <p className="nav-group-label">
+              {locale === "ar" ? "ذكاء التطوير" : "Development Intelligence"}
+              <span>{locale === "ar" ? "مجمد" : "Frozen"}</span>
+            </p>
+            <Link
+              className={costControlActive ? "nav-link nav-link-active" : "nav-link"}
+              href="/cost-control"
+              aria-current={costControlActive ? "page" : undefined}
+            >
+              <span className="nav-index" aria-hidden="true">03</span>
+              {t("nav.costControl")}
+            </Link>
+            <Link
+              className={progressActive ? "nav-link nav-link-active" : "nav-link"}
+              href="/progress"
+              aria-current={progressActive ? "page" : undefined}
+            >
+              <span className="nav-index" aria-hidden="true">04</span>
+              {t("nav.progress")}
+            </Link>
+          </section>
         </nav>
         <div className="sidebar-grid-key" aria-hidden="true">
           <span>{t("common.brand")}</span>

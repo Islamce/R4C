@@ -1,9 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from "@nestjs/common";
 import { AuthContext, CurrentUser } from "../common/auth-context";
 import { RequirePermissions } from "../common/authorization";
 import {
+  AttachCommercialMediaDto,
   BuildingQueryDto,
   CreateBuildingDto,
+  CreatePaymentPlanDto,
+  CreateUnitPriceRevisionDto,
   CreateFloorDto,
   CreatePhaseDto,
   CreateUnitDto,
@@ -131,5 +134,75 @@ export class CommercialController {
   @Post("units/:id/block") @RequirePermissions("commercial:status")
   blockUnit(@CurrentUser() user: AuthContext, @Param("id") id: string) {
     return this.commercial.transitionUnit(user, id, "block");
+  }
+
+  @Get("units/:id/prices") @RequirePermissions("commercial:price:view-published")
+  publishedPrices(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.publishedPrices(user.tenantId, id);
+  }
+
+  @Get("units/:id/prices/drafts") @RequirePermissions("commercial:price:view-draft")
+  draftPrices(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.draftPrices(user.tenantId, id);
+  }
+
+  @Post("units/:id/prices") @RequirePermissions("commercial:price:create-draft")
+  createPrice(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: CreateUnitPriceRevisionDto) {
+    return this.commercial.createPriceDraft(user, id, body);
+  }
+
+  @Post("unit-prices/:id/publish") @RequirePermissions("commercial:price:publish")
+  publishPrice(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.publishPrice(user, id);
+  }
+
+  @Post("unit-prices/:id/withdraw") @RequirePermissions("commercial:price:create-draft")
+  withdrawPrice(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.withdrawPrice(user, id);
+  }
+
+  @Get("projects/:projectId/payment-plans") @RequirePermissions("commercial:payment-plan:manage")
+  paymentPlans(@CurrentUser() user: AuthContext, @Param("projectId") projectId: string) {
+    return this.commercial.paymentPlans(user.tenantId, projectId);
+  }
+
+  @Post("projects/:projectId/payment-plans") @RequirePermissions("commercial:payment-plan:manage")
+  createPaymentPlan(@CurrentUser() user: AuthContext, @Param("projectId") projectId: string, @Body() body: CreatePaymentPlanDto) {
+    return this.commercial.createPaymentPlan(user, projectId, body);
+  }
+
+  @Put("payment-plans/:id") @RequirePermissions("commercial:payment-plan:manage")
+  replacePaymentPlan(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: CreatePaymentPlanDto) {
+    return this.commercial.replacePaymentPlan(user, id, body);
+  }
+
+  @Post("projects/:id/media") @RequirePermissions("commercial:media:manage")
+  attachProjectMedia(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: AttachCommercialMediaDto) {
+    return this.commercial.attachProjectMedia(user, id, body);
+  }
+
+  @Post("buildings/:id/media") @RequirePermissions("commercial:media:manage")
+  attachBuildingMedia(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: AttachCommercialMediaDto) {
+    return this.commercial.attachBuildingMedia(user, id, body);
+  }
+
+  @Post("units/:id/media") @RequirePermissions("commercial:media:manage")
+  attachUnitMedia(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: AttachCommercialMediaDto) {
+    return this.commercial.attachUnitMedia(user, id, body);
+  }
+
+  @Delete("project-media/:id") @RequirePermissions("commercial:media:manage")
+  removeProjectMedia(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.removeProjectMedia(user, id);
+  }
+
+  @Delete("building-media/:id") @RequirePermissions("commercial:media:manage")
+  removeBuildingMedia(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.removeBuildingMedia(user, id);
+  }
+
+  @Delete("unit-media/:id") @RequirePermissions("commercial:media:manage")
+  removeUnitMedia(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.removeUnitMedia(user, id);
   }
 }

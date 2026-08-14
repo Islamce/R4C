@@ -40,6 +40,13 @@ enum UnitStatus {
   WITHDRAWN
 }
 
+enum UnitPriceRevisionStatus {
+  DRAFT
+  PUBLISHED
+  SUPERSEDED
+  WITHDRAWN
+}
+
 enum WorkflowStatus {
   DRAFT
   ASSIGNED
@@ -333,6 +340,12 @@ model Tenant {
   floors            Floor[]
   unitTypes         UnitType[]
   units             Unit[]
+  unitPriceRevisions UnitPriceRevision[]
+  paymentPlans       PaymentPlan[]
+  paymentPlanInstallments PaymentPlanInstallment[]
+  projectMedia       ProjectMedia[]
+  buildingMedia      BuildingMedia[]
+  unitMedia          UnitMedia[]
 }
 
 model User {
@@ -388,6 +401,7 @@ model User {
   handoverPackagesCreated      HandoverPackage[] @relation("HandoverPackageCreator")
   handoverPackagesReviewed     HandoverPackage[] @relation("HandoverPackageReviewer")
   handoverRequirementsProvided HandoverRequirement[] @relation("HandoverRequirementProvider")
+  unitPriceRevisionsCreated UnitPriceRevision[] @relation("UnitPriceRevisionCreator")
 }
 
 model Role {
@@ -477,6 +491,8 @@ model Project {
   buildings         Building[]
   unitTypes         UnitType[]
   units             Unit[]
+  paymentPlans      PaymentPlan[]
+  projectMedia      ProjectMedia[]
 
   @@unique([tenantId, code])
   @@unique([id, tenantId])
@@ -522,6 +538,7 @@ model Building {
   phase     DevelopmentPhase @relation(fields: [phaseId, projectId, tenantId], references: [id, projectId, tenantId], onDelete: Restrict)
   floors    Floor[]
   units     Unit[]
+  media     BuildingMedia[]
 
   @@unique([projectId, code])
   @@unique([id, projectId, tenantId])
@@ -597,11 +614,110 @@ model Unit {
   building     Building   @relation(fields: [buildingId, projectId, phaseId, tenantId], references: [id, projectId, phaseId, tenantId], onDelete: Restrict)
   floor        Floor      @relation(fields: [floorId, buildingId, tenantId], references: [id, buildingId, tenantId], onDelete: Restrict)
   unitType     UnitType   @relation(fields: [unitTypeId, projectId, tenantId], references: [id, projectId, tenantId], onDelete: Restrict)
+  priceRevisions UnitPriceRevision[]
+  media        UnitMedia[]
 
   @@unique([projectId, code])
   @@unique([floorId, number])
   @@index([tenantId, projectId, phaseId, buildingId, floorId])
   @@index([tenantId, projectId, status, unitTypeId])
+}
+
+model UnitPriceRevision {
+  id             String                  @id @default(uuid())
+  tenantId       String
+  unitId         String
+  revision       Int
+  basePriceMinor BigInt
+  listPriceMinor BigInt
+  currency       String                  @db.VarChar(3)
+  validFrom      DateTime?
+  validTo        DateTime?
+  status         UnitPriceRevisionStatus @default(DRAFT)
+  createdById    String
+  publishedAt    DateTime?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  tenant         Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  unit           Unit                    @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  createdBy      User                    @relation("UnitPriceRevisionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([unitId, revision])
+  @@index([tenantId, unitId, status, validFrom])
+}
+
+model PaymentPlan {
+  id           String                   @id @default(uuid())
+  tenantId     String
+  projectId    String
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  tenant       Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project      Project                  @relation(fields: [projectId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  installments PaymentPlanInstallment[]
+
+  @@index([tenantId, projectId])
+}
+
+model PaymentPlanInstallment {
+  id              String      @id @default(uuid())
+  tenantId        String
+  paymentPlanId   String
+  sequence        Int
+  shareBasisPoints Int
+  label           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  paymentPlan     PaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
+
+  @@unique([paymentPlanId, sequence])
+  @@index([tenantId, paymentPlanId, sequence])
+}
+
+model ProjectMedia {
+  id                String          @id @default(uuid())
+  tenantId          String
+  projectId         String
+  documentVersionId String
+  sortOrder         Int?
+  createdAt         DateTime        @default(now())
+  tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project           Project         @relation(fields: [projectId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  documentVersion   DocumentVersion @relation(fields: [documentVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([projectId, documentVersionId])
+  @@index([tenantId, projectId, sortOrder, createdAt])
+}
+
+model BuildingMedia {
+  id                String          @id @default(uuid())
+  tenantId          String
+  buildingId        String
+  documentVersionId String
+  sortOrder         Int?
+  createdAt         DateTime        @default(now())
+  tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  building          Building        @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  documentVersion   DocumentVersion @relation(fields: [documentVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([buildingId, documentVersionId])
+  @@index([tenantId, buildingId, sortOrder, createdAt])
+}
+
+model UnitMedia {
+  id                String          @id @default(uuid())
+  tenantId          String
+  unitId            String
+  documentVersionId String
+  sortOrder         Int?
+  createdAt         DateTime        @default(now())
+  tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  unit              Unit            @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  documentVersion   DocumentVersion @relation(fields: [documentVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([unitId, documentVersionId])
+  @@index([tenantId, unitId, sortOrder, createdAt])
 }
 
 model ProjectMember {
@@ -761,6 +877,9 @@ model DocumentVersion {
   reviews           DocumentReview[]
   distributions     DocumentDistribution[]
   bimModel          BimModel?
+  projectMedia      ProjectMedia[]
+  buildingMedia     BuildingMedia[]
+  unitMedia         UnitMedia[]
   qualityEvidence   QualityEvidence[]
   safetyEvidence    SafetyEvidence[]
   commissioningEvidence CommissioningEvidence[]
