@@ -1,19 +1,19 @@
 {
   "_meta": {
     "artifact": "drift.json",
-    "bodyDigest": "dc464fe49e32b09b477b54c70fbdaa5e19370d0b9161b69782aafa0d0c4e78e5",
+    "bodyDigest": "9799d4c470b67625db363b08bcbad7a77a8cdd5b0b85d8629c59b23447b090b2",
     "confidence": "derived",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "8659b1338f552438741b8a3067497a841c8b77fabbf98207749f9eca7e9c8729",
+    "inputDigest": "ce970557b52edab81b50385800d6b5ace7acd4f32508350363b1bfceae56a917",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "confidenceByModule": {
     "r4c-api": {
       "level": "verified",
-      "reason": "Declared and corroborated by 89 discovered code file(s)."
+      "reason": "Declared and corroborated by 90 discovered code file(s)."
     },
     "r4c-bim-worker": {
       "level": "verified",
