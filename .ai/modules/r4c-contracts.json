@@ -6,7 +6,7 @@
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "9af797b0122d867eef3c13c662c6bf10d5bed9be8e1ac795ddd5af733985ddf9",
+    "inputDigest": "249f1220b41801cc8fa40abdb65cded08eb68a298b09d2795cbfe573e777443e",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },

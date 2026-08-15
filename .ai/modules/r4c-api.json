@@ -1,18 +1,18 @@
 {
   "_meta": {
     "artifact": "modules/r4c-api.json",
-    "bodyDigest": "b8e5f869c9b1cea16af598c4206c7ef6a8fdfec0f617ae42b13bd052a54d6eb4",
+    "bodyDigest": "487c2d7a43e1787a36b1b3e0d4dd670f0842811e9388c7113d963912b48a9fe1",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "9af797b0122d867eef3c13c662c6bf10d5bed9be8e1ac795ddd5af733985ddf9",
+    "inputDigest": "249f1220b41801cc8fa40abdb65cded08eb68a298b09d2795cbfe573e777443e",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 92 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 93 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
   "dependedOnBy": [],
@@ -106,6 +106,7 @@
       "apps/api/test/c03-http-e2e.mjs",
       "apps/api/test/c03-invariants-e2e.mjs",
       "apps/api/test/c04-i18n-holds-reservations-e2e.mjs",
+      "apps/api/test/commercial-interface-contracts.test.mjs",
       "apps/api/test/http-e2e.mjs",
       "apps/api/test/prisma-adapter-bootstrap.test.mjs",
       "apps/api/test/rate-limit-e2e.mjs",
@@ -212,6 +213,7 @@
       "apps/api/test/c03-http-e2e.mjs",
       "apps/api/test/c03-invariants-e2e.mjs",
       "apps/api/test/c04-i18n-holds-reservations-e2e.mjs",
+      "apps/api/test/commercial-interface-contracts.test.mjs",
       "apps/api/test/http-e2e.mjs",
       "apps/api/test/prisma-adapter-bootstrap.test.mjs",
       "apps/api/test/rate-limit-e2e.mjs",
@@ -233,12 +235,20 @@
   "ownedEntities": [
     "approval",
     "building",
+    "customer",
     "design-document",
     "development-phase",
     "floor",
+    "lead",
+    "payment-plan",
     "progress-record",
     "project",
+    "reservation",
+    "sales-activity",
+    "translation",
     "unit",
+    "unit-hold",
+    "unit-price-revision",
     "unit-type",
     "wbs-node"
   ],
@@ -246,16 +256,165 @@
   "path": "apps/api",
   "permissions": [
     {
+      "key": "commercial:activity:log",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:activity:view",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:customer:create",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:customer:view",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:hold:create",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:hold:release",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:lead:create",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:lead:disqualify",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:lead:qualify",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:lead:reassign",
+      "roles": [
+        "ADMIN",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:lead:view-all",
+      "roles": [
+        "ADMIN",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:lead:view-own",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
       "key": "commercial:manage",
       "roles": [
         "ADMIN"
       ]
     },
     {
+      "key": "commercial:media:manage",
+      "roles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "key": "commercial:payment-plan:manage",
+      "roles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "key": "commercial:payment-plan:view",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:price:create-draft",
+      "roles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "key": "commercial:price:publish",
+      "roles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "key": "commercial:price:view-draft",
+      "roles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "key": "commercial:price:view-published",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
       "key": "commercial:read",
       "roles": [
         "ADMIN",
-        "VIEWER"
+        "VIEWER",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:reservation:confirm",
+      "roles": [
+        "ADMIN",
+        "SALES_MANAGER"
       ]
     },
     {

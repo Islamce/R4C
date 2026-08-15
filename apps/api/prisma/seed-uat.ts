@@ -193,9 +193,67 @@ async function seedProgressSubmitter() {
   );
 }
 
+async function seedCommercialOperators() {
+  const agentPassword = process.env.SEED_UAT_SALES_AGENT_PASSWORD;
+  const managerPassword = process.env.SEED_UAT_SALES_MANAGER_PASSWORD;
+  if (!agentPassword && !managerPassword) {
+    console.log("R4C UAT commercial operators skipped: sales passwords are not configured");
+    return;
+  }
+  if (!agentPassword || !managerPassword) {
+    throw new Error("Both SEED_UAT_SALES_AGENT_PASSWORD and SEED_UAT_SALES_MANAGER_PASSWORD are required together");
+  }
+  if (agentPassword.length < 12 || managerPassword.length < 12) {
+    throw new Error("Commercial operator passwords must contain at least 12 characters");
+  }
+
+  const tenantCode = process.env.SEED_UAT_TENANT_CODE?.trim() || "ALOMRAN";
+  const tenant = await prisma.tenant.findUnique({ where: { code: tenantCode } });
+  if (!tenant) throw new Error(`UAT tenant ${tenantCode} was not created`);
+  const definitions = [
+    {
+      roleCode: "SALES_AGENT",
+      email: (process.env.SEED_UAT_SALES_AGENT_EMAIL || "uat.sales-agent@alomran.test").trim().toLowerCase(),
+      displayName: "Alomran UAT Sales Agent",
+      password: agentPassword,
+    },
+    {
+      roleCode: "SALES_MANAGER",
+      email: (process.env.SEED_UAT_SALES_MANAGER_EMAIL || "uat.sales-manager@alomran.test").trim().toLowerCase(),
+      displayName: "Alomran UAT Sales Manager",
+      password: managerPassword,
+    },
+  ];
+
+  for (const definition of definitions) {
+    const role = await prisma.role.findUniqueOrThrow({
+      where: { tenantId_code: { tenantId: tenant.id, code: definition.roleCode } },
+    });
+    const existing = await prisma.user.findUnique({ where: { email: definition.email } });
+    const passwordMatches = existing
+      ? await verifyPassword(existing.passwordHash, definition.password)
+      : false;
+    const passwordHash = passwordMatches
+      ? existing!.passwordHash
+      : await hashPassword(definition.password);
+    const user = await prisma.user.upsert({
+      where: { email: definition.email },
+      update: { displayName: definition.displayName, passwordHash, isActive: true },
+      create: { email: definition.email, displayName: definition.displayName, passwordHash, isActive: true },
+    });
+    await prisma.tenantMembership.upsert({
+      where: { tenantId_userId: { tenantId: tenant.id, userId: user.id } },
+      update: { roleId: role.id },
+      create: { tenantId: tenant.id, userId: user.id, roleId: role.id },
+    });
+  }
+  console.log("R4C UAT commercial operators completed");
+}
+
 async function seedUat() {
   await runBootstrapSeed();
   await seedProgressSubmitter();
+  await seedCommercialOperators();
 }
 
 seedUat()

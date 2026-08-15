@@ -8,6 +8,11 @@ import {
 
 const readPaths = [
   /^commercial\/(?:phases|buildings|floors|unit-types|units)(?:\/[^/]+)?$/,
+  /^commercial\/units\/[^/]+\/prices$/,
+  /^commercial\/projects\/[^/]+\/payment-plans$/,
+  /^commercial\/leads(?:\/all)?(?:\/[^/]+)?$/,
+  /^commercial\/leads\/[^/]+\/activities$/,
+  /^commercial\/assignees$/,
   /^bim-models\/[^/]+\/(?:viewer-manifest|visual-state|4d-state|5d-state|material-state|quality-state|safety-state|turnover-state)$/,
   /^bim-models\/[^/]+\/elements\/global\/[^/]+$/,
   /^projects\/[^/]+\/wbs$/,
@@ -15,6 +20,9 @@ const readPaths = [
 
 const writePaths = [
   /^commercial\/(?:phases|buildings|floors|unit-types|units)(?:\/[^/]+)?(?:\/(?:release|block))?$/,
+  /^commercial\/(?:customers|leads|holds)$/,
+  /^commercial\/leads\/[^/]+\/(?:status|disqualify|assignee|activities)$/,
+  /^commercial\/holds\/[^/]+\/(?:cancel|confirm)$/,
   /^bim-models\/[^/]+\/wbs-links$/,
   /^wbs\/[^/]+\/progress$/,
 ];

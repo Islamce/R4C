@@ -6,6 +6,37 @@ import { hashPassword, verifyPassword } from "../src/auth/auth.service";
 
 const prisma = createPrismaClient();
 const READ_ONLY_ACTIONS = new Set(["read", "list", "get"]);
+const COMMERCIAL_ROLE_DEFINITIONS = [
+  {
+    code: "SALES_AGENT",
+    name: "Sales Agent",
+    permissions: [
+      "project:read",
+      "commercial:read",
+      "commercial:price:view-published",
+      "commercial:payment-plan:view",
+      "commercial:customer:create",
+      "commercial:customer:view",
+      "commercial:lead:create",
+      "commercial:lead:view-own",
+      "commercial:lead:qualify",
+      "commercial:lead:disqualify",
+      "commercial:activity:view",
+      "commercial:activity:log",
+      "commercial:hold:create",
+      "commercial:hold:release",
+    ],
+  },
+  {
+    code: "SALES_MANAGER",
+    name: "Sales Manager",
+    permissions: [
+      "commercial:lead:view-all",
+      "commercial:lead:reassign",
+      "commercial:reservation:confirm",
+    ],
+  },
+] as const;
 const PERMISSION_LITERAL = /(["'`])([a-z][a-z0-9-]*(?::[a-z][a-z0-9-]*)+)\1/g;
 const REQUIRE_PERMISSIONS = /@RequirePermissions\s*\(([\s\S]*?)\)/g;
 
@@ -138,66 +169,58 @@ async function main() {
       );
     }
 
+    const roleDefinitions = [
+      { code: "ADMIN", name: "Administrator", permissions: derived.codes },
+      { code: "VIEWER", name: "Viewer", permissions: viewerPermissionCodes },
+      { ...COMMERCIAL_ROLE_DEFINITIONS[0] },
+      {
+        ...COMMERCIAL_ROLE_DEFINITIONS[1],
+        permissions: [
+          ...COMMERCIAL_ROLE_DEFINITIONS[0].permissions,
+          ...COMMERCIAL_ROLE_DEFINITIONS[1].permissions,
+        ],
+      },
+    ];
     const existingRoles = await tx.role.findMany({
-      where: { tenantId: tenant.id, code: { in: ["ADMIN", "VIEWER"] } },
+      where: { tenantId: tenant.id, code: { in: roleDefinitions.map(({ code }) => code) } },
     });
     const existingRoleByCode = new Map(existingRoles.map((role) => [role.code, role]));
-
-    const adminRole = await tx.role.upsert({
-      where: { tenantId_code: { tenantId: tenant.id, code: "ADMIN" } },
-      update: { name: "Administrator" },
-      create: { tenantId: tenant.id, code: "ADMIN", name: "Administrator" },
-    });
-    const viewerRole = await tx.role.upsert({
-      where: { tenantId_code: { tenantId: tenant.id, code: "VIEWER" } },
-      update: { name: "Viewer" },
-      create: { tenantId: tenant.id, code: "VIEWER", name: "Viewer" },
-    });
 
     const permissionIdByCode = new Map(
       permissions.map((permission) => [permission.code, permission.id]),
     );
-    const adminPermissionIds = permissions.map((permission) => permission.id);
-    const viewerPermissionIds = viewerPermissionCodes.map((code) => {
-      const id = permissionIdByCode.get(code);
-      if (!id) throw new Error(`Derived permission ${code} was not persisted`);
-      return id;
-    });
-
-    const existingAdminLinks = await tx.rolePermission.findMany({
-      where: { roleId: adminRole.id },
-    });
-    const existingViewerLinks = await tx.rolePermission.findMany({
-      where: { roleId: viewerRole.id },
-    });
-
-    const removedAdminLinks = await tx.rolePermission.deleteMany({
-      where: {
-        roleId: adminRole.id,
-        permissionId: { notIn: adminPermissionIds },
-      },
-    });
-    const removedViewerLinks = await tx.rolePermission.deleteMany({
-      where: {
-        roleId: viewerRole.id,
-        permissionId: { notIn: viewerPermissionIds },
-      },
-    });
-
-    for (const permissionId of adminPermissionIds) {
-      await tx.rolePermission.upsert({
-        where: { roleId_permissionId: { roleId: adminRole.id, permissionId } },
-        update: {},
-        create: { roleId: adminRole.id, permissionId },
+    const seededRoles = new Map<string, { id: string; code: string; name: string }>();
+    let addedRolePermissionLinks = 0;
+    let removedRolePermissionLinks = 0;
+    for (const definition of roleDefinitions) {
+      const role = await tx.role.upsert({
+        where: { tenantId_code: { tenantId: tenant.id, code: definition.code } },
+        update: { name: definition.name },
+        create: { tenantId: tenant.id, code: definition.code, name: definition.name },
       });
-    }
-    for (const permissionId of viewerPermissionIds) {
-      await tx.rolePermission.upsert({
-        where: { roleId_permissionId: { roleId: viewerRole.id, permissionId } },
-        update: {},
-        create: { roleId: viewerRole.id, permissionId },
+      seededRoles.set(definition.code, role);
+      const permissionIds = definition.permissions.map((code) => {
+        const id = permissionIdByCode.get(code);
+        if (!id) throw new Error(`Derived permission ${code} was not persisted`);
+        return id;
       });
+      const existingLinks = await tx.rolePermission.findMany({ where: { roleId: role.id } });
+      const existingIds = new Set(existingLinks.map(({ permissionId }) => permissionId));
+      const removed = await tx.rolePermission.deleteMany({
+        where: { roleId: role.id, permissionId: { notIn: permissionIds } },
+      });
+      removedRolePermissionLinks += removed.count;
+      for (const permissionId of permissionIds) {
+        await tx.rolePermission.upsert({
+          where: { roleId_permissionId: { roleId: role.id, permissionId } },
+          update: {},
+          create: { roleId: role.id, permissionId },
+        });
+        if (!existingIds.has(permissionId)) addedRolePermissionLinks += 1;
+      }
     }
+    const adminRole = seededRoles.get("ADMIN");
+    if (!adminRole) throw new Error("ADMIN role was not persisted");
 
     const user = await tx.user.upsert({
       where: { email: adminEmail },
@@ -223,24 +246,15 @@ async function main() {
       create: { tenantId: tenant.id, userId: user.id, roleId: adminRole.id },
     });
 
-    const existingAdminLinkIds = new Set(
-      existingAdminLinks.map((link) => link.permissionId),
-    );
-    const existingViewerLinkIds = new Set(
-      existingViewerLinks.map((link) => link.permissionId),
-    );
-
     return {
       tenant,
       user,
       adminRole,
-      viewerRole,
       existingRoleByCode,
       existingMembership,
-      addedAdminLinks: adminPermissionIds.filter((id) => !existingAdminLinkIds.has(id)).length,
-      addedViewerLinks: viewerPermissionIds.filter((id) => !existingViewerLinkIds.has(id)).length,
-      removedAdminLinks: removedAdminLinks.count,
-      removedViewerLinks: removedViewerLinks.count,
+      roleDefinitions,
+      addedRolePermissionLinks,
+      removedRolePermissionLinks,
     };
   });
 
@@ -251,6 +265,7 @@ async function main() {
   const roleUpdates = [
     { code: "ADMIN", name: "Administrator" },
     { code: "VIEWER", name: "Viewer" },
+    ...COMMERCIAL_ROLE_DEFINITIONS.map(({ code, name }) => ({ code, name })),
   ].filter(({ code, name }) => {
     const existing = result.existingRoleByCode.get(code);
     return existing !== undefined && existing.name !== name;
@@ -260,12 +275,12 @@ async function main() {
     created: {
       tenants: existingTenant ? 0 : 1,
       permissions: derived.codes.length - existingPermissions.length,
-      roles: ["ADMIN", "VIEWER"].filter(
+      roles: ["ADMIN", "VIEWER", "SALES_AGENT", "SALES_MANAGER"].filter(
         (code) => !result.existingRoleByCode.has(code),
       ).length,
       users: existingUser ? 0 : 1,
       memberships: result.existingMembership ? 0 : 1,
-      rolePermissionLinks: result.addedAdminLinks + result.addedViewerLinks,
+      rolePermissionLinks: result.addedRolePermissionLinks,
     },
     updated: {
       tenants:
@@ -288,14 +303,14 @@ async function main() {
           : 0,
     },
     removed: {
-      rolePermissionLinks: result.removedAdminLinks + result.removedViewerLinks,
+      rolePermissionLinks: result.removedRolePermissionLinks,
     },
     totals: {
       permissions: derived.codes.length,
       adminPermissions: derived.codes.length,
       viewerPermissions: viewerPermissionCodes.length,
       tenants: 1,
-      roles: 2,
+      roles: 4,
       users: 1,
       memberships: 1,
     },

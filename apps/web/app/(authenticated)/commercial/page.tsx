@@ -1,5 +1,5 @@
-import { CommercialInventory } from "../../../components/CommercialInventory";
+import { CommercialOperatorWorkspace } from "../../../components/CommercialOperatorWorkspace";
 
 export default function CommercialPage() {
-  return <CommercialInventory />;
+  return <CommercialOperatorWorkspace />;
 }

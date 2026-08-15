@@ -232,7 +232,14 @@ export class CommercialService {
     return { items, total, page: query.page, pageSize: query.pageSize };
   }
 
-  async unit(tenantId: string, id: string) { return this.requireUnit(tenantId, id, true); }
+  async unit(tenantId: string, id: string, locale: TranslationLocale = TranslationLocale.en) {
+    const unit = await this.found(
+      this.prisma.unit.findFirst({ where: { id, tenantId }, include: this.unitInclude() }),
+      "Unit",
+    );
+    const descriptions = await this.localeResolvedDescriptions(tenantId, unit, locale);
+    return { ...unit, descriptions };
+  }
 
   async createUnit(user: AuthContext, command: CreateUnitDto) {
     await this.assertHierarchy(user.tenantId, command);
@@ -520,6 +527,7 @@ export class CommercialService {
         this.requireUnitTx(tx, user.tenantId, command.unitId),
         this.requireLeadTx(tx, user.tenantId, command.leadId),
       ]);
+      this.assertLeadOwnerOrManager(user, lead.assignedToId);
       if (lead.unitId && lead.unitId !== unit.id) {
         throw new BadRequestException("Lead is linked to a different Unit");
       }
@@ -553,6 +561,8 @@ export class CommercialService {
 
   async cancelHold(user: AuthContext, id: string) {
     const hold = await this.requireHold(user.tenantId, id);
+    const lead = await this.requireLead(user.tenantId, hold.leadId);
+    this.assertLeadOwnerOrManager(user, lead.assignedToId);
     return this.releaseHold(user.tenantId, hold.id, UnitHoldStatus.CANCELLED, user);
   }
 
@@ -808,10 +818,35 @@ export class CommercialService {
     });
   }
 
-  async activities(tenantId: string, leadId: string) {
-    await this.requireLead(tenantId, leadId);
+  async assignees(tenantId: string) {
+    const memberships = await this.prisma.tenantMembership.findMany({
+      where: {
+        tenantId,
+        user: { isActive: true },
+        role: {
+          permissions: {
+            some: { permission: { code: { in: ["commercial:lead:view-own", "commercial:lead:view-all"] } } },
+          },
+        },
+      },
+      select: {
+        user: { select: { id: true, displayName: true } },
+        role: { select: { code: true, name: true } },
+      },
+      orderBy: { user: { displayName: "asc" } },
+    });
+    return memberships.map(({ user, role }) => ({
+      id: user.id,
+      displayName: user.displayName,
+      role: { code: role.code, name: role.name },
+    }));
+  }
+
+  async activities(user: AuthContext, leadId: string) {
+    const lead = await this.requireLead(user.tenantId, leadId);
+    this.assertLeadOwnerOrManager(user, lead.assignedToId);
     const activities = await this.prisma.salesActivity.findMany({
-      where: { tenantId, leadId }, orderBy: { createdAt: "asc" }, include: { actor: { select: { id: true, displayName: true } } },
+      where: { tenantId: user.tenantId, leadId }, orderBy: { createdAt: "asc" }, include: { actor: { select: { id: true, displayName: true } } },
     });
     return activities.map((activity) => this.activityView(activity));
   }
@@ -890,6 +925,37 @@ export class CommercialService {
     if (!allowed.has(`${entityType}.${field}`)) {
       throw new BadRequestException("This commercial field is not authorized for translation");
     }
+  }
+
+  private async localeResolvedDescriptions(
+    tenantId: string,
+    unit: { projectId: string; phaseId: string; unitTypeId: string; project: { description?: string | null }; phase: { description?: string | null }; unitType: { description?: string | null } },
+    locale: TranslationLocale,
+  ) {
+    const targets = [
+      { key: "project", entityType: "Project", entityId: unit.projectId, fallback: unit.project.description ?? null },
+      { key: "phase", entityType: "DevelopmentPhase", entityId: unit.phaseId, fallback: unit.phase.description ?? null },
+      { key: "unitType", entityType: "UnitType", entityId: unit.unitTypeId, fallback: unit.unitType.description ?? null },
+    ] as const;
+    const translations = await this.prisma.translation.findMany({
+      where: {
+        tenantId,
+        field: "description",
+        OR: targets.map(({ entityType, entityId }) => ({ entityType, entityId })),
+        locale: { in: locale === TranslationLocale.en ? [TranslationLocale.en] : [locale, TranslationLocale.en] },
+      },
+      select: { entityType: true, entityId: true, locale: true, value: true },
+    });
+    return Object.fromEntries(targets.map((target) => {
+      const requested = translations.find((item) => item.entityType === target.entityType && item.entityId === target.entityId && item.locale === locale);
+      const english = translations.find((item) => item.entityType === target.entityType && item.entityId === target.entityId && item.locale === TranslationLocale.en);
+      const selected = requested ?? english;
+      return [target.key, {
+        value: selected?.value ?? target.fallback,
+        locale: selected?.locale ?? null,
+        fallbackUsed: locale !== TranslationLocale.en && requested === undefined && (english !== undefined || target.fallback !== null),
+      }];
+    }));
   }
 
   private async requireTranslationEntity(
@@ -1129,7 +1195,7 @@ export class CommercialService {
   private requireUnitType(tenantId: string, id: string) { return this.found(this.prisma.unitType.findFirst({ where: { id, tenantId } }), "Unit type"); }
   private requireUnit(tenantId: string, id: string, include = false) { return this.found(this.prisma.unit.findFirst({ where: { id, tenantId }, ...(include ? { include: this.unitInclude() } : {}) }), "Unit"); }
   private async found<T>(query: Promise<T | null>, entity: string): Promise<T> { const value = await query; if (!value) throw new NotFoundException(`${entity} not found`); return value; }
-  private unitInclude() { return { phase: { select: { id: true, code: true, name: true } }, building: { select: { id: true, code: true, name: true } }, floor: { select: { id: true, code: true, name: true, floorNumber: true } }, unitType: { select: { id: true, code: true, name: true } } } as const; }
+  private unitInclude() { return { project: { select: { id: true, code: true, name: true, description: true } }, phase: { select: { id: true, code: true, name: true, description: true } }, building: { select: { id: true, code: true, name: true } }, floor: { select: { id: true, code: true, name: true, floorNumber: true } }, unitType: { select: { id: true, code: true, name: true, description: true } } } as const; }
   private code(value: string) { return value.trim().toUpperCase(); }
   private positiveDecimal(value: string, field: string) { const result = new Prisma.Decimal(value); if (result.lte(0)) throw new BadRequestException(`${field} must be positive`); return result; }
   private areas(gross: string, net?: string) { const grossArea = this.positiveDecimal(gross, "Gross area"); const netArea = net ? this.positiveDecimal(net, "Net area") : undefined; if (netArea?.gt(grossArea)) throw new BadRequestException("Net area cannot exceed gross area"); return { grossArea, ...(netArea ? { netArea } : {}) }; }
