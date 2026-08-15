@@ -1,18 +1,18 @@
 {
   "_meta": {
     "artifact": "modules/r4c-api.json",
-    "bodyDigest": "f2e801f3b22a2f19271eefeb811f4389c34c82b7e3491eb8a44729f9d9c9692c",
+    "bodyDigest": "02f65726384ef54f43684a8d7911fd61c9ec99efdc6b52ecb241f59ba5503690",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "d38cdfc3705b91a7915401cdb1615459710667509c893853f773f6f8f07ef766",
+    "inputDigest": "5feb215d3f046d057460f28becb612cda7070b1a2a2ac8647955db3a0ac132b8",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 90 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 91 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
   "dependedOnBy": [],
@@ -106,6 +106,7 @@
       "apps/api/test/c03-invariants-e2e.mjs",
       "apps/api/test/c04-i18n-holds-reservations-e2e.mjs",
       "apps/api/test/http-e2e.mjs",
+      "apps/api/test/prisma-adapter-bootstrap.test.mjs",
       "apps/api/test/rate-limit-e2e.mjs",
       "apps/api/test/security-contracts.test.mjs",
       "apps/api/test/seed-e2e.mjs"
@@ -210,6 +211,7 @@
       "apps/api/test/c03-invariants-e2e.mjs",
       "apps/api/test/c04-i18n-holds-reservations-e2e.mjs",
       "apps/api/test/http-e2e.mjs",
+      "apps/api/test/prisma-adapter-bootstrap.test.mjs",
       "apps/api/test/rate-limit-e2e.mjs",
       "apps/api/test/security-contracts.test.mjs",
       "apps/api/test/seed-e2e.mjs",
