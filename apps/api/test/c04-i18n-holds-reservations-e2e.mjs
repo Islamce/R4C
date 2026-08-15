@@ -104,7 +104,10 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
     },
   });
 
-  const api = await startApi(t, port);
+  const api = await startApi(t, port, {
+    environment: { BIM_ENABLED: "false" },
+    removeEnvironment: ["BIM_WORKER_URL", "BIM_WORKER_TOKEN"],
+  });
   const schedulerConnection = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
   const schedulerQueue = new Queue("r4c-commercial-hold-expiry", { connection: schedulerConnection });
   t.after(async () => {

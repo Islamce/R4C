@@ -36,6 +36,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://r4c:r4c_dev@localhost:5432/r4c
+      DIRECT_URL: postgresql://r4c:r4c_dev@localhost:5432/r4c
       REDIS_URL: redis://127.0.0.1:6379
       S3_ENDPOINT: http://127.0.0.1:9000
       S3_REGION: us-east-1
@@ -43,6 +44,8 @@ jobs:
       S3_ACCESS_KEY: r4c-ci-${{ github.run_id }}
       S3_SECRET_KEY: r4c-ci-value-${{ github.run_id }}
       JWT_ACCESS_SECRET: ci-only-${{ github.run_id }}-value-at-least-32-characters-long
+      # BIM remains covered by CI only when explicitly opted in. Deployment defaults false.
+      BIM_ENABLED: true
       BIM_WORKER_URL: http://127.0.0.1:65535
       BIM_WORKER_TOKEN: ci-bim-worker-${{ github.run_id }}
       API_URL: http://127.0.0.1:4000/api/v1
@@ -103,6 +106,9 @@ jobs:
 
       - name: Run authenticated runtime integration
         run: pnpm --filter @r4c/api test:e2e
+
+      - name: Verify BIM-disabled commercial runtime boundary
+        run: pnpm --filter @r4c/api test:bim-disabled
 
       - name: Verify rate limiting and proxy client isolation
         run: |

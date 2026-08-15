@@ -5,6 +5,13 @@
   "description": "BIM-centered real-estate development control platform",
   "packageManager": "pnpm@10.13.1",
   "engines": { "node": ">=22" },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "10.13.1",
+      "onFail": "warn"
+    }
+  },
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm -r --parallel dev",
@@ -17,12 +24,5 @@
     "local:verify:windows": "powershell -ExecutionPolicy Bypass -File scripts/local-verify.ps1",
     "local:stop": "docker compose down",
     "local:reset": "docker compose down -v"
-  },
-  "pnpm": {
-    "overrides": {
-      "sharp": ">=0.35.0",
-      "postcss": ">=8.5.18",
-      "nanoid": "5.1.16"
-    }
   }
 }

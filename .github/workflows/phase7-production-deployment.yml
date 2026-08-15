@@ -90,13 +90,16 @@ jobs:
           test ${#REDIS_PASSWORD} -ge 40
           test ${#JWT_ACCESS_SECRET} -ge 64
           test ${#JWT_REFRESH_SECRET} -ge 64
-          test ${#BIM_WORKER_TOKEN} -ge 64
+          test "$BIM_ENABLED" = false
+          test -z "$BIM_WORKER_URL"
+          test -z "$BIM_WORKER_TOKEN"
           ! git grep -F "$JWT_ACCESS_SECRET"
           ! git grep -F "$POSTGRES_PASSWORD"
 
       - name: Build every production image
         run: |
-          docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools build --pull
+          # Build the frozen BIM image for reproducibility, but do not start it.
+          docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools --profile bim build --pull
           touch phase7-images-built.ok
 
       - name: Start infrastructure, migrate, and seed twice
@@ -125,16 +128,16 @@ jobs:
           grep -q '"canReview": false' phase7-seed-uat-second.txt
           touch phase7-seeds-idempotent.ok
 
-      - name: Start the full production compose stack
+      - name: Start the default commercial compose stack with BIM disabled
         run: |
           docker compose --env-file .env.production -f docker-compose.prod.yml up -d
           for attempt in {1..90}; do
             healthy=0
-            for service in api web bim-worker caddy; do
+            for service in api web caddy; do
               status=$(docker inspect -f '{{.State.Health.Status}}' "r4c-${service}-1" 2>/dev/null || true)
               [ "$status" = healthy ] && healthy=$((healthy+1))
             done
-            [ "$healthy" = 4 ] && touch phase7-stack-healthy.ok && exit 0
+            [ "$healthy" = 3 ] && touch phase7-stack-healthy.ok && exit 0
             sleep 2
           done
           docker compose --env-file .env.production -f docker-compose.prod.yml ps
@@ -145,14 +148,13 @@ jobs:
         run: |
           api_user=$(docker inspect -f '{{.Config.User}}' r4c-api-1)
           web_user=$(docker inspect -f '{{.Config.User}}' r4c-web-1)
-          bim_user=$(docker inspect -f '{{.Config.User}}' r4c-bim-worker-1)
           test -n "$api_user" && test "$api_user" != "0" && test "$api_user" != "root"
           test -n "$web_user" && test "$web_user" != "0" && test "$web_user" != "root"
-          test -n "$bim_user" && test "$bim_user" != "0" && test "$bim_user" != "root"
-          for service in postgres redis minio api web bim-worker caddy; do
+          for service in postgres redis minio api web caddy; do
             test "$(docker inspect -f '{{.State.Health.Status}}' "r4c-${service}-1")" = healthy
           done
-          printf 'PHASE7_USERS api=%s web=%s bim=%s\n' "$api_user" "$web_user" "$bim_user" | tee phase7-users.txt
+          ! docker inspect r4c-bim-worker-1 >/dev/null 2>&1
+          printf 'PHASE7_USERS api=%s web=%s bim=disabled\n' "$api_user" "$web_user" | tee phase7-users.txt
 
       - name: Verify HTTPS routing and Alomran login
         run: |
@@ -225,7 +227,7 @@ jobs:
         run: |
           {
             if test -f phase7-images-built.ok; then
-              echo "PHASE7_IMAGES api=built web=built bim-worker=built caddy=built"
+              echo "PHASE7_IMAGES api=built web=built bim-worker=built-not-started caddy=built"
             else
               echo "PHASE7_IMAGES incomplete"
             fi
@@ -237,7 +239,7 @@ jobs:
             test -f phase7-https-login.ok && echo "PHASE7_TLS app=https://r4c.local api=https://api.r4c.local tenant=https://alomran.r4c.local secureCookies=true"
             echo "PHASE7_SECRETS generated=true devDefaults=false committed=false"
             if test -f phase7-stack-healthy.ok && test -f phase7-seeds-idempotent.ok; then
-              echo "PHASE7_COMPOSE fullStack=true migrations=deploy seeds=bootstrap+uat-twice idempotent=true health=green"
+              echo "PHASE7_COMPOSE commercialStack=true bim=disabled migrations=deploy seeds=bootstrap+uat-twice idempotent=true health=green"
             else
               echo "PHASE7_COMPOSE incomplete"
             fi
@@ -271,5 +273,5 @@ jobs:
       - name: Stop isolated stack
         if: always()
         run: |
-          docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools down --volumes --remove-orphans || true
+          docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools --profile bim down --volumes --remove-orphans || true
           rm -f .env.production phase7-admin-cookies.txt

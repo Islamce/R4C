@@ -12,6 +12,7 @@
     "test:c02": "pnpm build && node --test test/c02-*.mjs",
     "test:c03": "pnpm build && node --test test/c03-http-e2e.mjs test/c03-invariants-e2e.mjs",
     "test:c04": "pnpm build && node --test test/c04-i18n-holds-reservations-e2e.mjs",
+    "test:bim-disabled": "pnpm build && node --test test/bim-disabled-bootstrap-e2e.mjs",
     "test:seed": "node --test test/seed-e2e.mjs",
     "test:rate-limit": "node --test test/rate-limit-e2e.mjs",
     "test:auth-session": "node --test test/auth-session-e2e.mjs",
