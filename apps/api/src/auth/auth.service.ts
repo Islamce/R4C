@@ -2,7 +2,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { AuditOutcome, Prisma } from "@prisma/client";
 import { JwtService } from "@nestjs/jwt";
-import * as argon2 from "argon2";
+import { argon2Verify, argon2id } from "hash-wasm";
 import { AuditService } from "../audit/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { LoginDto, RefreshTokenDto } from "./auth.dto";
@@ -11,6 +11,11 @@ const ACCESS_TOKEN_TTL_SECONDS = 900;
 const DEFAULT_REFRESH_TOKEN_TTL_DAYS = 14;
 const MAX_REFRESH_TOKEN_TTL_DAYS = 365;
 const REFRESH_TOKEN_SECRET_BYTES = 48;
+const PASSWORD_HASH_SALT_BYTES = 16;
+const PASSWORD_HASH_ITERATIONS = 3;
+const PASSWORD_HASH_MEMORY_KIB = 65_536;
+const PASSWORD_HASH_PARALLELISM = 4;
+const PASSWORD_HASH_LENGTH_BYTES = 32;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -42,11 +47,19 @@ type RefreshTokenMaterial = {
 class ConcurrentRefreshReuseError extends Error {}
 
 export async function hashPassword(password: string) {
-  return argon2.hash(password, { type: argon2.argon2id });
+  return argon2id({
+    password,
+    salt: randomBytes(PASSWORD_HASH_SALT_BYTES),
+    parallelism: PASSWORD_HASH_PARALLELISM,
+    iterations: PASSWORD_HASH_ITERATIONS,
+    memorySize: PASSWORD_HASH_MEMORY_KIB,
+    hashLength: PASSWORD_HASH_LENGTH_BYTES,
+    outputType: "encoded",
+  });
 }
 
 export async function verifyPassword(passwordHash: string, password: string) {
-  return argon2.verify(passwordHash, password);
+  return argon2Verify({ password, hash: passwordHash });
 }
 
 export function refreshTokenTtlDays(

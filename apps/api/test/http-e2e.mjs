@@ -8,7 +8,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { PrismaClient } from "@prisma/client";
-import * as argon2 from "argon2";
+import { hashTestPassword } from "./argon2-test-helpers.mjs";
 import { Queue } from "bullmq";
 
 const port = Number(process.env.E2E_API_PORT ?? 4107);
@@ -174,7 +174,7 @@ test(
       data: { roleId: reader.id, permissionId: readPermission.id },
     });
 
-    const passwordHash = await argon2.hash(password);
+    const passwordHash = await hashTestPassword(password);
     const adminUser = await prisma.user.create({
       data: {
         email: "admin.e2e@r4c.test",

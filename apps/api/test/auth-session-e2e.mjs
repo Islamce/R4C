@@ -4,7 +4,10 @@ import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import test from "node:test";
 import { PrismaClient } from "@prisma/client";
-import * as argon2 from "argon2";
+import {
+  hashTestPassword,
+  verifyTestPassword,
+} from "./argon2-test-helpers.mjs";
 
 const port = Number(process.env.AUTH_SESSION_API_PORT ?? 4127);
 const baseUrl = `http://127.0.0.1:${port}/api/v1`;
@@ -111,7 +114,7 @@ test(
       data: {
         email,
         displayName: "Auth Session Administrator",
-        passwordHash: await argon2.hash(password, { type: argon2.argon2id }),
+        passwordHash: await hashTestPassword(password),
       },
     });
     await prisma.tenantMembership.createMany({
@@ -173,7 +176,7 @@ test(
       assert.notEqual(storedInitial.tokenHash, initialParts.secret);
       assert.match(storedInitial.tokenHash, /^\$argon2id\$/);
       assert.equal(
-        await argon2.verify(storedInitial.tokenHash, initialParts.secret),
+        await verifyTestPassword(storedInitial.tokenHash, initialParts.secret),
         true,
       );
       console.log(
