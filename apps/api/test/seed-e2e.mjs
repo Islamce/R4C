@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { once } from "node:events";
 import test from "node:test";
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../dist/prisma/client.js";
 
 const port = Number(process.env.SEED_E2E_API_PORT ?? 4108);
 const baseUrl = `http://127.0.0.1:${port}/api/v1`;
@@ -102,7 +102,7 @@ test(
   { timeout: 120_000 },
   async (t) => {
     assert.ok(process.env.DATABASE_URL, "DATABASE_URL is required");
-    const prisma = new PrismaClient();
+    const prisma = createPrismaClient();
 
     const initial = await snapshot(prisma);
 

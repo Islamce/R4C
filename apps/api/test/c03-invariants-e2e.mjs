@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { PrismaClient, UnitStatus } from "@prisma/client";
+import { UnitStatus } from "@prisma/client";
+import { createPrismaClient } from "../dist/prisma/client.js";
 import { apiClient, createFixture, expectStatus, startApi } from "./c03-helpers.mjs";
 
 const port = Number(process.env.C03_INVARIANT_E2E_API_PORT ?? 4114);
@@ -8,7 +9,7 @@ const port = Number(process.env.C03_INVARIANT_E2E_API_PORT ?? 4114);
 test("C03 invariants enforce capability, ownership, lifecycle, consent, tenant, audit, append-only, and C04 boundaries", { timeout: 120_000 }, async (t) => {
   assert.ok(process.env.DATABASE_URL, "DATABASE_URL is required");
   assert.ok(process.env.REDIS_URL, "REDIS_URL is required");
-  const prisma = new PrismaClient();
+  const prisma = createPrismaClient();
   t.after(() => prisma.$disconnect());
   const suffix = `${Date.now().toString(36)}-i`;
   const fixture = await createFixture(prisma, suffix, { withUnit: true });

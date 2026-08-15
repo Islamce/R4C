@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import test from "node:test";
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../dist/prisma/client.js";
 import {
   hashTestPassword,
   verifyTestPassword,
@@ -83,7 +83,7 @@ test(
   { timeout: 120_000 },
   async (t) => {
     assert.ok(process.env.DATABASE_URL, "DATABASE_URL is required");
-    const prisma = new PrismaClient();
+    const prisma = createPrismaClient();
     const suffix = randomUUID().slice(0, 8);
     const email = `auth-session-${suffix}@r4c.test`;
 

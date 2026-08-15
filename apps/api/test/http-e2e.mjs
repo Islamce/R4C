@@ -7,7 +7,7 @@ import {
   HeadBucketCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../dist/prisma/client.js";
 import { hashTestPassword } from "./argon2-test-helpers.mjs";
 import { Queue } from "bullmq";
 
@@ -98,7 +98,7 @@ test(
     assert.ok(process.env.REDIS_URL, "REDIS_URL is required");
     assert.ok(process.env.S3_ENDPOINT, "S3_ENDPOINT is required");
 
-    const prisma = new PrismaClient();
+    const prisma = createPrismaClient();
     const s3 = new S3Client({
       endpoint: process.env.S3_ENDPOINT,
       region: process.env.S3_REGION ?? "us-east-1",
