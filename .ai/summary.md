@@ -7,10 +7,10 @@ R4C — a BIM-centered platform for governed real-estate development delivery, c
 - Repository: `Islamce/R4C`
 - Default branch: `main`
 - KAAF phase: 7
-- Modules: 6 declared, 0 discovered only
-- Drift: 0 error, 0 warning, 0 info
+- Modules: 6 declared, 1 discovered only
+- Drift: 0 error, 1 warning, 0 info
 - Generator: `kaaf` v0.7.0
-- Input digest: `8f1873ca55cc82a9…`
+- Input digest: `d38cdfc3705b91a7…`
 
 ## Modules
 
@@ -26,6 +26,7 @@ check against, `derived` = discovered with no declaration.
 | `r4c-kaaf-tooling` | `scripts/architecture` | DevOps | Generate and validate this repository's KAAF architecture context. | `verified` |
 | `r4c-scripts` | `scripts` | DevOps | Provision local development environments and generate production configuration. | `verified` |
 | `r4c-web` | `apps/web` | Frontend | Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards. | `verified` |
+| `root` | `.` | unknown | Not declared — discovered from source. | `derived` |
 
 ## Dependencies
 
@@ -37,6 +38,7 @@ graph LR
   r4c_kaaf_tooling["r4c-kaaf-tooling"]
   r4c_scripts["r4c-scripts"]
   r4c_web["r4c-web"]
+  root["root (undeclared)"]
   r4c_web --> r4c_contracts
 ```
 
@@ -64,7 +66,13 @@ No declared public contracts.
 
 ## Drift — declared versus discovered
 
-No drift: every declaration matches what discovery found in the source.
+0 error, 1 warning, 0 info. Errors block CI; warnings and information do not.
+
+| Severity | Type | Module | Finding |
+|---|---|---|---|
+| `warning` | `undeclared-module` | `root` | 1 code file(s) under '.' belong to no declared module. |
+
+Full detail, with evidence and recommendations, in `.ai/drift.json`.
 
 ## How to use this
 
@@ -77,4 +85,4 @@ No drift: every declaration matches what discovery found in the source.
 Declarations come from `kaaf.repo.json` and `kaaf.module.json`. Discovery is a static
 read of the source: dynamic imports and runtime wiring are invisible to it, so the
 absence of a drift finding is not proof that none exists.
-<!-- kaaf:bodyDigest=779de9431d92140e0456eda4cfee1b4f40fbfbf1b74d63e78bceaa6e5f176f50 -->
+<!-- kaaf:bodyDigest=08bde795c6f9dbfad6626ba807e15434bb3de5691096bad7893a33d37d154b71 -->

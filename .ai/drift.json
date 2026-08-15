@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "drift.json",
-    "bodyDigest": "9799d4c470b67625db363b08bcbad7a77a8cdd5b0b85d8629c59b23447b090b2",
+    "bodyDigest": "72cd104d0a398e0d5c8813c20c2b3901b89887d13e61cf6ad82753972c20b54a",
     "confidence": "derived",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "8f1873ca55cc82a9700356dc794911d2118772cd8b62352a6122363907171c2a",
+    "inputDigest": "d38cdfc3705b91a7915401cdb1615459710667509c893853f773f6f8f07ef766",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -34,12 +34,16 @@
     "r4c-web": {
       "level": "verified",
       "reason": "Declared and corroborated by 46 discovered code file(s)."
+    },
+    "root": {
+      "level": "derived",
+      "reason": "Discovered from source; no manifest declares this module."
     }
   },
   "counts": {
     "error": 0,
     "info": 0,
-    "warning": 0
+    "warning": 1
   },
   "declaredModules": [
     "r4c-api",
@@ -64,9 +68,21 @@
     "r4c-contracts",
     "r4c-kaaf-tooling",
     "r4c-scripts",
-    "r4c-web"
+    "r4c-web",
+    "root"
   ],
-  "findings": [],
+  "findings": [
+    {
+      "evidence": [
+        "hostinger-web-entry.cjs"
+      ],
+      "module": "root",
+      "recommendation": "Add ./kaaf.module.json declaring this module, or move the code into an existing module.",
+      "severity": "warning",
+      "summary": "1 code file(s) under '.' belong to no declared module.",
+      "type": "undeclared-module"
+    }
+  ],
   "hasErrors": false,
   "howToRead": [
     "error: the declaration and the code disagree in a way that must be fixed; CI fails.",
@@ -74,5 +90,7 @@
     "info: expected divergence, such as a documentation-only dependency.",
     "Everything here is derived from a static read of the source: dynamic imports and runtime wiring are invisible to it, so absence of a finding is not proof of absence."
   ],
-  "undeclaredCode": []
+  "undeclaredCode": [
+    "hostinger-web-entry.cjs"
+  ]
 }

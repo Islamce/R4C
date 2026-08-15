@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "ai-context.json",
-    "bodyDigest": "cfd1d6a4b3858acc7d8d3f0e304f9d1e20ae131aae79e83863a9d977f8ba4a62",
+    "bodyDigest": "52bcfd1543fac3d29a6c48ba48180eb6e6a819dec540c12ce3e32ee427fc01bd",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "8f1873ca55cc82a9700356dc794911d2118772cd8b62352a6122363907171c2a",
+    "inputDigest": "d38cdfc3705b91a7915401cdb1615459710667509c893853f773f6f8f07ef766",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -23,16 +23,16 @@
   "counts": {
     "apis": 0,
     "externalIntegrations": 2,
-    "modules": 6,
+    "modules": 7,
     "modulesDeclared": 6,
-    "modulesUndeclared": 0,
+    "modulesUndeclared": 1,
     "permissions": 3
   },
   "drift": {
     "counts": {
       "error": 0,
       "info": 0,
-      "warning": 0
+      "warning": 1
     },
     "detail": ".ai/drift.json",
     "hasErrors": false
@@ -132,6 +132,18 @@
         "apps/web/package.json"
       ],
       "purpose": "Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards."
+    },
+    {
+      "confidence": "derived",
+      "declared": false,
+      "dependsOn": [],
+      "detail": "modules/root.json",
+      "hasDiscoveredCode": true,
+      "id": "root",
+      "owner": "unknown",
+      "path": ".",
+      "publicEntryPoints": [],
+      "purpose": "Not declared — discovered from source. Add a kaaf.module.json to describe it."
     }
   ],
   "pointers": {

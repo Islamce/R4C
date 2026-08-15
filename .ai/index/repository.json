@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "index/repository.json",
-    "bodyDigest": "0b3da940683fb1d10861d4bb6118f1cf2121a2a84529dd1ac22df4b0d8cbde50",
+    "bodyDigest": "525469594c62838e49ff8ffef7509a4b117d04272cc8abf402939b3d7919ef1e",
     "confidence": "derived",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "8f1873ca55cc82a9700356dc794911d2118772cd8b62352a6122363907171c2a",
+    "inputDigest": "d38cdfc3705b91a7915401cdb1615459710667509c893853f773f6f8f07ef766",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -27,19 +27,22 @@
   ],
   "health": {
     "confidenceByLevel": {
+      "derived": 1,
       "verified": 6
     },
     "driftCounts": {
       "error": 0,
       "info": 0,
-      "warning": 0
+      "warning": 1
     },
     "hasDriftErrors": false,
-    "moduleCount": 6,
-    "modulesUndeclared": 0,
-    "modulesWithoutOwner": [],
+    "moduleCount": 7,
+    "modulesUndeclared": 1,
+    "modulesWithoutOwner": [
+      "root"
+    ],
     "note": "No publication timestamp is embedded: it would break byte-identical regeneration. Time-based staleness is computed at aggregation time from publication metadata supplied to the aggregator.",
-    "ownershipCoverage": 1.0
+    "ownershipCoverage": 0.8571
   },
   "indexSchemaVersion": "1.1.0",
   "kaafGeneratorVersion": "0.7.0",
@@ -134,6 +137,18 @@
       "path": "apps/web",
       "purpose": "Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards.",
       "qualifiedId": "Islamce/R4C#r4c-web"
+    },
+    {
+      "confidence": "derived",
+      "consumes": [],
+      "declared": false,
+      "dependsOn": [],
+      "id": "root",
+      "ownedEntities": [],
+      "owner": "unknown",
+      "path": ".",
+      "purpose": "Not declared — discovered from source.",
+      "qualifiedId": "Islamce/R4C#root"
     }
   ],
   "permissions": [
