@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { once } from "node:events";
 import test from "node:test";
 import { PrismaClient, UnitPriceRevisionStatus } from "@prisma/client";
-import * as argon2 from "argon2";
+import { hashTestPassword } from "./argon2-test-helpers.mjs";
 
 const port = Number(process.env.C02_E2E_API_PORT ?? 4112);
 const baseUrl = `http://127.0.0.1:${port}/api/v1`;
@@ -56,7 +56,7 @@ test("C02 real HTTP boundary enforces pricing, template, media, tenant, and audi
     "commercial:media:manage",
   ];
   const suffix = Date.now().toString(36);
-  const passwordHash = await argon2.hash(password);
+  const passwordHash = await hashTestPassword(password);
   const tenant = await prisma.tenant.create({ data: { code: `C02-${suffix}`, name: "C02 Tenant" } });
   const otherTenant = await prisma.tenant.create({ data: { code: `C02-O-${suffix}`, name: "Other C02 Tenant" } });
   await prisma.permission.createMany({ data: permissions.map((code) => ({ code, name: code })), skipDuplicates: true });

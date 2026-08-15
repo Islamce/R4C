@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { once } from "node:events";
 import test from "node:test";
 import { PrismaClient, UnitPriceRevisionStatus } from "@prisma/client";
-import * as argon2 from "argon2";
+import { hashTestPassword } from "./argon2-test-helpers.mjs";
 
 const port = Number(process.env.C02_INVARIANTS_API_PORT ?? 4113);
 const baseUrl = `http://127.0.0.1:${port}/api/v1`;
@@ -61,7 +61,7 @@ test("C02 invariant-focused HTTP coverage", { timeout: 120_000 }, async (t) => {
     "commercial:media:manage",
   ];
   const suffix = `${Date.now().toString(36)}-${process.pid}`;
-  const passwordHash = await argon2.hash(password);
+  const passwordHash = await hashTestPassword(password);
   const tenant = await prisma.tenant.create({ data: { code: `C02I-${suffix}`, name: "C02 Invariants Tenant" } });
   const otherTenant = await prisma.tenant.create({ data: { code: `C02I-O-${suffix}`, name: "C02 Invariants Other Tenant" } });
   await prisma.permission.createMany({ data: permissions.map((code) => ({ code, name: code })), skipDuplicates: true });

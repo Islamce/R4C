@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import * as argon2 from "argon2";
+import { hashTestPassword } from "./argon2-test-helpers.mjs";
 
 export const password = "Correct-Horse-Battery-Staple-42";
 
@@ -88,7 +88,7 @@ export async function startApi(t, port, { environment = {}, removeEnvironment = 
 }
 
 export async function createFixture(prisma, suffix, { withUnit = false } = {}) {
-  const passwordHash = await argon2.hash(password);
+  const passwordHash = await hashTestPassword(password);
   const tenant = await prisma.tenant.create({ data: { code: `C03-${suffix}`, name: "C03 Tenant" } });
   const otherTenant = await prisma.tenant.create({ data: { code: `C03-O-${suffix}`, name: "Other C03 Tenant" } });
   await prisma.permission.createMany({ data: c03Permissions.map((code) => ({ code, name: code })), skipDuplicates: true });
