@@ -88,6 +88,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      DIRECT_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
     depends_on:
       postgres:
         condition: service_healthy
@@ -106,6 +107,7 @@ services:
       API_PORT: 4000
       HOLD_EXPIRY_SWEEP_INTERVAL_MS: ${HOLD_EXPIRY_SWEEP_INTERVAL_MS}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      DIRECT_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       S3_ENDPOINT: http://minio:9000
       S3_REGION: ${S3_REGION}
@@ -114,10 +116,13 @@ services:
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      BIM_WORKER_URL: http://bim-worker:8000
-      BIM_WORKER_TOKEN: ${BIM_WORKER_TOKEN}
-      BIM_MAX_ELEMENTS: ${BIM_MAX_ELEMENTS}
-      BIM_MAX_FILE_BYTES: ${BIM_MAX_FILE_BYTES}
+      # Development Intelligence is frozen and disabled by default. Set this to
+      # true only with an approved BIM runtime and the optional bim profile.
+      BIM_ENABLED: ${BIM_ENABLED:-false}
+      BIM_WORKER_URL: ${BIM_WORKER_URL:-}
+      BIM_WORKER_TOKEN: ${BIM_WORKER_TOKEN:-}
+      BIM_MAX_ELEMENTS: ${BIM_MAX_ELEMENTS:-250000}
+      BIM_MAX_FILE_BYTES: ${BIM_MAX_FILE_BYTES:-1073741824}
       CORS_ORIGINS: ${CORS_ORIGINS}
       RATE_LIMIT_GLOBAL_PER_MINUTE: ${RATE_LIMIT_GLOBAL_PER_MINUTE}
       RATE_LIMIT_LOGIN_PER_MINUTE: ${RATE_LIMIT_LOGIN_PER_MINUTE}
@@ -135,8 +140,6 @@ services:
         condition: service_completed_successfully
       api-migrate:
         condition: service_completed_successfully
-      bim-worker:
-        condition: service_healthy
     expose:
       - "4000"
     networks:
@@ -190,6 +193,9 @@ services:
       start_period: 30s
 
   bim-worker:
+    # Frozen Development Intelligence service. Excluded unless explicitly
+    # requested with `--profile bim` and BIM_ENABLED=true for the API.
+    profiles: ["bim"]
     build:
       context: ./apps/bim-worker
       dockerfile: Dockerfile

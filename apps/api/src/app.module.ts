@@ -27,6 +27,15 @@ import { TenantsModule } from "./tenants/tenants.module";
 import { TurnoverModule } from "./turnover/turnover.module";
 import { WorkflowModule } from "./workflow/workflow.module";
 
+function bimEnabledAtStartup() {
+  const value = process.env.BIM_ENABLED?.trim().toLowerCase();
+  if (value === undefined || value === "" || value === "false") return false;
+  if (value === "true") return true;
+  throw new Error("BIM_ENABLED must be explicitly set to true or false");
+}
+
+const bimEnabled = bimEnabledAtStartup();
+
 @Controller("health")
 class HealthController {
   constructor(private readonly prisma: PrismaService) {}
@@ -85,7 +94,7 @@ class HealthController {
     DocumentsModule,
     HseModule,
     MaterialsModule,
-    BimModule,
+    ...(bimEnabled ? [BimModule] : []),
     ProjectsModule,
     ProgressModule,
     QualityModule,

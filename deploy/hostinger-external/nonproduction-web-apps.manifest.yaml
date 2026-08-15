@@ -1,0 +1,65 @@
+# R4C Hostinger Cloud Startup — non-production operator manifest
+#
+# Informational only: this file is not an hPanel import format and does not
+# create an application, connect GitHub, configure DNS, or execute a deployment.
+# Apply only after the Founder has separately approved the relevant G0-G4 gates.
+
+version: 1
+status: evidence-gated-not-deployed
+source:
+  repository: Islamce/R4C
+  required_commit: <FOUNDATION_COMMIT_APPROVED_FOR_DEPLOYMENT>
+  branch_policy: pin-a-reviewed-commit; auto-deploy-disabled-for-first-run
+
+constraints:
+  environment: non-production-only
+  customer_data: prohibited
+  production_dns: prohibited
+  region: PDPL-data-residency-decision-required
+  bim:
+    default: disabled
+    required_environment:
+      BIM_ENABLED: "false"
+
+applications:
+  api:
+    source_root: repository-root
+    node_version: "22.x"
+    build_command: >-
+      pnpm install --frozen-lockfile &&
+      pnpm --filter @r4c/api prisma:generate &&
+      pnpm --filter @r4c/api build
+    start_command: node apps/api/dist/main.js
+    environment_template: deploy/hostinger-external/api.env.example
+    health_path: /api/v1/health/ready
+    migration:
+      command: pnpm --filter @r4c/api prisma:migrate:deploy
+      rule: run-once-against-an-empty-isolated-database-before-api-start
+    requires:
+      - managed-postgresql-neon-or-approved-equivalent
+      - upstash-redis-tcp-tls-no-eviction
+      - private-cloudflare-r2-bucket
+
+  web:
+    source_root: repository-root
+    node_version: "22.x"
+    build_command: >-
+      pnpm install --frozen-lockfile &&
+      pnpm --filter @r4c/web build
+    start_command: node apps/web/.next/standalone/apps/web/server.js
+    environment_template: deploy/hostinger-external/web.env.example
+    health_path: /api/health
+    build_time_environment:
+      - NEXT_PUBLIC_API_URL
+    requires:
+      - api-web-app-healthy
+      - temporary-nonproduction-origin
+
+validation_before_deploy:
+  - verify-hpanel-monorepo-root-and-port-contract
+  - verify-hostinger-outbound-tls-to-postgresql-redis-r2
+  - migrate-an-empty-isolated-database
+  - verify-r2-presigned-put-head-get
+  - verify-c04-expiry-sweep-and-reservation-race
+  - verify-bim-disabled-api-starts-without-bim-worker-credentials
+  - record-build-start-health-and-resource-observations

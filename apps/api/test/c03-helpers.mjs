@@ -40,25 +40,28 @@ export function apiClient(port) {
   };
 }
 
-export async function startApi(t, port) {
+export async function startApi(t, port, { environment = {}, removeEnvironment = [] } = {}) {
   const client = apiClient(port);
   let logs = "";
+  const environmentForProcess = {
+    ...process.env,
+    API_PORT: String(port),
+    HOLD_EXPIRY_SWEEP_INTERVAL_MS: process.env.HOLD_EXPIRY_SWEEP_INTERVAL_MS ?? "3600000",
+    JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET ?? "c03-test-access-secret-that-is-long-enough",
+    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET ?? "c03-test-refresh-secret-that-is-long-enough",
+    BIM_WORKER_URL: process.env.BIM_WORKER_URL ?? "http://127.0.0.1:65535",
+    BIM_WORKER_TOKEN: process.env.BIM_WORKER_TOKEN ?? "c03-worker-token",
+    S3_ENDPOINT: process.env.S3_ENDPOINT ?? "http://127.0.0.1:9000",
+    S3_REGION: process.env.S3_REGION ?? "us-east-1",
+    S3_BUCKET: process.env.S3_BUCKET ?? "r4c-c03",
+    S3_ACCESS_KEY: process.env.S3_ACCESS_KEY ?? "c03-access",
+    S3_SECRET_KEY: process.env.S3_SECRET_KEY ?? "c03-secret",
+    ...environment,
+  };
+  for (const key of removeEnvironment) delete environmentForProcess[key];
   const apiProcess = spawn(process.execPath, ["dist/main.js"], {
     cwd: process.cwd(),
-    env: {
-      ...process.env,
-      API_PORT: String(port),
-      HOLD_EXPIRY_SWEEP_INTERVAL_MS: process.env.HOLD_EXPIRY_SWEEP_INTERVAL_MS ?? "3600000",
-      JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET ?? "c03-test-access-secret-that-is-long-enough",
-      JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET ?? "c03-test-refresh-secret-that-is-long-enough",
-      BIM_WORKER_URL: process.env.BIM_WORKER_URL ?? "http://127.0.0.1:65535",
-      BIM_WORKER_TOKEN: process.env.BIM_WORKER_TOKEN ?? "c03-worker-token",
-      S3_ENDPOINT: process.env.S3_ENDPOINT ?? "http://127.0.0.1:9000",
-      S3_REGION: process.env.S3_REGION ?? "us-east-1",
-      S3_BUCKET: process.env.S3_BUCKET ?? "r4c-c03",
-      S3_ACCESS_KEY: process.env.S3_ACCESS_KEY ?? "c03-access",
-      S3_SECRET_KEY: process.env.S3_SECRET_KEY ?? "c03-secret",
-    },
+    env: environmentForProcess,
     stdio: ["ignore", "pipe", "pipe"],
   });
   apiProcess.stdout.on("data", (chunk) => { logs = (logs + chunk.toString()).slice(-12_000); });

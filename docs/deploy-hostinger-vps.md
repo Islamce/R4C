@@ -344,19 +344,23 @@ This creates or updates idempotently:
 
 The passwords are read only from `.env.production` and are never hardcoded.
 
-### Start the complete stack
+### Start the default commercial stack
 
 ```bash
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 ```
 
-The full startup also runs the idempotent bucket initializer and `migrate deploy` before the API becomes healthy.
+The default startup runs the idempotent bucket initializer and `migrate deploy` before the API becomes healthy. It keeps the frozen BIM worker disabled. To start a separately approved BIM runtime, set `BIM_ENABLED=true` with a real private worker URL/token and use the explicit `bim` profile; do not enable it solely to satisfy normal commercial startup.
 
-Watch startup:
+```bash
+docker compose --env-file .env.production -f docker-compose.prod.yml --profile bim up -d bim-worker
+```
+
+Watch default startup:
 
 ```bash
 docker compose --env-file .env.production -f docker-compose.prod.yml ps
-docker compose --env-file .env.production -f docker-compose.prod.yml logs -f --tail=100 caddy api web bim-worker
+docker compose --env-file .env.production -f docker-compose.prod.yml logs -f --tail=100 caddy api web
 ```
 
 Press `Ctrl+C` to stop following logs; the containers continue running.
@@ -397,17 +401,16 @@ Never paste UAT passwords into chat, GitHub issues, or screenshots.
 docker compose --env-file .env.production -f docker-compose.prod.yml ps
 ```
 
-The long-running services should be `Up` and `healthy`:
+The default long-running services should be `Up` and `healthy`:
 
 - postgres
 - redis
 - minio
 - api
 - web
-- bim-worker
 - caddy
 
-`api-migrate` and `minio-init` are expected to show `Exited (0)` after completing.
+`bim-worker` is absent unless a separately approved BIM run started it with `--profile bim` and `BIM_ENABLED=true`. `api-migrate` and `minio-init` are expected to show `Exited (0)` after completing.
 
 ## 11. Day-2 operations
 
@@ -424,7 +427,9 @@ COMPOSE='docker compose --env-file .env.production -f docker-compose.prod.yml'
 $COMPOSE logs --tail=200 api
 $COMPOSE logs --tail=200 web
 $COMPOSE logs --tail=200 caddy
-$COMPOSE logs -f --tail=100 api web bim-worker
+$COMPOSE logs -f --tail=100 api web
+# Only after a separately approved BIM opt-in:
+$COMPOSE --profile bim logs -f --tail=100 bim-worker
 ```
 
 ### Restart a service
@@ -550,7 +555,9 @@ Do not run `docker system prune --volumes`; it can delete production data volume
 Stop application traffic while preserving data:
 
 ```bash
-$COMPOSE stop caddy web api bim-worker
+$COMPOSE stop caddy web api
+# If it was separately enabled:
+$COMPOSE --profile bim stop bim-worker
 ```
 
 Start it again:
