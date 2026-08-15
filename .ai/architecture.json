@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "897419037986a8f4b5ce5bf16e8c867ccfa02085582a9650abc21a013e8244be",
+    "bodyDigest": "6e710cedfa46234ac47545464ada599eb3efd4ee0842660fb920eda804b20916",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "8f1873ca55cc82a9700356dc794911d2118772cd8b62352a6122363907171c2a",
+    "inputDigest": "d38cdfc3705b91a7915401cdb1615459710667509c893853f773f6f8f07ef766",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -47,7 +47,7 @@
     "counts": {
       "error": 0,
       "info": 0,
-      "warning": 0
+      "warning": 1
     },
     "detail": ".ai/drift.json",
     "hasErrors": false
@@ -291,6 +291,31 @@
       ],
       "purpose": "Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards.",
       "sourceManifest": "apps/web/kaaf.module.json"
+    },
+    {
+      "confidence": "derived",
+      "confidenceReason": "Discovered from source; no manifest declares this module.",
+      "declared": false,
+      "dependedOnBy": [],
+      "dependsOn": [],
+      "discovery": {
+        "codeFileCount": 1,
+        "discovered": true,
+        "entryPoints": [],
+        "languages": [
+          "javascript"
+        ],
+        "parseErrors": [],
+        "publicSymbols": [],
+        "sourceFileCount": 1
+      },
+      "id": "root",
+      "ownedEntities": [],
+      "owner": "unknown",
+      "path": ".",
+      "publicEntryPoints": [],
+      "purpose": "Not declared — discovered from source. Add a kaaf.module.json to describe it.",
+      "sourceManifest": null
     }
   ],
   "permissions": [

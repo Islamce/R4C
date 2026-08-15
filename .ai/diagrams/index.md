@@ -14,6 +14,7 @@ same commit that makes it.
 | [component-r4c-kaaf-tooling.md](component-r4c-kaaf-tooling.md) | Component (L3) |
 | [component-r4c-scripts.md](component-r4c-scripts.md) | Component (L3) |
 | [component-r4c-web.md](component-r4c-web.md) | Component (L3) |
+| [component-root.md](component-root.md) | Component (L3) |
 | [container.md](container.md) | Container (L2) |
 | [context.md](context.md) | Context (L1) |
 
@@ -26,4 +27,4 @@ never committed.
 - Solid arrow: a dependency declared in a `kaaf.module.json` manifest.
 - Dotted arrow: a real import discovered in the source that no manifest declares — see `.ai/drift.json`.
 - Node outline reflects confidence: solid = `verified`, dashed = `documented` or `derived`.
-<!-- kaaf:bodyDigest=440ba47e78d6473327dcb3bd4f9c2eb9e48b3b2e6810d02a8f5104bf94e18728 -->
+<!-- kaaf:bodyDigest=26af51c55a6b1cee370599bd57f16b949569fb382e5652ca0dbffb1a4b44297d -->
