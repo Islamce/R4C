@@ -45,6 +45,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://r4c:r4c_dev@127.0.0.1:5432/r4c_phase65
+      DIRECT_URL: postgresql://r4c:r4c_dev@127.0.0.1:5432/r4c_phase65
       REDIS_URL: redis://127.0.0.1:6379
       S3_ENDPOINT: http://127.0.0.1:9000
       S3_REGION: us-east-1

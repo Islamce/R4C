@@ -36,6 +36,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://r4c:r4c_dev@localhost:5432/r4c
+      DIRECT_URL: postgresql://r4c:r4c_dev@localhost:5432/r4c
       REDIS_URL: redis://127.0.0.1:6379
       JWT_ACCESS_SECRET: seed-verification-only-value-with-32-characters
       S3_ENDPOINT: http://127.0.0.1:9000
