@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../dist/prisma/client.js";
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
 import { CommercialService } from "../dist/commercial/commercial.service.js";
@@ -54,7 +54,7 @@ async function createLead(prisma, fixture, suffix, unit) {
 test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Reservation, and sweep rules", { timeout: 180_000 }, async (t) => {
   assert.ok(process.env.DATABASE_URL, "DATABASE_URL is required");
   assert.ok(process.env.REDIS_URL, "REDIS_URL is required");
-  const prisma = new PrismaClient();
+  const prisma = createPrismaClient();
   t.after(async () => prisma.$disconnect());
 
   const suffix = Date.now().toString(36);

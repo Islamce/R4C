@@ -1,9 +1,10 @@
-import { PrismaClient, TenantStatus } from "@prisma/client";
+import { TenantStatus } from "@prisma/client";
+import { createPrismaClient } from "../src/prisma/client";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { hashPassword, verifyPassword } from "../src/auth/auth.service";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 const READ_ONLY_ACTIONS = new Set(["read", "list", "get"]);
 const PERMISSION_LITERAL = /(["'`])([a-z][a-z0-9-]*(?::[a-z][a-z0-9-]*)+)\1/g;
 const REQUIRE_PERMISSIONS = /@RequirePermissions\s*\(([\s\S]*?)\)/g;

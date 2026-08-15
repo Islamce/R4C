@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import test from "node:test";
-import { PrismaClient, UnitPriceRevisionStatus } from "@prisma/client";
+import { UnitPriceRevisionStatus } from "@prisma/client";
+import { createPrismaClient } from "../dist/prisma/client.js";
 import { hashTestPassword } from "./argon2-test-helpers.mjs";
 
 const port = Number(process.env.C02_E2E_API_PORT ?? 4112);
@@ -46,7 +47,7 @@ async function login(email, tenantId) {
 test("C02 real HTTP boundary enforces pricing, template, media, tenant, and audit rules", { timeout: 120_000 }, async (t) => {
   assert.ok(process.env.DATABASE_URL, "DATABASE_URL is required");
   assert.ok(process.env.REDIS_URL, "REDIS_URL is required");
-  const prisma = new PrismaClient();
+  const prisma = createPrismaClient();
   const permissions = [
     "commercial:price:create-draft",
     "commercial:price:publish",

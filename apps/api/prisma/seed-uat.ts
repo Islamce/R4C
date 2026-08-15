@@ -1,8 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/prisma/client";
 import { spawn } from "node:child_process";
 import { hashPassword, verifyPassword } from "../src/auth/auth.service";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 function requiredPassword(name: string) {
   const password = process.env[name];

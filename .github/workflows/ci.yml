@@ -131,8 +131,8 @@ jobs:
         run: |
           pnpm --filter @r4c/api seed
           pnpm --filter @r4c/api exec node - <<'NODE' >> "$GITHUB_ENV"
-          const { PrismaClient } = require('@prisma/client');
-          const prisma = new PrismaClient();
+          const { createPrismaClient } = require('./dist/prisma/client.js');
+          const prisma = createPrismaClient();
           prisma.tenant.findUnique({ where: { code: 'PH4' } })
             .then((tenant) => {
               if (!tenant) throw new Error('Phase 4 tenant not found');

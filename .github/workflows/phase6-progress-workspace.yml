@@ -114,9 +114,10 @@ jobs:
         run: |
           pnpm --filter @r4c/api seed
           pnpm --filter @r4c/api exec node - <<'NODE' >> "$GITHUB_ENV"
-          const argon2 = require('argon2');
-          const { PrismaClient } = require('@prisma/client');
-          const prisma = new PrismaClient();
+          const { argon2id } = require('hash-wasm');
+          const { randomBytes } = require('node:crypto');
+          const { createPrismaClient } = require('./dist/prisma/client.js');
+          const prisma = createPrismaClient();
 
           async function main() {
             const tenant = await prisma.tenant.findUnique({ where: { code: 'PH6' } });
@@ -138,8 +139,14 @@ jobs:
                 },
               },
             });
-            const passwordHash = await argon2.hash(process.env.JOURNEY_SUBMIT_PASSWORD, {
-              type: argon2.argon2id,
+            const passwordHash = await argon2id({
+              password: process.env.JOURNEY_SUBMIT_PASSWORD,
+              salt: randomBytes(16),
+              parallelism: 4,
+              iterations: 3,
+              memorySize: 65_536,
+              hashLength: 32,
+              outputType: 'encoded',
             });
             const user = await prisma.user.create({
               data: {

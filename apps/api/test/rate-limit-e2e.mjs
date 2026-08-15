@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import test from "node:test";
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../dist/prisma/client.js";
 
 const port = Number(process.env.RATE_LIMIT_API_PORT ?? 4117);
 const baseUrl = `http://127.0.0.1:${port}/api/v1`;
@@ -83,7 +83,7 @@ test(
   async (t) => {
     assert.ok(process.env.DATABASE_URL, "DATABASE_URL is required");
 
-    const prisma = new PrismaClient();
+    const prisma = createPrismaClient();
     const tenant = await prisma.tenant.findUnique({ where: { code: tenantCode } });
     assert.ok(tenant, `Integration tenant ${tenantCode} was not found`);
 
