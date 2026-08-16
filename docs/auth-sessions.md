@@ -14,6 +14,7 @@ The browser login form sends only `email` and `password`. It never sends, displa
 
 - `alomran.r4c.local` with `TENANT_BASE_DOMAIN=r4c.local` resolves to tenant code `ALOMRAN`.
 - `alomran.example.com` with `TENANT_BASE_DOMAIN=example.com` resolves to `ALOMRAN`.
+- The exact `TENANT_BASE_DOMAIN` host resolves to `TENANT_DEFAULT_CODE`, allowing a governed default workspace on the apex application domain.
 
 The request uses `X-Forwarded-Host` when present, then `Host`, so the platform works behind the configured trusted reverse proxy. The closest subdomain label before the base domain is normalized to uppercase and validated before lookup.
 
