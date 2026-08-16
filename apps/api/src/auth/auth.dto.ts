@@ -27,3 +27,20 @@ export class RefreshTokenDto {
   @IsUUID()
   tenantId!: string;
 }
+
+export class RequestPasswordResetDto {
+  @IsEmail()
+  email!: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  @MinLength(40)
+  @MaxLength(512)
+  token!: string;
+
+  @IsString()
+  @MinLength(12)
+  @MaxLength(200)
+  password!: string;
+}

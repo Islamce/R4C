@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { ClientApiError, clientApi } from "../lib/client-api";
 import { useI18n } from "./I18nProvider";
@@ -107,6 +108,9 @@ export function LoginForm({
           >
             {submitting ? t("login.submitting") : t("login.submit")}
           </button>
+          <Link className="text-link" href="/forgot-password">
+            {t("passwordReset.forgot")}
+          </Link>
         </form>
       </section>
     </main>
