@@ -5,6 +5,13 @@ import test from "node:test";
 const workspace = await readFile(new URL("../components/CommercialOperatorWorkspace.tsx", import.meta.url), "utf8");
 const messages = await readFile(new URL("../lib/commercial-i18n.ts", import.meta.url), "utf8");
 const proxy = await readFile(new URL("../app/api/backend/[...path]/route.ts", import.meta.url), "utf8");
+const home = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+const login = await readFile(new URL("../components/LoginForm.tsx", import.meta.url), "utf8");
+
+test("production entry routes users into the commercial journey", () => {
+  assert.match(home, /redirect\("\/login"\)/);
+  assert.match(login, /router\.replace\("\/commercial"\)/);
+});
 
 test("commercial journey authorizes exclusively through session permissions", () => {
   for (const permission of [
