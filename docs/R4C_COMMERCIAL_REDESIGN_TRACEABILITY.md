@@ -99,3 +99,19 @@ Add supported sortable table columns, saved filter state, deep links to selected
 | Prior commits | `9a3e6ae`, `d36cb20` and preceding diagnosis fixes |
 | Production mutation | None |
 | Automatic merge/deploy | Not performed |
+
+## Closeout rendered QA
+
+Rendered browser evidence was captured from the local preview using the existing installed Chromium/Playwright runtime. PNG files are stored outside source control at `/home/ubuntu/r4c-qa-evidence/` to avoid committing bulky generated artifacts. The reviewed states include English command center at 1440px and 430px, inventory, selected unit at desktop and mobile, sales operations, title-transfer queue, Arabic command center, and Arabic title-transfer file.
+
+The visual audit found that the command center hierarchy is clear, the snapshot warning appears before metrics, the context bar and decision queue remain visible, the selected-unit workspace keeps primary actions reachable, and the Arabic title-transfer state correctly applies RTL while preserving identifiers such as `RH-A-1204` and `SAR`. The mobile selected-unit capture keeps the floor navigator, inventory, floor plan, drawer facts, progressive evidence sections, and Record interest/Create reservation actions reachable. The connected-browser screenshot operation continued to time out, so local headless rendered evidence is the recorded screenshot source.
+
+The saved browser validation script passed the following assertions: tab relationship and selected state, decision/context visibility, table-to-drawer and floor-plan selection continuity, dialog semantics, autofocus close control, Escape-to-close, controlled title-transfer wording, Arabic `dir="rtl"`, and Arabic transfer-tab availability.
+
+## Closeout artifacts
+
+- `docs/qa-screenshots/visual-findings.md`
+- `scripts/capture-commercial-qa.py`
+- `scripts/capture-commercial-qa.mjs` (reference attempt; Python runner is the working capture script)
+- `scripts/validate-commercial-qa.py`
+- External PNG evidence directory: `/home/ubuntu/r4c-qa-evidence/`
