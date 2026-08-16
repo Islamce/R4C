@@ -221,6 +221,25 @@
 .commercial-pipeline .section-heading {
   align-items: center;
 }
+.empty-state {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 9rem;
+  place-content: center;
+  padding: 1.25rem;
+  border: 1px dashed var(--line-strong);
+  background: color-mix(in srgb, var(--paper) 84%, var(--survey-blue));
+  color: var(--steel);
+  text-align: center;
+}
+.empty-state p,
+.empty-state small {
+  margin: 0;
+}
+.empty-state p {
+  color: var(--blueprint-navy);
+  font-weight: 800;
+}
 .segmented {
   display: flex;
   border: 1px solid var(--line-strong);

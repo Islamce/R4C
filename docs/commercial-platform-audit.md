@@ -139,3 +139,19 @@ Do **not** merge or deploy this branch until the required review is approved and
 [2]: https://www.salesforce.com/crm/real-estate-crm/ "Salesforce — Real Estate CRM: Guide for Brokers, Agents, and Businesses"
 [3]: https://docs.oracle.com/cd/F50962_01/English/User_Guides/fam/10285651.htm "Oracle — Unifier Real Estate Management"
 [4]: https://www.yardi.com/ "Yardi — Real Estate Software and Solutions"
+
+## Diagnosis-driven continuation update
+
+Following authenticated browser diagnosis, the feature branch was extended without mutating production data. The commercial suite now replaces “Live development digital twin” and “live commercial status” wording with snapshot language where the underlying values are static. Arabic coverage was expanded across executive analytics, funnel stages, financial labels, closing summaries, building labels, unit-type filters, statuses, views, floor-layout labels, accessibility labels, selected-unit metadata, and buyer-evidence headings. The lead-pipeline empty state now provides a bilingual explanation and next step, and receives an accessible visual treatment.
+
+The updated source files are `apps/web/components/CommercialWorkspaceSuite.tsx`, `apps/web/components/CommercialOperatorWorkspace.tsx`, `apps/web/lib/commercial-i18n.ts`, and `apps/web/app/commercial.css`. The production browser session used for diagnosis remains on the deployed pre-fix version because no deployment was performed; the changes require a reviewed deployment before authenticated browser regression can verify the new strings visually.
+
+| Continuation check | Result |
+|---|---|
+| Web type-check | Passed |
+| Commercial workflow contract test | Passed: 4/4 |
+| Production build | Passed; existing autoprefixer warnings remain in unrelated cost-control CSS |
+| `git diff --check` | Passed |
+| Production mutation | Not performed |
+| Post-fix deployed browser QA | Pending reviewed deployment |
+
