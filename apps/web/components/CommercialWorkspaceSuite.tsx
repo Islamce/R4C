@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { CommercialOperatorWorkspace } from "./CommercialOperatorWorkspace";
-import { CommercialHero3D } from "./CommercialHero3D";
 import { useI18n } from "./I18nProvider";
+import { CommercialHero3D } from "./CommercialHero3D";
 
 const localize = (ar: boolean, en: string, arabic: string) => ar ? arabic : en;
 
@@ -199,6 +199,28 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
     [project],
   );
 
+  function exportReport() {
+    const rows = [
+      ["Section", "Project", "Record", "Status", "Value"],
+      ["Project", selected.name, "Construction progress", "Current snapshot", `${selected.progress}%`],
+      ["Project", selected.name, "Units", "Current snapshot", String(selected.units)],
+      ["Project", selected.name, "Available units", "Current snapshot", String(selected.available)],
+      ["Project", selected.name, "Pending units", "Current snapshot", String(selected.pending)],
+      ["Project", selected.name, "Sold units", "Current snapshot", String(selected.sold)],
+      ["Project", selected.name, "Lead count", "Current snapshot", String(selected.leads)],
+      ...unitsFor("A", 12).map((unit) => ["Unit", selected.name, unit[0], unit[6], unit[5]]),
+      ...transfers.filter((row) => row[1] === selected.name).map((row) => ["Title transfer", selected.name, row[0], row[6], row[4]]),
+    ];
+    const csv = rows.map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${selected.name.toLowerCase().replaceAll(/\\s+/g, "-")}-commercial-report.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="commercial-suite" dir={ar ? "rtl" : "ltr"}>
       <header className="suite-header">
@@ -207,6 +229,11 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           <h1>{localize(ar, "Sales & Development Command Center", "مركز قيادة المبيعات والتطوير")}</h1>
           <p>
             {localize(ar, "Projects, unit inventory, buyer evidence, reservations and closing readiness in one governed workspace.", "المشروعات ومخزون الوحدات وأدلة المشترين والحجوزات وجاهزية الإفراغ في مساحة عمل محكومة واحدة.")}
+          </p>
+          <p className="data-provenance" role="note">
+            {preview
+              ? localize(ar, "Development-only preview data. Do not use for operational decisions.", "بيانات معاينة مخصصة للتطوير فقط. لا تستخدم لاتخاذ قرارات تشغيلية.")
+              : localize(ar, "Dashboard snapshot data; sales operations below use governed live records.", "بيانات لقطة لوحة المعلومات؛ عمليات المبيعات أدناه تستخدم سجلات حية محكومة.")}
           </p>
         </div>
         <div className="suite-header-actions">
@@ -221,7 +248,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
               ))}
             </select>
           </label>
-          <button className="button button-secondary" type="button">
+          <button className="button button-secondary" type="button" onClick={exportReport}>
             {localize(ar, "Export report", "تصدير التقرير")}
           </button>
         </div>
@@ -237,8 +264,12 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
         ).map(([id, label]) => (
           <button
             key={id}
+            id={`commercial-tab-${id}`}
             type="button"
+            role="tab"
             aria-selected={tab === id}
+            aria-controls={`commercial-panel-${id}`}
+            tabIndex={tab === id ? 0 : -1}
             onClick={() => setTab(id)}
           >
             {label}
@@ -246,6 +277,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
         ))}
       </nav>
       {tab === "portfolio" ? (
+        <div id="commercial-panel-portfolio" role="tabpanel" aria-labelledby="commercial-tab-portfolio">
         <PortfolioDashboard
           selectedProject={project}
           onSelectProject={setProject}
@@ -253,8 +285,10 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           onOpenTransfers={() => setTab("transfer")}
           ar={ar}
         />
+        </div>
       ) : null}
       {tab === "units" ? (
+        <div id="commercial-panel-units" role="tabpanel" aria-labelledby="commercial-tab-units">
         <UnitDashboard
           project={selected}
           selectedUnit={selectedUnit}
@@ -265,12 +299,17 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           setSaved={setSaved}
           ar={ar}
         />
+        </div>
       ) : null}
       {tab === "transfer" ? (
-        <TransferDashboard project={project} onProjectChange={setProject} ar={ar} />
+        <div id="commercial-panel-transfer" role="tabpanel" aria-labelledby="commercial-tab-transfer">
+          <TransferDashboard project={project} onProjectChange={setProject} ar={ar} />
+        </div>
       ) : null}
       {tab === "operations" ? (
-        preview ? <PreviewSalesOperations project={project} ar={ar} /> : <CommercialOperatorWorkspace />
+        <div id="commercial-panel-operations" role="tabpanel" aria-labelledby="commercial-tab-operations">
+        {preview ? <PreviewSalesOperations project={project} ar={ar} /> : <CommercialOperatorWorkspace />}
+        </div>
       ) : null}
     </div>
   );
