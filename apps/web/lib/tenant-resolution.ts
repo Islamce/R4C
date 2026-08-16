@@ -55,6 +55,9 @@ export function tenantCodeForRequest({
     .trim()
     .toLowerCase()
     .replace(/^\.+|\.+$/g, "");
+  if (baseDomain && hostname === baseDomain) {
+    return normalizeTenantCode(process.env.TENANT_DEFAULT_CODE);
+  }
   if (baseDomain && hostname.endsWith(`.${baseDomain}`)) {
     const prefix = hostname.slice(0, -(baseDomain.length + 1));
     const tenantLabel = prefix.split(".").filter(Boolean).at(-1);

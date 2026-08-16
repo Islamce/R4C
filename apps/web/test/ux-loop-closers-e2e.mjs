@@ -164,6 +164,21 @@ test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, as
   assert.doesNotMatch(englishLoginPage.text, /Tenant UUID/);
   assert.ok(!englishLoginPage.text.includes(tenantUuid));
 
+  const apexJar = new CookieJar();
+  const apexLoginPage = await webRequest(apexJar, "/login", {
+    headers: { "x-forwarded-host": "r4c.local" },
+  });
+  assert.equal(apexLoginPage.response.status, 200);
+  assert.match(apexLoginPage.text, /Alomran Development/);
+
+  const apexLogin = await webRequest(apexJar, "/api/session/login", {
+    method: "POST",
+    headers: { "x-forwarded-host": "r4c.local" },
+    body: { email, password },
+  });
+  assert.equal(apexLogin.response.status, 201, JSON.stringify(apexLogin.body));
+  assert.equal(apexLogin.body.user.tenant.code, "ALOMRAN");
+
   const arabicJar = new CookieJar();
   const arabicLocale = await webRequest(arabicJar, "/api/locale", {
     method: "POST",
@@ -289,7 +304,7 @@ test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, as
   assert.deepEqual(browserStorageReferences, []);
 
   console.log(`PHASE65_TENANT endpointFields=id,code,name,status code=ALOMRAN status=ACTIVE unknown=404 rate=${rateStatuses.join(",")}`);
-  console.log("PHASE65_LOGIN fields=email,password subdomain=alomran.r4c.local uuidInHtml=false uuidInJson=false uuidInCookies=false legacyCookieDeleted=true sessionTenant=ALOMRAN");
+  console.log("PHASE65_LOGIN fields=email,password apex=r4c.local subdomain=alomran.r4c.local uuidInHtml=false uuidInJson=false uuidInCookies=false legacyCookieDeleted=true sessionTenant=ALOMRAN");
   console.log(`PHASE65_DEEPLINK project=${project.id} data=200 en=ltr ar=rtl urlSync=true bogusFallback=true`);
   console.log("PHASE65_UAT login=true canonicalName=Alomran Development arabicName=العمران للتطوير العقاري roles=verified-by-workflow idempotent=verified-by-workflow");
   console.log(`PHASE65_FOUNDATION browserStorageReferences=${browserStorageReferences.length} refreshCookie=${Boolean(englishJar.get("r4c_refresh_token"))}`);
