@@ -793,6 +793,15 @@ function UnitDashboard({
   const selectedRow =
     floorUnits.find(({ row }) => row[0] === selectedUnit) ?? floorUnits[0]!;
 
+  useEffect(() => {
+    if (!interestOpen) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setInterestOpen(false);
+    }
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [interestOpen, setInterestOpen]);
+
   function chooseLocation(nextBuilding: string, nextFloor: number) {
     setBuilding(nextBuilding);
     setFloor(nextFloor);
@@ -903,6 +912,14 @@ function UnitDashboard({
               <option value="Park">{localizedView(ar, "Park")}</option>
               <option value="City">{localizedView(ar, "City")}</option>
             </select>
+          </div>
+          <div className="unit-status-legend" aria-label={localize(ar, "Unit status legend", "دليل حالات الوحدات")}>
+            {(["Available", "Interest", "Held", "Reserved", "Sold"] as const).map((status) => (
+              <span key={status} className={`legend-item status-${status.toLowerCase()}`}>
+                <i aria-hidden="true" />
+                {localizedUnitStatus(ar, status)}
+              </span>
+            ))}
           </div>
           <div className="unit-table">
             <div className="unit-row unit-head">
@@ -1022,7 +1039,8 @@ function UnitDashboard({
               <dd>Structure · 62%</dd>
             </div>
           </dl>
-          <h3>{localize(ar, "Measurements", "القياسات")}</h3>
+          <details className="unit-detail-section" open>
+            <summary>{localize(ar, "Measurements", "القياسات")}</summary>
           <dl>
             <div>
               <dt>Living & dining</dt>
@@ -1045,7 +1063,9 @@ function UnitDashboard({
               <dd>11.80 m²</dd>
             </div>
           </dl>
-          <h3>{localize(ar, "Price history", "سجل الأسعار")}</h3>
+          </details>
+          <details className="unit-detail-section">
+            <summary>{localize(ar, "Price history", "سجل الأسعار")}</summary>
           <dl>
             <div>
               <dt>18 May 2025</dt>
@@ -1060,13 +1080,17 @@ function UnitDashboard({
               <dd>SAR 2,100,000</dd>
             </div>
           </dl>
-          <h3>{localize(ar, "Buyer activity evidence", "أدلة نشاط المشتري")}</h3>
+          </details>
+          <details className="unit-detail-section" open>
+            <summary>{localize(ar, "Buyer activity evidence", "أدلة نشاط المشتري")}</summary>
           <ol className="transfer-timeline">
             <li>Website enquiry received</li>
             <li>Call logged · no answer</li>
             <li>WhatsApp message delivered</li>
             <li>Brochure.pdf uploaded</li>
           </ol>
+          </details>
+          <div className="unit-action-stack">
           <button
             className="button button-primary"
             type="button"
@@ -1086,6 +1110,7 @@ function UnitDashboard({
           >
             {localize(ar, "Create reservation", "إنشاء حجز")}
           </button>
+          </div>
         </aside>
       </section>
       {interestOpen ? (
@@ -1096,6 +1121,10 @@ function UnitDashboard({
         >
           <form
             className="suite-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="commercial-interest-title"
+
             onMouseDown={(e) => e.stopPropagation()}
             onSubmit={(e) => {
               e.preventDefault();
@@ -1109,14 +1138,15 @@ function UnitDashboard({
             <div className="suite-panel-heading">
               <div>
                 <p className="eyebrow">Buyer evidence</p>
-                <h2>Record interest for {selectedUnit}</h2>
+                <h2 id="commercial-interest-title">{localize(ar, `Record interest for ${selectedUnit}`, `تسجيل اهتمام للوحدة ${selectedUnit}`)}</h2>
               </div>
               <button
                 type="button"
                 className="button button-quiet"
                 onClick={() => setInterestOpen(false)}
+                autoFocus
               >
-                Close
+                {localize(ar, "Close", "إغلاق")}
               </button>
             </div>
             <label>
