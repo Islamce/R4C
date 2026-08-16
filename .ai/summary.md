@@ -10,7 +10,7 @@ R4C — a BIM-centered platform for governed real-estate development delivery, c
 - Modules: 6 declared, 1 discovered only
 - Drift: 0 error, 1 warning, 0 info
 - Generator: `kaaf` v0.7.0
-- Input digest: `32583f8bfca8bab9…`
+- Input digest: `4f58199d0c0c5986…`
 
 ## Modules
 
@@ -81,6 +81,7 @@ No declared public contracts.
 
 | Integration | Module | Criticality | On unavailability |
 |---|---|---|---|
+| Hostinger SMTP | `r4c-api` | required | Password-reset requests cannot deliver their expiring recovery links. |
 | PostgreSQL (Prisma) | `r4c-api` | required | The API cannot serve or accept any domain data. |
 | R4C API | `r4c-web` | required | The client renders but shows no project data. |
 
@@ -105,4 +106,4 @@ Full detail, with evidence and recommendations, in `.ai/drift.json`.
 Declarations come from `kaaf.repo.json` and `kaaf.module.json`. Discovery is a static
 read of the source: dynamic imports and runtime wiring are invisible to it, so the
 absence of a drift finding is not proof that none exists.
-<!-- kaaf:bodyDigest=6812ca3cf60ac767116b7f4f080ba88e56fb93614209803cd458d68b4cb2cf3b -->
+<!-- kaaf:bodyDigest=36a2d87cd906031cf7d27f75c6b76993cf3df56ddaa5a99a27ccfb52e1cce98f -->

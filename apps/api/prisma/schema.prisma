@@ -398,6 +398,7 @@ model Tenant {
   translations       Translation[]
   unitHolds          UnitHold[]
   reservations       Reservation[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model User {
@@ -411,6 +412,7 @@ model User {
   memberships   TenantMembership[]
   projectAccess ProjectMember[]
   refreshTokens RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
   auditEvents         AuditEvent[]          @relation("AuditActor")
   uploadedVersions    DocumentVersion[]      @relation("VersionUploader")
   documentComments    DocumentComment[]
@@ -1026,6 +1028,20 @@ model RefreshToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, tenantId])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(uuid())
+  userId     String
+  tenantId   String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId, expiresAt])
 }
 
 model AuditEvent {

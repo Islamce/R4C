@@ -9,6 +9,12 @@
       "kind": "database",
       "name": "PostgreSQL (Prisma)",
       "onUnavailable": "The API cannot serve or accept any domain data."
+    },
+    {
+      "criticality": "required",
+      "kind": "email",
+      "name": "Hostinger SMTP",
+      "onUnavailable": "Password-reset requests cannot deliver their expiring recovery links."
     }
   ],
   "flows": [],
@@ -31,7 +37,8 @@
     "reservation",
     "unit-price-revision",
     "payment-plan",
-    "progress-record"
+    "progress-record",
+    "password-reset-token"
   ],
   "owner": "Backend",
   "permissions": [

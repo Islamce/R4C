@@ -1,11 +1,12 @@
-import { randomBytes, randomUUID } from "node:crypto";
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { AuditOutcome, Prisma } from "@prisma/client";
 import { JwtService } from "@nestjs/jwt";
 import { argon2Verify, argon2id } from "hash-wasm";
 import { AuditService } from "../audit/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
-import { LoginDto, RefreshTokenDto } from "./auth.dto";
+import { LoginDto, RefreshTokenDto, RequestPasswordResetDto, ResetPasswordDto } from "./auth.dto";
+import { MailService } from "./mail.service";
 
 const ACCESS_TOKEN_TTL_SECONDS = 900;
 const DEFAULT_REFRESH_TOKEN_TTL_DAYS = 14;
@@ -18,6 +19,11 @@ const PASSWORD_HASH_PARALLELISM = 4;
 const PASSWORD_HASH_LENGTH_BYTES = 32;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const PASSWORD_RESET_TTL_MS = 30 * 60 * 1000;
+
+function resetTokenHash(token: string) {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 type SessionMembership = Prisma.TenantMembershipGetPayload<{
   include: {
@@ -100,6 +106,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly audit: AuditService,
+    private readonly mail: MailService,
   ) {}
 
   async login(command: LoginDto) {
@@ -276,6 +283,83 @@ export class AuthService {
     });
 
     return { revoked: true };
+  }
+
+  async requestPasswordReset(command: RequestPasswordResetDto) {
+    const email = command.email.trim().toLowerCase();
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: { memberships: { take: 1, orderBy: { tenantId: "asc" } } },
+    });
+
+    if (user?.isActive && user.memberships[0]) {
+      const token = randomBytes(48).toString("base64url");
+      const now = new Date();
+      await this.prisma.$transaction([
+        this.prisma.passwordResetToken.updateMany({
+          where: { userId: user.id, consumedAt: null },
+          data: { consumedAt: now },
+        }),
+        this.prisma.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            tenantId: user.memberships[0].tenantId,
+            tokenHash: resetTokenHash(token),
+            expiresAt: new Date(now.getTime() + PASSWORD_RESET_TTL_MS),
+          },
+        }),
+      ]);
+      await this.mail.sendPasswordReset(email, token);
+      await this.audit.record({
+        tenantId: user.memberships[0].tenantId,
+        actorId: user.id,
+        action: "AUTH_PASSWORD_RESET_REQUESTED",
+        entityType: "User",
+        entityId: user.id,
+      });
+    }
+
+    return { accepted: true };
+  }
+
+  async resetPassword(command: ResetPasswordDto) {
+    const tokenHash = resetTokenHash(command.token);
+    const now = new Date();
+    const record = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
+    if (!record || record.consumedAt || record.expiresAt <= now || !record.user.isActive) {
+      throw new BadRequestException("Reset link is invalid or expired");
+    }
+
+    const passwordHash = await hashPassword(command.password);
+    const consumed = await this.prisma.$transaction(async (transaction) => {
+      const claimed = await transaction.passwordResetToken.updateMany({
+        where: { id: record.id, consumedAt: null, expiresAt: { gt: now } },
+        data: { consumedAt: now },
+      });
+      if (claimed.count !== 1) return false;
+      await transaction.user.update({
+        where: { id: record.userId },
+        data: { passwordHash },
+      });
+      await transaction.refreshToken.updateMany({
+        where: { userId: record.userId, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      return true;
+    });
+    if (!consumed) throw new BadRequestException("Reset link is invalid or expired");
+
+    await this.audit.record({
+      tenantId: record.tenantId,
+      actorId: record.userId,
+      action: "AUTH_PASSWORD_RESET_COMPLETED",
+      entityType: "User",
+      entityId: record.userId,
+    });
+    return { reset: true };
   }
 
   private async requireMembership(userId: string, tenantId: string) {

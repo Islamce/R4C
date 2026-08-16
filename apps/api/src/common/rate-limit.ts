@@ -41,6 +41,14 @@ export const AuthSessionRateLimit = () =>
     },
   });
 
+export const PasswordResetRateLimit = () =>
+  Throttle({
+    default: {
+      limit: environmentLimit("RATE_LIMIT_PASSWORD_RESET_PER_MINUTE", 3),
+      ttl: RATE_LIMIT_WINDOW_MS,
+    },
+  });
+
 export const TenantLookupRateLimit = () =>
   Throttle({
     default: {

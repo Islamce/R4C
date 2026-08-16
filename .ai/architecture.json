@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "55285ed2cb4685c2d90d24ae0672a656941eccd3619ceae02c54c8e8ced599bf",
+    "bodyDigest": "7330ab3355a2bd1d5650c0c132dbc0d078b57f42c232b0ef1094de18821f6883",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "32583f8bfca8bab9f1bca704c872360e532a2a2430880849382e0601c2590f94",
+    "inputDigest": "4f58199d0c0c598663160904b5596036310c8afd81f5ef789629b6dd91e0c9aa",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -56,6 +56,15 @@
     {
       "confidence": "verified",
       "criticality": "required",
+      "kind": "email",
+      "module": "r4c-api",
+      "name": "Hostinger SMTP",
+      "onUnavailable": "Password-reset requests cannot deliver their expiring recovery links.",
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "criticality": "required",
       "kind": "database",
       "module": "r4c-api",
       "name": "PostgreSQL (Prisma)",
@@ -75,13 +84,13 @@
   "modules": [
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 93 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 95 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
       "dependsOn": [],
       "discovery": {
-        "codeFileCount": 93,
+        "codeFileCount": 95,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -91,7 +100,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 97
+        "sourceFileCount": 99
       },
       "id": "r4c-api",
       "ownedEntities": [
@@ -102,6 +111,7 @@
         "development-phase",
         "floor",
         "lead",
+        "password-reset-token",
         "payment-plan",
         "progress-record",
         "project",
@@ -270,7 +280,7 @@
     },
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 50 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 57 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
@@ -278,7 +288,7 @@
         "r4c-contracts"
       ],
       "discovery": {
-        "codeFileCount": 50,
+        "codeFileCount": 57,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -288,7 +298,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 53
+        "sourceFileCount": 60
       },
       "id": "r4c-web",
       "ownedEntities": [],
