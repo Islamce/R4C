@@ -61,6 +61,7 @@ jobs:
               'TENANT_BASE_DOMAIN=r4c.example.com': 'TENANT_BASE_DOMAIN=r4c.local',
               'ACME_EMAIL=owner@example.com': 'ACME_EMAIL=ci@r4c.local',
               'CLOUDFLARE_API_TOKEN=REPLACE_WITH_CLOUDFLARE_DNS_TOKEN': 'CLOUDFLARE_API_TOKEN=ci-local-tls-does-not-use-cloudflare',
+              'SMTP_PASSWORD=REPLACE_WITH_MAILBOX_PASSWORD': 'SMTP_PASSWORD=ci-local-smtp-password-not-used',
               'CADDYFILE=Caddyfile': 'CADDYFILE=Caddyfile.local',
               'NEXT_PUBLIC_API_URL=https://api.r4c.example.com/api/v1': 'NEXT_PUBLIC_API_URL=https://api.r4c.local/api/v1',
               'CORS_ORIGINS=https://r4c.example.com,https://alomran.r4c.example.com': 'CORS_ORIGINS=https://r4c.local,https://alomran.r4c.local',
