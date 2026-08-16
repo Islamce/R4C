@@ -7,6 +7,8 @@ import {
   AttachCommercialMediaDto,
   BuildingQueryDto,
   CommercialLocaleQueryDto,
+  CommercialOverviewQueryDto,
+  CommercialExceptionsQueryDto,
   CreateBuildingDto,
   CreateCustomerDto,
   CreateTranslationDto,
@@ -32,10 +34,21 @@ import {
   UpdateUnitTypeDto,
 } from "./commercial.dto";
 import { CommercialService } from "./commercial.service";
+import { CommercialAggregationService } from "./commercial-aggregation.service";
 
 @Controller("commercial")
 export class CommercialController {
-  constructor(private readonly commercial: CommercialService) {}
+  constructor(private readonly commercial: CommercialService, private readonly aggregation: CommercialAggregationService) {}
+
+  @Get("overview") @RequirePermissions("commercial:read")
+  overview(@CurrentUser() user: AuthContext, @Query() query: CommercialOverviewQueryDto) {
+    return this.aggregation.overview(user, query.projectId);
+  }
+
+  @Get("exceptions") @RequirePermissions("commercial:read")
+  exceptions(@CurrentUser() user: AuthContext, @Query() query: CommercialExceptionsQueryDto) {
+    return this.aggregation.exceptions(user, query);
+  }
 
   @Get("phases") @RequirePermissions("commercial:read")
   phases(@CurrentUser() user: AuthContext, @Query() query: ProjectQueryDto) {

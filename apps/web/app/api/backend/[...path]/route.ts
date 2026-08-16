@@ -7,7 +7,9 @@ import {
 } from "../../../../lib/server-session";
 
 const readPaths = [
+  /^commercial\/(?:overview|exceptions)(?:\/[^/]+)?$/,
   /^commercial\/(?:phases|buildings|floors|unit-types|units)(?:\/[^/]+)?$/,
+
   /^commercial\/units\/[^/]+\/prices$/,
   /^commercial\/projects\/[^/]+\/payment-plans$/,
   /^commercial\/leads(?:\/all)?(?:\/[^/]+)?$/,

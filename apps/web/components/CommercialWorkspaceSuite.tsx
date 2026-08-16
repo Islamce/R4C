@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { CommercialOperatorWorkspace } from "./CommercialOperatorWorkspace";
+import { commercialApi, type CommercialException, type CommercialOverview } from "../lib/commercial-api";
 import { useI18n } from "./I18nProvider";
 import { CommercialHero3D } from "./CommercialHero3D";
 
@@ -194,10 +195,40 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
   const [selectedUnit, setSelectedUnit] = useState("A-1204");
   const [interestOpen, setInterestOpen] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [liveOverview, setLiveOverview] = useState<CommercialOverview | null>(null);
+  const [liveExceptions, setLiveExceptions] = useState<CommercialException[]>([]);
+  const [liveState, setLiveState] = useState<"loading" | "ready" | "unavailable">(preview ? "ready" : "loading");
   const selected = useMemo(
     () => projects.find((item) => item.name === project) ?? projects[0]!,
     [project],
   );
+
+  useEffect(() => {
+    if (preview) return;
+    let active = true;
+    setLiveState("loading");
+    Promise.all([commercialApi.overview(), commercialApi.exceptions({ limit: 50 })])
+      .then(([overview, exceptionPage]) => {
+        if (!active) return;
+        setLiveOverview(overview);
+        setLiveExceptions(exceptionPage.items);
+        setLiveState("ready");
+      })
+      .catch(() => {
+        if (!active) return;
+        setLiveOverview(null);
+        setLiveExceptions([]);
+        setLiveState("unavailable");
+      });
+    return () => { active = false; };
+  }, [preview]);
+
+  function openException(exception: CommercialException) {
+    const liveProject = liveOverview?.projects.find((item) => item.id === exception.object.projectId);
+    if (liveProject) setProject(liveProject.name);
+    if (exception.type === "STALE_LEAD") setTab("operations");
+    if (exception.type === "EXPIRING_HOLD") setTab("units");
+  }
 
   function exportReport() {
     const rows = [
@@ -284,13 +315,13 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
         </div>
         <div>
           <span className="context-label">{localize(ar, "Data freshness", "حداثة البيانات")}</span>
-          <strong>{localize(ar, "Snapshot", "لقطة")}</strong>
-          <small>{localize(ar, "Executive and inventory surfaces", "واجهات التنفيذ والمخزون")}</small>
+          <strong>{preview ? localize(ar, "Preview", "معاينة") : liveState === "ready" ? localize(ar, "Governed live", "حي محكوم") : liveState === "unavailable" ? localize(ar, "Live unavailable", "البيانات الحية غير متاحة") : localize(ar, "Loading live", "جار تحميل البيانات الحية")}</strong>
+          <small>{localize(ar, "Inventory and exception layer", "طبقة المخزون والاستثناءات")}</small>
         </div>
         <div>
           <span className="context-label">{localize(ar, "Next best action", "أفضل إجراء تالٍ")}</span>
-          <strong>{localize(ar, "Review 3 exceptions", "مراجعة 3 استثناءات")}</strong>
-          <small>{localize(ar, "Missing evidence, aging leads, blocked transfers", "أدلة ناقصة، عملاء متقدمون في العمر، إفراغات متعثرة")}</small>
+          <strong>{preview ? localize(ar, "Review preview queue", "مراجعة قائمة المعاينة") : liveState === "ready" ? localize(ar, `Review ${liveExceptions.length} governed exceptions`, `مراجعة ${liveExceptions.length} استثناءات محكومة`) : liveState === "unavailable" ? localize(ar, "Refresh live data", "تحديث البيانات الحية") : localize(ar, "Loading exceptions", "جار تحميل الاستثناءات")}</strong>
+          <small>{localize(ar, "Derived from governed commercial records", "مشتقة من سجلات تجارية محكومة")}</small>
         </div>
       </div>
       {tab === "portfolio" ? (
@@ -299,7 +330,11 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           selectedProject={project}
           onSelectProject={setProject}
           onOpenProject={() => setTab("units")}
-          onOpenTransfers={() => setTab("transfer")}
+            onOpenTransfers={() => setTab("transfer")}
+            liveOverview={liveOverview}
+            liveExceptions={preview ? null : liveExceptions}
+            liveState={liveState}
+            onOpenException={openException}
           ar={ar}
         />
         </div>
@@ -434,16 +469,43 @@ function PortfolioDashboard({
   onSelectProject,
   onOpenProject,
   onOpenTransfers,
+  liveOverview,
+  liveExceptions,
+  liveState,
+  onOpenException,
   ar,
 }: {
   selectedProject: string;
   onSelectProject: (project: string) => void;
   onOpenProject: () => void;
   onOpenTransfers: () => void;
+  liveOverview: CommercialOverview | null;
+  liveExceptions: CommercialException[] | null;
+  liveState: "loading" | "ready" | "unavailable";
+  onOpenException: (exception: CommercialException) => void;
   ar: boolean;
 }) {
-  const focusedProject =
-    projects.find((item) => item.name === selectedProject) ?? projects[0]!;
+  const staticProject = projects.find((item) => item.name === selectedProject) ?? projects[0]!;
+  const liveProject = liveOverview?.projects.find((item) => item.name === selectedProject);
+  const focusedProject: ProjectDashboardRecord = liveProject ? {
+    ...staticProject,
+    units: liveProject.units.total,
+    available: liveProject.units.available,
+    pending: liveProject.units.held + liveProject.units.reserved,
+    sold: liveProject.units.sold,
+    leads: liveProject.leads ?? staticProject.leads,
+    value: liveOverview?.commercialValue.confirmedReservationsMinor && liveOverview.commercialValue.currency ? `${(Number(liveOverview.commercialValue.confirmedReservationsMinor) / 100000000).toFixed(1)}B` : staticProject.value,
+  } : staticProject;
+  const liveMetrics = liveOverview ? {
+    projects: liveOverview.scope.projects,
+    units: liveOverview.inventory.total,
+    sold: liveOverview.inventory.sold,
+    pending: (liveOverview.inventory.held ?? 0) + (liveOverview.inventory.reserved ?? 0),
+    leads: liveOverview.pipeline.total,
+    value: liveOverview.commercialValue.currency && liveOverview.commercialValue.confirmedReservationsMinor ? `${liveOverview.commercialValue.currency} ${(Number(liveOverview.commercialValue.confirmedReservationsMinor) / 100000000).toFixed(1)}B` : "—",
+  } : null;
+  const displayExceptions = liveExceptions ?? [];
+  const exceptionTone = (severity: CommercialException["severity"]) => severity === "CRITICAL" ? "attention-card-danger" : severity === "WARNING" ? "attention-card-warning" : "attention-card-teal";
   return (
     <main className="suite-dashboard">
       <section className="executive-hero">
@@ -465,12 +527,12 @@ function PortfolioDashboard({
         </div>
       </section>
       <section className="suite-metrics">
-        <Metric value="8" label={localize(ar, "Active projects", "المشروعات النشطة")} />
-        <Metric value="1,248" label={localize(ar, "Total units", "إجمالي الوحدات")} />
-        <Metric value="684" label={localize(ar, "Sold", "المباع")} tone="good" />
-        <Metric value="92" label={localize(ar, "Pending / reserved", "قيد الانتظار / محجوز")} />
-        <Metric value="147" label={localize(ar, "Active leads", "العملاء المحتملون النشطون")} />
-        <Metric value="SAR 1.84B" label={localize(ar, "Contracted value", "القيمة التعاقدية")} tone="good" />
+        <Metric value={liveState === "loading" ? "…" : liveState === "unavailable" ? "—" : String(liveMetrics?.projects ?? 8)} label={localize(ar, "Active projects", "المشروعات النشطة")} />
+        <Metric value={liveState === "loading" ? "…" : liveState === "unavailable" ? "—" : String(liveMetrics?.units ?? 1248)} label={localize(ar, "Total units", "إجمالي الوحدات")} />
+        <Metric value={liveState === "loading" ? "…" : liveState === "unavailable" ? "—" : String(liveMetrics?.sold ?? 684)} label={localize(ar, "Sold", "المباع")} tone="good" />
+        <Metric value={liveState === "loading" ? "…" : liveState === "unavailable" ? "—" : String(liveMetrics?.pending ?? 92)} label={localize(ar, "Pending / reserved", "قيد الانتظار / محجوز")} />
+        <Metric value={liveState === "loading" ? "…" : liveState === "unavailable" ? "—" : liveMetrics?.leads === null ? "—" : String(liveMetrics?.leads ?? 147)} label={localize(ar, "Active leads", "العملاء المحتملون النشطون")} />
+        <Metric value={liveState === "loading" ? "…" : liveState === "unavailable" ? "—" : liveMetrics?.value ?? "—"} label={localize(ar, "Confirmed reservation value", "قيمة الحجوزات المؤكدة")} tone="good" />
       </section>
       <section className="portfolio-layout">
         <div className="suite-panel">
@@ -597,21 +659,16 @@ function PortfolioDashboard({
           <h2>{localize(ar, "Attention before analytics", "الانتباه قبل التحليلات")}</h2>
           <p>{localize(ar, "A focused queue for the few issues most likely to change this week’s commercial outcome.", "قائمة مركزة بأهم الاستثناءات التي قد تغير النتيجة التجارية لهذا الأسبوع.")}</p>
         </div>
-        <button type="button" className="attention-card attention-card-warning" onClick={onOpenProject}>
-          <span>{localize(ar, "Inventory", "المخزون")}</span>
-          <strong>{localize(ar, "12 units need a pricing review", "12 وحدة تحتاج مراجعة سعر")}</strong>
-          <small>{localize(ar, "Open unit control →", "فتح إدارة الوحدات ←")}</small>
-        </button>
-        <button type="button" className="attention-card attention-card-danger" onClick={onOpenTransfers}>
-          <span>{localize(ar, "Closing readiness", "جاهزية الإغلاق")}</span>
-          <strong>{localize(ar, "5 transfers are in government review", "5 إفراغات قيد المراجعة الحكومية")}</strong>
-          <small>{localize(ar, "Open title-transfer file →", "فتح ملف الإفراغ ←")}</small>
-        </button>
-        <button type="button" className="attention-card attention-card-teal" onClick={onOpenProject}>
-          <span>{localize(ar, "Buyer momentum", "زخم المشترين")}</span>
-          <strong>{localize(ar, "16 reservations need a next action", "16 حجزاً تحتاج إجراءً تالياً")}</strong>
-          <small>{localize(ar, "Open the commercial workspace →", "فتح مساحة المبيعات ←")}</small>
-        </button>
+        {liveState === "loading" ? <div className="attention-card attention-card-teal"><span>{localize(ar, "Live exceptions", "الاستثناءات الحية")}</span><strong>{localize(ar, "Loading governed exceptions…", "جار تحميل الاستثناءات المحكومة…")}</strong><small>{localize(ar, "Retaining commercial context", "الحفاظ على سياق العمل التجاري")}</small></div> : null}
+        {liveState === "unavailable" ? <div className="attention-card attention-card-danger"><span>{localize(ar, "Live exceptions", "الاستثناءات الحية")}</span><strong>{localize(ar, "Live data unavailable", "البيانات الحية غير متاحة")}</strong><small>{localize(ar, "Last known snapshot is not presented as live", "لا يتم عرض آخر لقطة على أنها بيانات حية")}</small></div> : null}
+        {liveState === "ready" && displayExceptions.length === 0 ? <div className="attention-card attention-card-teal"><span>{localize(ar, "Live exceptions", "الاستثناءات الحية")}</span><strong>{localize(ar, "No active governed exceptions", "لا توجد استثناءات محكومة نشطة")}</strong><small>{localize(ar, "No deterministic rule currently requires action", "لا توجد قاعدة حتمية تتطلب إجراءً حالياً")}</small></div> : null}
+        {displayExceptions.slice(0, 3).map((exception) => (
+          <button key={exception.id} type="button" className={`attention-card ${exceptionTone(exception.severity)}`} onClick={() => onOpenException(exception)}>
+            <span>{exception.type === "STALE_LEAD" ? localize(ar, "Lead follow-up", "متابعة عميل محتمل") : localize(ar, "Hold expiry", "انتهاء الحجز المؤقت")}</span>
+            <strong>{localize(ar, exception.title, exception.type === "STALE_LEAD" ? "العميل المحتمل يحتاج متابعة" : "الحجز المؤقت يوشك على الانتهاء")}</strong>
+            <small>{exception.reason} · {exception.nextAction?.label ?? localize(ar, "Open record", "فتح السجل")} →</small>
+          </button>
+        ))}
       </section>
       <section className="suite-analytics">
         <Chart
