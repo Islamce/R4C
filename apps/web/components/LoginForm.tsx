@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { ClientApiError, clientApi } from "../lib/client-api";
@@ -39,7 +38,7 @@ export function LoginForm({
           password: String(form.get("password") ?? ""),
         }),
       });
-      router.replace("/projects");
+      router.replace("/commercial");
       router.refresh();
     } catch (error) {
       setFailure(
@@ -108,9 +107,6 @@ export function LoginForm({
           >
             {submitting ? t("login.submitting") : t("login.submit")}
           </button>
-          <Link className="text-link" href="/">
-            {t("login.back")}
-          </Link>
         </form>
       </section>
     </main>
