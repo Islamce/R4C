@@ -276,6 +276,23 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           </button>
         ))}
       </nav>
+      <div className="suite-context-bar" role="status">
+        <div>
+          <span className="context-label">{localize(ar, "Working context", "سياق العمل")}</span>
+          <strong>{project}</strong>
+          <small>{selected.phase} · {selected.progress}% {localize(ar, "construction", "إنشاء")}</small>
+        </div>
+        <div>
+          <span className="context-label">{localize(ar, "Data freshness", "حداثة البيانات")}</span>
+          <strong>{localize(ar, "Snapshot", "لقطة")}</strong>
+          <small>{localize(ar, "Executive and inventory surfaces", "واجهات التنفيذ والمخزون")}</small>
+        </div>
+        <div>
+          <span className="context-label">{localize(ar, "Next best action", "أفضل إجراء تالٍ")}</span>
+          <strong>{localize(ar, "Review 3 exceptions", "مراجعة 3 استثناءات")}</strong>
+          <small>{localize(ar, "Missing evidence, aging leads, blocked transfers", "أدلة ناقصة، عملاء متقدمون في العمر، إفراغات متعثرة")}</small>
+        </div>
+      </div>
       {tab === "portfolio" ? (
         <div id="commercial-panel-portfolio" role="tabpanel" aria-labelledby="commercial-tab-portfolio">
         <PortfolioDashboard
@@ -573,6 +590,28 @@ function PortfolioDashboard({
             {localize(ar, "View project details", "عرض تفاصيل المشروع")}
           </button>
         </aside>
+      </section>
+      <section className="suite-attention-grid">
+        <div className="suite-attention-intro">
+          <p className="eyebrow">{localize(ar, "Decision queue", "قائمة القرارات")}</p>
+          <h2>{localize(ar, "Attention before analytics", "الانتباه قبل التحليلات")}</h2>
+          <p>{localize(ar, "A focused queue for the few issues most likely to change this week’s commercial outcome.", "قائمة مركزة بأهم الاستثناءات التي قد تغير النتيجة التجارية لهذا الأسبوع.")}</p>
+        </div>
+        <button type="button" className="attention-card attention-card-warning" onClick={onOpenProject}>
+          <span>{localize(ar, "Inventory", "المخزون")}</span>
+          <strong>{localize(ar, "12 units need a pricing review", "12 وحدة تحتاج مراجعة سعر")}</strong>
+          <small>{localize(ar, "Open unit control →", "فتح إدارة الوحدات ←")}</small>
+        </button>
+        <button type="button" className="attention-card attention-card-danger" onClick={onOpenTransfers}>
+          <span>{localize(ar, "Closing readiness", "جاهزية الإغلاق")}</span>
+          <strong>{localize(ar, "5 transfers are in government review", "5 إفراغات قيد المراجعة الحكومية")}</strong>
+          <small>{localize(ar, "Open title-transfer file →", "فتح ملف الإفراغ ←")}</small>
+        </button>
+        <button type="button" className="attention-card attention-card-teal" onClick={onOpenProject}>
+          <span>{localize(ar, "Buyer momentum", "زخم المشترين")}</span>
+          <strong>{localize(ar, "16 reservations need a next action", "16 حجزاً تحتاج إجراءً تالياً")}</strong>
+          <small>{localize(ar, "Open the commercial workspace →", "فتح مساحة المبيعات ←")}</small>
+        </button>
       </section>
       <section className="suite-analytics">
         <Chart
