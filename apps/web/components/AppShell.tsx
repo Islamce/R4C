@@ -7,15 +7,23 @@ import { clientApi, ClientApiError } from "../lib/client-api";
 import type { BrowserSessionUser } from "../lib/types";
 import { useI18n } from "./I18nProvider";
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, preview = false }: { children: ReactNode; preview?: boolean }) {
   const { t, locale } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<BrowserSessionUser | null>(null);
+  const [user, setUser] = useState<BrowserSessionUser | null>(preview ? {
+    id: "design-preview",
+    email: "islam@kynox.io",
+    displayName: "Islam Makramalla",
+    role: "ADMIN",
+    permissions: ["commercial:manage", "commercial:read"],
+    tenant: { code: "KYNOX", name: "Kynox Real Estate" },
+  } : null);
   const [sessionError, setSessionError] = useState(false);
   const [working, setWorking] = useState(false);
 
   useEffect(() => {
+    if (preview) return;
     let active = true;
     clientApi<{ user: BrowserSessionUser }>("/api/session")
       .then((response) => {
@@ -32,7 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [router]);
+  }, [preview, router]);
 
   async function toggleLanguage() {
     setWorking(true);
@@ -49,6 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
+    if (preview) return;
     setWorking(true);
     try {
       await clientApi("/api/session/logout", { method: "POST" });
@@ -59,12 +68,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   const projectsActive = pathname.startsWith("/projects");
-  const costControlActive = pathname.startsWith("/cost-control");
-  const progressActive = pathname.startsWith("/progress");
   const commercialActive = pathname.startsWith("/commercial");
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" dir={locale === "ar" ? "rtl" : "ltr"}>
       <aside className="app-sidebar">
         <div className="brand-lockup">
           <span className="brand-mark" aria-hidden="true">{t("common.brand")}</span>
@@ -78,7 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <p className="nav-group-label">{t("commercial.navGroup")}</p>
             <Link
               className={projectsActive ? "nav-link nav-link-active" : "nav-link"}
-              href="/projects"
+              href={preview ? "/design-preview" : "/projects"}
               aria-current={projectsActive ? "page" : undefined}
             >
               <span className="nav-index" aria-hidden="true">01</span>
@@ -86,33 +93,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
             <Link
               className={commercialActive ? "nav-link nav-link-active" : "nav-link"}
-              href="/commercial"
+              href={preview ? "/design-preview" : "/commercial"}
               aria-current={commercialActive ? "page" : undefined}
             >
               <span className="nav-index" aria-hidden="true">02</span>
               {t("commercial.nav")}
-            </Link>
-          </section>
-          <section className="nav-group nav-group-frozen" aria-label={locale === "ar" ? "ذكاء التطوير المجمد" : "Frozen Development Intelligence"}>
-            <p className="nav-group-label">
-              {locale === "ar" ? "ذكاء التطوير" : "Development Intelligence"}
-              <span>{locale === "ar" ? "مجمد" : "Frozen"}</span>
-            </p>
-            <Link
-              className={costControlActive ? "nav-link nav-link-active" : "nav-link"}
-              href="/cost-control"
-              aria-current={costControlActive ? "page" : undefined}
-            >
-              <span className="nav-index" aria-hidden="true">03</span>
-              {t("nav.costControl")}
-            </Link>
-            <Link
-              className={progressActive ? "nav-link nav-link-active" : "nav-link"}
-              href="/progress"
-              aria-current={progressActive ? "page" : undefined}
-            >
-              <span className="nav-index" aria-hidden="true">04</span>
-              {t("nav.progress")}
             </Link>
           </section>
         </nav>
@@ -158,9 +143,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               className="button button-secondary"
               type="button"
               onClick={logout}
-              disabled={working}
+              disabled={working || preview}
             >
-              {t("header.logout")}
+              {preview ? "Preview mode" : t("header.logout")}
             </button>
           </div>
         </header>
