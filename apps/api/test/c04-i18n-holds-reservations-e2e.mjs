@@ -64,6 +64,9 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
     prisma.role.findFirstOrThrow({ where: { tenantId: fixture.tenant.id, code: "AGENT" } }),
   ]);
   const c04Permissions = [
+    "commercial:read",
+    "commercial:price:view-published",
+    "commercial:payment-plan:view",
     "commercial:media:manage",
     "commercial:hold:create",
     "commercial:hold:release",
@@ -77,7 +80,7 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
   });
   await prisma.rolePermission.createMany({
     data: permissionRows
-      .filter((permission) => ["commercial:hold:create", "commercial:hold:release"].includes(permission.code))
+      .filter((permission) => ["commercial:read", "commercial:price:view-published", "commercial:payment-plan:view", "commercial:hold:create", "commercial:hold:release"].includes(permission.code))
       .map((permission) => ({ roleId: agentRole.id, permissionId: permission.id })),
     skipDuplicates: true,
   });
@@ -148,6 +151,28 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
   expectStatus(localized, 200, api);
   assert.equal(localized.body.value, "وصف المشروع");
   assert.equal(localized.body.fallbackUsed, false);
+  await api.request("/commercial/translations", {
+    token: managerToken,
+    method: "POST",
+    body: { entityType: "UnitType", entityId: fixture.unitType.id, locale: "en", field: "description", value: "One bedroom home" },
+  });
+  const operatorUnit = await api.request(`/commercial/units/${fixture.unit.id}?locale=ar`, { token: agentToken });
+  expectStatus(operatorUnit, 200, api);
+  assert.equal(operatorUnit.body.descriptions.unitType.value, "One bedroom home");
+  assert.equal(operatorUnit.body.descriptions.unitType.fallbackUsed, true);
+  const readablePlans = await api.request(`/commercial/projects/${fixture.project.id}/payment-plans`, { token: agentToken });
+  expectStatus(readablePlans, 200, api);
+  assert.equal(readablePlans.body[0].id, plan.id);
+  const planManageDenied = await api.request(`/commercial/projects/${fixture.project.id}/payment-plans`, {
+    token: agentToken,
+    method: "POST",
+    body: { installments: [{ sequence: 1, shareBasisPoints: 10000 }] },
+  });
+  assert.equal(planManageDenied.response.status, 403);
+  const assignees = await api.request("/commercial/assignees", { token: managerToken });
+  expectStatus(assignees, 200, api);
+  assert.ok(assignees.body.some((item) => item.id === fixture.agent.id));
+  assert.ok(!assignees.body.some((item) => item.id === fixture.outsider.id));
   const translationDenied = await api.request("/commercial/translations", {
     token: readerToken,
     method: "POST",

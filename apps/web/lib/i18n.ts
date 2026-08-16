@@ -1,4 +1,5 @@
 import { progressMessages, type ProgressMessageKey } from "./progress-i18n";
+import { commercialMessages, type CommercialMessageKey } from "./commercial-i18n";
 
 export type Locale = "en" | "ar";
 
@@ -144,7 +145,7 @@ const en = {
   "status.ARCHIVED": "Archived"
 } as const;
 
-export type MessageKey = keyof typeof en | ProgressMessageKey;
+export type MessageKey = keyof typeof en | ProgressMessageKey | CommercialMessageKey;
 
 const ar: Record<keyof typeof en, string> = {
   "common.brand": "R4C",
@@ -289,8 +290,8 @@ const ar: Record<keyof typeof en, string> = {
 };
 
 export const dictionaries: Record<Locale, Record<MessageKey, string>> = {
-  en: { ...en, ...progressMessages.en },
-  ar: { ...ar, ...progressMessages.ar },
+  en: { ...en, ...progressMessages.en, ...commercialMessages.en },
+  ar: { ...ar, ...progressMessages.ar, ...commercialMessages.ar },
 };
 
 export function normalizeLocale(value: string | undefined): Locale {

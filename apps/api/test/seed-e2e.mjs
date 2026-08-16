@@ -21,7 +21,8 @@ function runSeed(passwordMarker) {
     env.SEED_ADMIN_PASSWORD = passwordMarker;
   }
 
-  return spawnSync("pnpm", ["seed"], {
+  const isWindows = process.platform === "win32";
+  return spawnSync(isWindows ? process.env.ComSpec || "cmd.exe" : "pnpm", isWindows ? ["/d", "/s", "/c", "pnpm.cmd seed"] : ["seed"], {
     cwd: process.cwd(),
     env,
     encoding: "utf8",
@@ -135,13 +136,22 @@ test(
 
     assert.equal(afterFirst.tenants, 1);
     assert.equal(afterFirst.users, 1);
-    assert.equal(afterFirst.roles, 2);
+    assert.equal(afterFirst.roles, 4);
     assert.equal(afterFirst.memberships, 1);
     assert.ok(afterFirst.permissions > 0, "permissions must be derived from source");
     assert.ok(
       afterFirst.rolePermissionLinks >= afterFirst.permissions,
       "ADMIN must receive every permission",
     );
+    const salesRoles = await prisma.role.findMany({
+      where: { tenantId: (await prisma.tenant.findUniqueOrThrow({ where: { code: seedConfig.SEED_TENANT_CODE } })).id, code: { in: ["SALES_AGENT", "SALES_MANAGER"] } },
+      include: { permissions: { include: { permission: true } } },
+    });
+    const rolePermissions = new Map(salesRoles.map((role) => [role.code, role.permissions.map((link) => link.permission.code)]));
+    assert.ok(rolePermissions.get("SALES_AGENT")?.includes("commercial:payment-plan:view"));
+    assert.ok(!rolePermissions.get("SALES_AGENT")?.includes("commercial:reservation:confirm"));
+    assert.ok(!rolePermissions.get("SALES_AGENT")?.includes("commercial:payment-plan:manage"));
+    assert.ok(rolePermissions.get("SALES_MANAGER")?.includes("commercial:reservation:confirm"));
     console.log(`SEED_FIRST_RUN counts=${JSON.stringify(afterFirst)}`);
 
     const secondRun = runSeed(strongPassword);
@@ -216,7 +226,7 @@ test(
       assert.equal(projects.response.status, 200, JSON.stringify(projects.body));
 
       console.log(
-        `SEEDED_LOGIN status=201 accessToken=${login.body.accessToken.slice(0, 12)}...<redacted> role=${login.body.user.role} permissions=${login.body.user.permissions.length}`,
+        `SEEDED_LOGIN status=201 accessToken=<redacted> role=${login.body.user.role} permissions=${login.body.user.permissions.length}`,
       );
       console.log("SEEDED_TOKEN_USE method=GET path=/projects status=200");
     } catch (error) {

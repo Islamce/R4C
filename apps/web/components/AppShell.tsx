@@ -74,8 +74,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
         <nav className="app-nav" aria-label={t("nav.controlHome")}>
-          <section className="nav-group" aria-label={locale === "ar" ? "مساحة العمل التجارية" : "Commercial workspace"}>
-            <p className="nav-group-label">{locale === "ar" ? "المساحة التجارية" : "Commercial workspace"}</p>
+          <section className="nav-group" aria-label={t("commercial.navGroup")}>
+            <p className="nav-group-label">{t("commercial.navGroup")}</p>
             <Link
               className={projectsActive ? "nav-link nav-link-active" : "nav-link"}
               href="/projects"
@@ -90,7 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               aria-current={commercialActive ? "page" : undefined}
             >
               <span className="nav-index" aria-hidden="true">02</span>
-              {locale === "ar" ? "المخزون التجاري" : "Commercial inventory"}
+              {t("commercial.nav")}
             </Link>
           </section>
           <section className="nav-group nav-group-frozen" aria-label={locale === "ar" ? "ذكاء التطوير المجمد" : "Frozen Development Intelligence"}>

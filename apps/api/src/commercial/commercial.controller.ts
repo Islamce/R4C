@@ -6,6 +6,7 @@ import {
   AssignLeadDto,
   AttachCommercialMediaDto,
   BuildingQueryDto,
+  CommercialLocaleQueryDto,
   CreateBuildingDto,
   CreateCustomerDto,
   CreateTranslationDto,
@@ -122,8 +123,8 @@ export class CommercialController {
   }
 
   @Get("units/:id") @RequirePermissions("commercial:read")
-  unit(@CurrentUser() user: AuthContext, @Param("id") id: string) {
-    return this.commercial.unit(user.tenantId, id);
+  unit(@CurrentUser() user: AuthContext, @Param("id") id: string, @Query() query: CommercialLocaleQueryDto) {
+    return this.commercial.unit(user.tenantId, id, query.locale);
   }
 
   @Post("units") @RequirePermissions("commercial:manage")
@@ -171,7 +172,7 @@ export class CommercialController {
     return this.commercial.withdrawPrice(user, id);
   }
 
-  @Get("projects/:projectId/payment-plans") @RequirePermissions("commercial:payment-plan:manage")
+  @Get("projects/:projectId/payment-plans") @RequirePermissions("commercial:payment-plan:view")
   paymentPlans(@CurrentUser() user: AuthContext, @Param("projectId") projectId: string) {
     return this.commercial.paymentPlans(user.tenantId, projectId);
   }
@@ -291,9 +292,14 @@ export class CommercialController {
     return this.commercial.reassignLead(user, id, body.assignedToId);
   }
 
+  @Get("assignees") @RequirePermissions("commercial:lead:reassign")
+  assignees(@CurrentUser() user: AuthContext) {
+    return this.commercial.assignees(user.tenantId);
+  }
+
   @Get("leads/:id/activities") @RequirePermissions("commercial:activity:view")
   activities(@CurrentUser() user: AuthContext, @Param("id") id: string) {
-    return this.commercial.activities(user.tenantId, id);
+    return this.commercial.activities(user, id);
   }
 
   @Post("leads/:id/activities") @RequirePermissions("commercial:activity:log")

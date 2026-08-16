@@ -197,7 +197,7 @@ test("frontend foundation completes the real bilingual project journey", { timeo
   assert.match(english.text, />Projects</);
   const commercialEnglish = await webRequest(jar, "/commercial");
   assert.equal(commercialEnglish.response.status, 200);
-  assert.match(commercialEnglish.text, /Commercial inventory/);
+  assert.match(commercialEnglish.text, /Commercial sales/);
 
   const arabicToggle = await webRequest(jar, "/api/locale", {
     method: "POST",
@@ -210,7 +210,7 @@ test("frontend foundation completes the real bilingual project journey", { timeo
   assert.match(arabic.text, /المشاريع/);
   const commercialArabic = await webRequest(jar, "/commercial");
   assert.equal(commercialArabic.response.status, 200);
-  assert.match(commercialArabic.text, /المخزون التجاري/);
+  assert.match(commercialArabic.text, /المبيعات التجارية/);
 
   const previousRefresh = jar.get("r4c_refresh_token");
   jar.set("r4c_access_token", "expired.invalid.access-token");
