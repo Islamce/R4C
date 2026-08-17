@@ -3,34 +3,18 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "./I18nProvider";
+import { commercialApi, type CommercialLead, type PaymentPlan } from "../lib/commercial-api";
 import { quotationApi, type SalesQuotation } from "../lib/quotation-api";
-
-const syntheticQuotation: SalesQuotation = {
-  id: "synthetic-quotation-001",
-  quotationNumber: "SQ-20260817-DEMO01",
-  revision: 1,
-  status: "APPROVED_TO_SEND",
-  expiresAt: "2026-09-30T15:00:00.000Z",
-  currency: "SAR",
-  leadId: "synthetic-lead-001",
-  customer: { displayName: "Noura Al Harbi" },
-  project: { code: "AL-RAWD-01", name: "Al Rawdah Residences" },
-  unit: { code: "B2-804", number: "804" },
-  createdById: "synthetic-agent",
-  reviewedById: "synthetic-manager",
-  approvedToSendById: "synthetic-manager",
-  reviewedAt: "2026-08-17T09:00:00.000Z",
-  approvedToSendAt: "2026-08-17T09:10:00.000Z",
-  snapshotChecksum: "uat-quotation-checksum-20260817",
-  previewChecksum: "uat-preview-checksum-20260817",
-  priceSnapshot: { listPriceMinor: "125000000", basePriceMinor: "118500000", currency: "SAR", revision: 4 },
-  paymentPlanSnapshot: { installments: [{ sequence: 1, shareBasisPoints: 1000, label: "Reservation" }, { sequence: 2, shareBasisPoints: 4000, label: "Construction" }, { sequence: 3, shareBasisPoints: 5000, label: "Handover" }] },
-  customerSnapshot: { displayName: "Noura Al Harbi", email: "noura.preview@example.test" },
-  unitSnapshot: { code: "B2-804", number: "804", bedrooms: 3, bathrooms: 3, grossArea: "176.4", projectName: "Al Rawdah Residences", projectCode: "AL-RAWD-01" },
-  termsSnapshot: { body: "Preview terms: subject to controlled internal reservation handoff. Customer acceptance does not reserve the unit or create a payment obligation." },
-  decisions: [],
-  updatedAt: "2026-08-17T09:10:00.000Z",
-};
+import { syntheticCommercialLead, syntheticPaymentPlans, syntheticSalesQuotation } from "../lib/quotation-preview-adapter";
+import {
+  customerVisibleStatuses,
+  quotationDate,
+  quotationMoney,
+  quotationStatusClass,
+  quotationStatusLabel,
+  revisableStatuses,
+  snapshotInstallments,
+} from "../lib/quotation-presentation";
 
 const labels = {
   en: {
@@ -48,7 +32,7 @@ const labels = {
     lead: "Lead ID", plan: "Payment plan ID", expiry: "Validity expiry", terms: "Controlled terms", save: "Save draft", submit: "Submit for review",
     approve: "Approve to send", return: "Return to draft", withdraw: "Withdraw", revise: "Create revision", preview: "Open PDF preview", link: "Generate test link",
     decision: "Decision state", acceptance: "Acceptance is recorded only. It does not create a hold, reservation, sale, invoice, or payment obligation.",
-    status: "Status", amount: "Quoted list price", validity: "Valid until", customer: "Customer", unit: "Unit", project: "Project", action: "Last action", snapshot: "Snapshot evidence", payment: "Payment schedule", refresh: "Refresh quotation register", closePreview: "Close document preview", formHint: "Use canonical IDs from the governed lead and payment-plan records. The server revalidates availability, pricing, and plan scope before a draft is created.",
+    status: "Status", amount: "Quoted list price", validity: "Valid until", customer: "Customer", unit: "Unit", project: "Project", action: "Last action", snapshot: "Snapshot evidence", payment: "Payment schedule", refresh: "Refresh quotation register", closePreview: "Close document preview", formHint: "Select an authorized lead and eligible payment plan. The server revalidates availability, pricing, and plan scope before a draft is created.", leadSearch: "Search loaded leads", leadSelect: "Lead / customer context", leadLoading: "Loading eligible leads…", leadEmpty: "No eligible lead is available for quotation. A lead requires customer, project, and unit context.", leadUnavailable: "Lead selector is unavailable for this session. Sign in with commercial lead-view permission.", planSelect: "Eligible payment plan", planLoading: "Loading eligible payment plans…", planEmpty: "No eligible payment plan is available for the selected project.", planUnavailable: "Payment-plan access is unavailable for the selected project.", leadContext: "Authoritative lead context", projectUnit: "Project and available unit",
   },
   ar: {
     eyebrow: "مساحة العمل التجارية المحكومة",
@@ -65,25 +49,11 @@ const labels = {
     lead: "معرّف العميل المحتمل", plan: "معرّف خطة الدفع", expiry: "انتهاء الصلاحية", terms: "الشروط المحكومة", save: "حفظ المسودة", submit: "إرسال للمراجعة",
     approve: "اعتماد للإرسال", return: "إعادة إلى مسودة", withdraw: "سحب", revise: "إنشاء مراجعة", preview: "فتح معاينة PDF", link: "إنشاء رابط اختبار",
     decision: "حالة القرار", acceptance: "يتم تسجيل القبول فقط. لا ينشئ حجزًا أو بيعًا أو فاتورة أو التزام دفع.",
-    status: "الحالة", amount: "سعر القائمة المعروض", validity: "صالح حتى", customer: "العميل", unit: "الوحدة", project: "المشروع", action: "آخر إجراء", snapshot: "دليل اللقطة", payment: "جدول الدفع", refresh: "تحديث سجل عروض الأسعار", closePreview: "إغلاق معاينة المستند", formHint: "استخدم المعرّفات القياسية من سجلات العملاء المحتملين وخطط الدفع المحكومة. يعيد الخادم التحقق من الإتاحة والسعر ونطاق الخطة قبل إنشاء المسودة.",
+    status: "الحالة", amount: "سعر القائمة المعروض", validity: "صالح حتى", customer: "العميل", unit: "الوحدة", project: "المشروع", action: "آخر إجراء", snapshot: "دليل اللقطة", payment: "جدول الدفع", refresh: "تحديث سجل عروض الأسعار", closePreview: "إغلاق معاينة المستند", formHint: "اختر عميلًا محتملاً مخولًا وخطة دفع مؤهلة. يعيد الخادم التحقق من الإتاحة والسعر ونطاق الخطة قبل إنشاء المسودة.", leadSearch: "البحث في العملاء المحتملين المحملين", leadSelect: "سياق العميل المحتمل / المشتري", leadLoading: "يتم تحميل العملاء المحتملين المؤهلين…", leadEmpty: "لا يوجد عميل محتمل مؤهل لعرض السعر. يحتاج العميل إلى سياق المشتري والمشروع والوحدة.", leadUnavailable: "محدد العميل المحتمل غير متاح لهذه الجلسة. سجل الدخول بصلاحية عرض العملاء المحتملين التجارية.", planSelect: "خطة الدفع المؤهلة", planLoading: "يتم تحميل خطط الدفع المؤهلة…", planEmpty: "لا توجد خطة دفع مؤهلة للمشروع المحدد.", planUnavailable: "الوصول إلى خطة الدفع غير متاح للمشروع المحدد.", leadContext: "سياق العميل المحتمل المعتمد", projectUnit: "المشروع والوحدة المتاحة",
   },
 } as const;
 
 type Translation = { [K in keyof (typeof labels)["en"]]: string };
-
-function money(quotation: SalesQuotation, locale: "en" | "ar") {
-  const price = quotation.priceSnapshot?.listPriceMinor;
-  const minor = typeof price === "string" ? Number(price) : typeof price === "number" ? price : 0;
-  return new Intl.NumberFormat(locale === "ar" ? "ar-SA" : "en-SA", { style: "currency", currency: quotation.currency, maximumFractionDigits: 0 }).format(minor / 100);
-}
-
-function dateText(value: string, locale: "en" | "ar") {
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-}
-
-function statusClass(status: string) {
-  return `quotation-status quotation-status-${status.toLowerCase().replaceAll("_", "-")}`;
-}
 
 export function QuotationWorkspace() {
   const { locale } = useI18n();
@@ -95,6 +65,10 @@ export function QuotationWorkspace() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [form, setForm] = useState({ leadId: "", paymentPlanId: "", expiresAt: "", terms: "" });
+  const [leads, setLeads] = useState<CommercialLead[]>([]);
+  const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
+  const [leadSearch, setLeadSearch] = useState("");
+  const [selectorState, setSelectorState] = useState<"idle" | "loading-leads" | "loading-plans" | "lead-unavailable" | "plan-unavailable">("idle");
   const [testToken, setTestToken] = useState("");
   const [pdfPreview, setPdfPreview] = useState<SalesQuotation | null>(null);
 
@@ -114,8 +88,8 @@ export function QuotationWorkspace() {
       setSynthetic(false);
       setNotice("");
     } catch {
-      setQuotations([syntheticQuotation]);
-      setSelected(syntheticQuotation);
+      setQuotations([syntheticSalesQuotation]);
+      setSelected(syntheticSalesQuotation);
       setSynthetic(true);
       setNotice(copy.liveUnavailable);
     } finally {
@@ -125,10 +99,34 @@ export function QuotationWorkspace() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const selectedAmount = useMemo(() => selected ? money(selected, language) : "—", [selected, language]);
+  useEffect(() => {
+    if (synthetic) {
+      setLeads([syntheticCommercialLead]);
+      setSelectorState("idle");
+      return;
+    }
+    let active = true;
+    setSelectorState("loading-leads");
+    void commercialApi.leads(false).catch(() => commercialApi.leads(true)).then((page) => {
+      if (!active) return;
+      setLeads(page.items.filter((lead) => Boolean(lead.customerId && lead.projectId && lead.unitId)));
+      setSelectorState("idle");
+    }).catch(() => {
+      if (active) setSelectorState("lead-unavailable");
+    });
+    return () => { active = false; };
+  }, [synthetic]);
+
+  const selectedLead = leads.find((lead) => lead.id === form.leadId) ?? null;
+  const filteredLeads = useMemo(() => {
+    const needle = leadSearch.trim().toLocaleLowerCase();
+    if (!needle) return leads;
+    return leads.filter((lead) => [lead.customer?.firstName, lead.customer?.lastName, lead.customer?.email, lead.project?.code, lead.project?.name, lead.unit?.code, lead.unit?.number].filter(Boolean).join(" ").toLocaleLowerCase().includes(needle));
+  }, [leadSearch, leads]);
+
+  const selectedAmount = useMemo(() => selected ? quotationMoney(selected, language) : "—", [selected, language]);
   const previewArabicTerms = "تخضع هذه المعاينة المحكومة لإحالة حجز داخلية. يسجل القبول الاهتمام فقط ولا يحجز الوحدة أو ينشئ التزام دفع.";
-  const renderedPreviewTerms = language === "ar" && pdfPreview?.id === syntheticQuotation.id ? previewArabicTerms : pdfPreview?.termsSnapshot?.body ?? "—";
-  const previewInstallmentLabels = language === "ar" ? ["دفعة الحجز", "أثناء الإنشاء", "عند التسليم"] : ["Reservation", "Construction", "Handover"];
+  const renderedPreviewTerms = language === "ar" && pdfPreview?.id === syntheticSalesQuotation.id ? previewArabicTerms : pdfPreview?.termsSnapshot?.body ?? "—";
 
   async function selectQuotation(quotation: SalesQuotation) {
     if (synthetic) {
@@ -145,6 +143,25 @@ export function QuotationWorkspace() {
     }
   }
 
+  async function chooseLead(leadId: string) {
+    const lead = leads.find((item) => item.id === leadId) ?? null;
+    setForm((current) => ({ ...current, leadId, paymentPlanId: "" }));
+    setPaymentPlans([]);
+    if (!lead?.projectId) return;
+    if (synthetic) {
+      setPaymentPlans(syntheticPaymentPlans);
+      setSelectorState("idle");
+      return;
+    }
+    setSelectorState("loading-plans");
+    try {
+      setPaymentPlans(await commercialApi.paymentPlans(lead.projectId));
+      setSelectorState("idle");
+    } catch {
+      setSelectorState("plan-unavailable");
+    }
+  }
+
   async function submitDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (synthetic) {
@@ -157,6 +174,7 @@ export function QuotationWorkspace() {
       setQuotations((items) => [created, ...items]);
       setSelected(created);
       setForm({ leadId: "", paymentPlanId: "", expiresAt: "", terms: "" });
+      setPaymentPlans([]);
       setNotice("");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to save quotation draft");
@@ -188,7 +206,7 @@ export function QuotationWorkspace() {
       if (action === "link") {
         const link = await quotationApi.syntheticPreviewLink(selected.id);
         setTestToken(link.token);
-        setNotice(`${copy.synthetic} ${dateText(link.expiresAt, language)}`);
+        setNotice(`${copy.synthetic} ${quotationDate(link.expiresAt, language)}`);
       }
       await load();
     } catch (error) {
@@ -220,7 +238,7 @@ export function QuotationWorkspace() {
           <div className="quotation-list" aria-busy={busy}>
             {quotations.map((quotation) => (
               <button key={quotation.id} type="button" className={`quotation-list-item ${selected?.id === quotation.id ? "is-selected" : ""}`} onClick={() => void selectQuotation(quotation)}>
-                <span className={statusClass(quotation.status)}>{quotation.status.replaceAll("_", " ")}</span>
+                <span className={quotationStatusClass(quotation.status)}>{quotationStatusLabel(quotation.status, language)}</span>
                 <strong>{quotation.quotationNumber} · R{quotation.revision}</strong>
                 <span>{quotation.customer?.displayName ?? "—"}</span>
                 <small>{quotation.project?.name ?? "—"} / {quotation.unit?.code ?? "—"}</small>
@@ -234,11 +252,17 @@ export function QuotationWorkspace() {
             <div className="quotation-section-heading"><div><p>{copy.eyebrow}</p><h2 id="quotation-draft-title">{copy.newQuote}</h2></div><span className="quotation-mode">{synthetic ? "UAT" : "LIVE API"}</span></div>
             <form className="quotation-builder" onSubmit={submitDraft}>
               <p className="quotation-form-hint">{copy.formHint}</p>
-              <label>{copy.lead}<input required value={form.leadId} onChange={(event) => setForm({ ...form, leadId: event.target.value })} placeholder="UUID" /></label>
-              <label>{copy.plan}<input required value={form.paymentPlanId} onChange={(event) => setForm({ ...form, paymentPlanId: event.target.value })} placeholder="UUID" /></label>
+              <label className="quotation-wide">{copy.leadSearch}<input value={leadSearch} onChange={(event) => setLeadSearch(event.target.value)} placeholder={language === "ar" ? "الاسم أو المشروع أو الوحدة" : "Customer, project, or unit"} /></label>
+              <label>{copy.leadSelect}<select required value={form.leadId} disabled={selectorState === "loading-leads" || selectorState === "lead-unavailable"} onChange={(event) => void chooseLead(event.target.value)}><option value="">{selectorState === "loading-leads" ? copy.leadLoading : copy.leadSelect}</option>{filteredLeads.map((lead) => <option key={lead.id} value={lead.id}>{[lead.customer ? `${lead.customer.firstName} ${lead.customer.lastName ?? ""}`.trim() : null, lead.project?.code, lead.unit?.code].filter(Boolean).join(" · ")}</option>)}</select></label>
+              <label>{copy.planSelect}<select required value={form.paymentPlanId} disabled={!selectedLead || selectorState === "loading-plans" || selectorState === "plan-unavailable"} onChange={(event) => setForm({ ...form, paymentPlanId: event.target.value })}><option value="">{selectorState === "loading-plans" ? copy.planLoading : copy.planSelect}</option>{paymentPlans.map((plan) => <option key={plan.id} value={plan.id}>{plan.installments.map((installment) => `${installment.label ?? installment.sequence}: ${installment.shareBasisPoints / 100}%`).join(" · ")}</option>)}</select></label>
+              {selectedLead ? <aside className="quotation-lead-context quotation-wide" role="status"><strong>{copy.leadContext}</strong><span>{selectedLead.customer ? `${selectedLead.customer.firstName} ${selectedLead.customer.lastName ?? ""}`.trim() : "—"}</span><span>{copy.projectUnit}: {selectedLead.project?.name ?? "—"} / {selectedLead.unit?.code ?? "—"}</span></aside> : null}
+              {selectorState === "lead-unavailable" ? <p className="quotation-selector-error quotation-wide" role="alert">{copy.leadUnavailable}</p> : null}
+              {selectorState === "plan-unavailable" ? <p className="quotation-selector-error quotation-wide" role="alert">{copy.planUnavailable}</p> : null}
+              {selectorState === "idle" && !filteredLeads.length ? <p className="quotation-selector-empty quotation-wide">{copy.leadEmpty}</p> : null}
+              {selectedLead && selectorState === "idle" && !paymentPlans.length ? <p className="quotation-selector-empty quotation-wide">{copy.planEmpty}</p> : null}
               <label>{copy.expiry}<input required type="datetime-local" value={form.expiresAt} onChange={(event) => setForm({ ...form, expiresAt: event.target.value })} /></label>
               <label className="quotation-wide">{copy.terms}<textarea required value={form.terms} onChange={(event) => setForm({ ...form, terms: event.target.value })} placeholder={language === "ar" ? "اكتب الشروط التجارية المعتمدة" : "Enter approved commercial terms"} /></label>
-              <div className="quotation-form-actions"><button className="button-primary" disabled={busy} type="submit">{copy.save}</button></div>
+              <div className="quotation-form-actions"><button className="button-primary" disabled={busy || !form.leadId || !form.paymentPlanId} type="submit">{copy.save}</button></div>
             </form>
           </section>
 
@@ -248,24 +272,24 @@ export function QuotationWorkspace() {
               <div className="quotation-pdf-brand">KYNOX / R4C <span>{copy.synthetic}</span></div>
               <h2>{pdfPreview.quotationNumber} · R{pdfPreview.revision}</h2>
               <p>{pdfPreview.unitSnapshot?.projectName ? String(pdfPreview.unitSnapshot.projectName) : pdfPreview.project?.name} / {pdfPreview.unitSnapshot?.code ? String(pdfPreview.unitSnapshot.code) : pdfPreview.unit?.code}</p>
-              <div className="quotation-pdf-total"><span>{copy.amount}</span><strong>{money(pdfPreview, language)}</strong></div>
+              <div className="quotation-pdf-total"><span>{copy.amount}</span><strong>{quotationMoney(pdfPreview, language)}</strong></div>
               <h3>{copy.payment}</h3>
-              <ol>{Array.isArray(pdfPreview.paymentPlanSnapshot?.installments) ? pdfPreview.paymentPlanSnapshot.installments.map((item, index) => <li key={index}>{`${pdfPreview.id === syntheticQuotation.id ? previewInstallmentLabels[index] ?? (language === "ar" ? "دفعة" : "Installment") : typeof item === "object" && item ? String((item as { label?: unknown }).label ?? "Installment") : "—"} · ${typeof item === "object" && item ? Number((item as { shareBasisPoints?: unknown }).shareBasisPoints ?? 0) / 100 : 0}%`}</li>) : null}</ol>
+              <ol>{snapshotInstallments(pdfPreview, language, pdfPreview.id === syntheticSalesQuotation.id).map((installment, index) => <li key={index}>{`${installment.label} · ${installment.percentage}%`}</li>)}</ol>
               <h3>{copy.terms}</h3><p>{renderedPreviewTerms}</p>
               <footer>{copy.snapshot}: {pdfPreview.previewChecksum?.slice(0, 28) ?? "—"}</footer>
             </div>
           </section> : null}
 
           {selected ? <section className="quotation-panel card-surface quotation-detail" aria-label={selected.quotationNumber}>
-            <div className="quotation-detail-title"><div><p>{copy.eyebrow}</p><h2>{selected.quotationNumber} <span>R{selected.revision}</span></h2></div><span className={statusClass(selected.status)}>{selected.status.replaceAll("_", " ")}</span></div>
+            <div className="quotation-detail-title"><div><p>{copy.eyebrow}</p><h2>{selected.quotationNumber} <span>R{selected.revision}</span></h2></div><span className={quotationStatusClass(selected.status)}>{quotationStatusLabel(selected.status, language)}</span></div>
             <div className="quotation-kpis">
-              <div><span>{copy.amount}</span><strong>{selectedAmount}</strong></div><div><span>{copy.validity}</span><strong>{dateText(selected.expiresAt, language)}</strong></div><div><span>{copy.unit}</span><strong>{selected.unit?.code ?? "—"}</strong></div><div><span>{copy.customer}</span><strong>{selected.customer?.displayName ?? "—"}</strong></div>
+              <div><span>{copy.amount}</span><strong>{selectedAmount}</strong></div><div><span>{copy.validity}</span><strong>{quotationDate(selected.expiresAt, language)}</strong></div><div><span>{copy.unit}</span><strong>{selected.unit?.code ?? "—"}</strong></div><div><span>{copy.customer}</span><strong>{selected.customer?.displayName ?? "—"}</strong></div>
             </div>
             <div className="quotation-detail-grid">
-              <article><h3>{copy.review}</h3><p>{selected.reviewedAt ? `${copy.action}: ${dateText(selected.reviewedAt, language)}` : language === "ar" ? "بانتظار تقديم المسودة." : "Draft awaiting submission."}</p><div className="quotation-action-row"><button type="button" onClick={() => void act("submit")} disabled={busy || selected.status !== "DRAFT"}>{copy.submit}</button><button type="button" onClick={() => void act("return")} disabled={busy || selected.status !== "INTERNAL_REVIEW"}>{copy.return}</button><button className="button-primary" type="button" onClick={() => void act("approve")} disabled={busy || selected.status !== "INTERNAL_REVIEW"}>{copy.approve}</button></div></article>
+              <article><h3>{copy.review}</h3><p>{selected.reviewedAt ? `${copy.action}: ${quotationDate(selected.reviewedAt, language)}` : language === "ar" ? "بانتظار تقديم المسودة." : "Draft awaiting submission."}</p><div className="quotation-action-row"><button type="button" onClick={() => void act("submit")} disabled={busy || selected.status !== "DRAFT"}>{copy.submit}</button><button type="button" onClick={() => void act("return")} disabled={busy || selected.status !== "INTERNAL_REVIEW"}>{copy.return}</button><button className="button-primary" type="button" onClick={() => void act("approve")} disabled={busy || selected.status !== "INTERNAL_REVIEW"}>{copy.approve}</button></div></article>
               <article><h3>{copy.document}</h3><p>{copy.snapshot}: {selected.snapshotChecksum?.slice(0, 20) ?? "—"}</p><div className="quotation-action-row"><button type="button" onClick={() => void act("preview")} disabled={busy || !selected.snapshotChecksum}>{copy.preview}</button><button type="button" onClick={() => void act("link")} disabled={busy || selected.status !== "APPROVED_TO_SEND"}>{copy.link}</button></div>{testToken ? <Link className="quotation-test-link" href={`/buyer/quotation/${encodeURIComponent(testToken)}?preview=1`}>{copy.buyer}</Link> : null}</article>
-              <article><h3>{copy.payment}</h3><ol>{Array.isArray(selected.paymentPlanSnapshot?.installments) ? selected.paymentPlanSnapshot.installments.map((item, index) => <li key={index}>{typeof item === "object" && item ? `${String((item as { label?: unknown }).label ?? "Installment")} · ${Number((item as { shareBasisPoints?: unknown }).shareBasisPoints ?? 0) / 100}%` : "—"}</li>) : <li>—</li>}</ol></article>
-              <article><h3>{copy.decision}</h3><p>{copy.acceptance}</p><div className="quotation-action-row"><button type="button" onClick={() => void act("withdraw")} disabled={busy || !["APPROVED_TO_SEND", "SENT", "VIEWED"].includes(selected.status)}>{copy.withdraw}</button><button type="button" onClick={() => void act("revise")} disabled={busy || !["APPROVED_TO_SEND", "SENT", "VIEWED", "WITHDRAWN", "EXPIRED"].includes(selected.status)}>{copy.revise}</button></div></article>
+              <article><h3>{copy.payment}</h3><ol>{snapshotInstallments(selected, language).length ? snapshotInstallments(selected, language).map((installment, index) => <li key={index}>{`${installment.label} · ${installment.percentage}%`}</li>) : <li>—</li>}</ol></article>
+              <article><h3>{copy.decision}</h3><p>{copy.acceptance}</p><div className="quotation-action-row"><button type="button" onClick={() => void act("withdraw")} disabled={busy || !customerVisibleStatuses.includes(selected.status)}>{copy.withdraw}</button><button type="button" onClick={() => void act("revise")} disabled={busy || !revisableStatuses.includes(selected.status)}>{copy.revise}</button></div></article>
             </div>
           </section> : null}
         </section>
