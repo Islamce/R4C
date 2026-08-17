@@ -268,8 +268,8 @@ export class QuotationService {
       throw new ConflictException("The quotation must be approved before preview");
     }
     return {
-      kind: "SYNTHETIC_PDF_PREVIEW",
-      label: "DESIGN/UAT PREVIEW — NO LEGAL SIGNATURE OR LIVE COMMUNICATION",
+      kind: "SYNTHETIC_HTML_DOCUMENT_PREVIEW",
+      label: "DESIGN/UAT HTML DOCUMENT PREVIEW — NO LEGAL SIGNATURE OR LIVE COMMUNICATION",
       quotation: this.serializeDetail(quotation),
       checksum: quotation.previewChecksum ?? quotation.snapshotChecksum,
     };

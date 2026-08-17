@@ -33,19 +33,19 @@ with sync_playwright() as p:
     expect(page.get_by_text("Authoritative lead context")).to_be_visible()
     expect(page.locator(".quotation-lead-context").get_by_text("Al Rawdah Residences / B2-804")).to_be_visible()
     results["staff_lead_context_and_payment_plan_selectors"] = "passed"
-    page.get_by_role("button", name="Open PDF preview").click()
-    expect(page.get_by_role("dialog", name="PDF preview")).to_be_visible()
+    page.get_by_role("button", name="Open controlled document preview (HTML)").click()
+    expect(page.get_by_role("dialog", name="Controlled document preview (HTML)")).to_be_visible()
     page.get_by_role("button", name="Close document preview").click()
-    expect(page.get_by_role("dialog", name="PDF preview")).to_have_count(0)
-    results["staff_workspace_and_pdf_preview"] = "passed"
+    expect(page.get_by_role("dialog", name="Controlled document preview (HTML)")).to_have_count(0)
+    results["staff_workspace_and_html_document_preview"] = "passed"
 
     page.set_viewport_size({"width": 430, "height": 932})
     page.goto(f"{BASE}/buyer/quotation/synthetic-buyer-token-preview?preview=1", wait_until="networkidle")
     expect(page.locator("h1", has_text="Your buyer quotation")).to_be_visible()
-    page.get_by_role("button", name="Preview controlled PDF").click()
-    expect(page.get_by_role("dialog", name="Preview controlled PDF")).to_be_visible()
+    page.get_by_role("button", name="Preview controlled document (HTML)").click()
+    expect(page.get_by_role("dialog", name="Preview controlled document (HTML)")).to_be_visible()
     page.keyboard.press("Escape")
-    expect(page.get_by_role("dialog", name="Preview controlled PDF")).to_have_count(0)
+    expect(page.get_by_role("dialog", name="Preview controlled document (HTML)")).to_have_count(0)
     page.get_by_role("button", name="Accept quotation").click()
     expect(page.get_by_text("You are recording acceptance", exact=False)).to_be_visible()
     expect(page.get_by_role("button", name="Record decision")).to_be_enabled()
@@ -69,8 +69,8 @@ with sync_playwright() as p:
     page.goto(f"{BASE}/buyer/quotation/synthetic-buyer-token-preview?preview=1", wait_until="networkidle")
     expect(page.locator("main[dir='rtl']")).to_be_visible()
     expect(page.locator("h1", has_text="عرض المشتري الخاص بك")).to_be_visible()
-    page.get_by_role("button", name="معاينة PDF محكومة").click()
-    expect(page.get_by_role("dialog", name="معاينة PDF محكومة")).to_be_visible()
+    page.get_by_role("button", name="معاينة المستند المحكومة (HTML)").click()
+    expect(page.get_by_role("dialog", name="معاينة المستند المحكومة (HTML)")).to_be_visible()
     page.get_by_role("button", name="إغلاق معاينة المستند").click()
     results["buyer_arabic_rtl_and_document"] = "passed"
 

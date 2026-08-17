@@ -19,7 +19,7 @@ const snapshot = {
   customerDecisions: [],
 };
 
-function makeService({ expired = false } = {}) {
+function makeService({ expired = false, quotationStatus = "APPROVED_TO_SEND", tokenFound = true, claimCount = 1 } = {}) {
   const calls = { holds: 0, reservations: 0, quotationUpdates: [], tokenUpdates: [], decisions: [], audit: [] };
   const token = {
     id: "token-a",
@@ -30,13 +30,14 @@ function makeService({ expired = false } = {}) {
     expiresAt: new Date(Date.now() + 60 * 60 * 1000),
     consumedAt: null,
     revokedAt: null,
-    quotation: { ...snapshot, expiresAt: expired ? new Date(Date.now() - 60_000) : snapshot.expiresAt },
+    quotation: { ...snapshot, status: quotationStatus, expiresAt: expired ? new Date(Date.now() - 60_000) : snapshot.expiresAt },
   };
   const transaction = {
     quotationApprovalToken: {
       updateMany: async (command) => {
         calls.tokenUpdates.push(command);
-        return { count: 1 };
+        const isAtomicClaim = command.where?.id === token.id && Boolean(command.where?.expiresAt);
+        return { count: isAtomicClaim ? claimCount : 1 };
       },
     },
     customerDecision: {
@@ -55,7 +56,7 @@ function makeService({ expired = false } = {}) {
     auditEvent: { create: async ({ data }) => { calls.audit.push(data); return data; } },
   };
   const prisma = {
-    quotationApprovalToken: { findUnique: async () => token },
+    quotationApprovalToken: { findUnique: async () => tokenFound ? token : null },
     salesQuotation: { updateMany: async (command) => { calls.quotationUpdates.push(command); return { count: 1 }; } },
     unitHold: { create: async () => { calls.holds += 1; } },
     reservation: { create: async () => { calls.reservations += 1; } },
@@ -91,6 +92,58 @@ test("expired quotation tokens return the generic public error and do not create
   assert.equal(calls.decisions.length, 0);
   assert.equal(calls.holds, 0);
   assert.equal(calls.reservations, 0);
+});
+
+test("already-decided quotations reject a customer decision with the generic public error", async () => {
+  const { service, calls } = makeService({ quotationStatus: "CUSTOMER_ACCEPTED" });
+  await assert.rejects(
+    () => service.recordCustomerDecision({ token: "opaque-preview-token", decision: "DECLINED" }, {}),
+    /Quotation link is unavailable/,
+  );
+  assert.equal(calls.decisions.length, 0);
+  assert.equal(calls.tokenUpdates.length, 0);
+});
+
+test("superseded quotation tokens reject a customer decision with the generic public error", async () => {
+  const { service, calls } = makeService({ quotationStatus: "SUPERSEDED" });
+  await assert.rejects(
+    () => service.recordCustomerDecision({ token: "opaque-preview-token", decision: "ACCEPTED" }, {}),
+    /Quotation link is unavailable/,
+  );
+  assert.equal(calls.decisions.length, 0);
+  assert.equal(calls.tokenUpdates.length, 0);
+});
+
+test("concurrent decision submission is rejected when the optimistic token claim loses", async () => {
+  const { service, calls } = makeService({ claimCount: 0 });
+  await assert.rejects(
+    () => service.recordCustomerDecision({ token: "opaque-preview-token", decision: "ACCEPTED" }, {}),
+    /Quotation link is unavailable/,
+  );
+  assert.equal(calls.decisions.length, 0);
+  assert.equal(calls.tokenUpdates.length, 1);
+  assert.equal(calls.holds, 0);
+  assert.equal(calls.reservations, 0);
+});
+
+test("modified or malformed tokens return only the generic public error", async () => {
+  const { service, calls } = makeService({ tokenFound: false });
+  await assert.rejects(
+    () => service.recordCustomerDecision({ token: "modified-or-malformed-token", decision: "ACCEPTED" }, {}),
+    /Quotation link is unavailable/,
+  );
+  assert.equal(calls.decisions.length, 0);
+  assert.equal(calls.tokenUpdates.length, 0);
+});
+
+test("clarification requests require a non-empty comment before token consumption", async () => {
+  const { service, calls } = makeService();
+  await assert.rejects(
+    () => service.recordCustomerDecision({ token: "opaque-preview-token", decision: "CLARIFICATION_REQUESTED" }, {}),
+    /clarification request requires a comment/,
+  );
+  assert.equal(calls.decisions.length, 0);
+  assert.equal(calls.tokenUpdates.length, 0);
 });
 
 test("quotation lifecycle source keeps customer acceptance separate from reservation permission paths", async () => {
