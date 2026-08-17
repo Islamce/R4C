@@ -17,7 +17,13 @@ Three non-mutating rounds were recorded at ten-second intervals. The web root co
 
 > The observed readiness response proves only that the currently deployed API can reach a database. It does not establish the deployed source SHA, the Prisma migration state, or the intended candidate’s deployment status.
 
+## Public Static-Asset Check
+
+The anonymous web root redirected to `/login` with `307`, and the final public login HTML referenced `/_next/static/css/e803a6e8ade4bf1f.css`. That stylesheet returned `200` with an immutable public cache policy. This confirms that the **currently deployed** web application serves a real Next.js CSS asset; it does not identify its commit or prove that it contains the G9-approved candidate.
+
 ## Exact-SHA and Provider Gate
+
+The successful PR Phase 7 workflow is an isolated GitHub Actions compose verification. Its source creates a local `r4c.local` configuration, starts ephemeral Docker services, uses generated CI-only secrets, and tears the stack down at the end. It is valuable release qualification evidence, but it does **not** deploy to Hostinger or prove an active production SHA.
 
 The authorized provider-console inspection is blocked. `https://hpanel.hostinger.com/login` presented a CAPTCHA and the hosted browser could not load an interactive authenticated panel. No deployment, restart, migration, seed, configuration change, or provider mutation was attempted.
 
@@ -26,7 +32,7 @@ The authorized provider-console inspection is blocked. `https://hpanel.hostinger
 | Exact deployed web/API SHA | Blocked | Hostinger deployment console unavailable behind CAPTCHA. |
 | Completed provider deployment record | Blocked | Hostinger deployment console unavailable behind CAPTCHA. |
 | Production Prisma migration status | Blocked | No private execution context with preconfigured production database variables; no connection string was requested or exposed. |
-| Live CSS/static-asset URL | Not run | A post-deployment static-asset check is not meaningful until exact deployment identity is established. |
+| Live CSS/static-asset URL | Pass for current deployment only | Public login route served `/_next/static/css/e803a6e8ade4bf1f.css` with HTTP 200; candidate identity remains unverified. |
 | Upstash Redis / R2 boundary | Not run | Provider configuration and safe synthetic test boundary unavailable. |
 | Authenticated role UAT | Not run | No authenticated provider-backed synthetic test user session available. |
 | Customer-impacting action | Not run | Explicitly prohibited by the approved scope. |
