@@ -8,6 +8,23 @@ import { CommercialHero3D } from "./CommercialHero3D";
 
 const localize = (ar: boolean, en: string, arabic: string) => ar ? arabic : en;
 
+function exceptionCopy(ar: boolean, exception: CommercialException) {
+  if (exception.type === "STALE_LEAD") {
+    const days = exception.ageDays ?? 0;
+    return {
+      title: localize(ar, exception.title, "العميل المحتمل يحتاج متابعة"),
+      reason: localize(ar, `No qualifying sales activity recorded for ${days} days.`, `لم يُسجَّل نشاط مبيعات مؤهل منذ ${days} أيام.`),
+      action: localize(ar, "Open lead", "فتح العميل المحتمل"),
+    };
+  }
+  const expired = exception.severity === "CRITICAL";
+  return {
+    title: localize(ar, exception.title, expired ? "انتهت صلاحية الحجز المؤقت" : "الحجز المؤقت يوشك على الانتهاء"),
+    reason: localize(ar, expired ? "The active hold has passed its expiry time." : "The active hold expires within the configured review window.", expired ? "تجاوز الحجز المؤقت النشط وقت انتهاء صلاحيته." : "ينتهي الحجز المؤقت النشط خلال نافذة المراجعة المحددة."),
+    action: localize(ar, "Review hold", "مراجعة الحجز المؤقت"),
+  };
+}
+
 type Tab = "portfolio" | "units" | "transfer" | "operations";
 type ProjectDashboardRecord = {
   name: string;
@@ -388,7 +405,7 @@ function PreviewSalesOperations({ project, ar }: { project: string; ar: boolean 
       <section className="commercial-journey-grid">
         <form className="create-panel commercial-capture" onSubmit={(event) => {
           event.preventDefault();
-          setNotice("Lead captured and assigned to the project sales queue.");
+          setNotice(localize(ar, "Lead captured and assigned to the project sales queue.", "تم تسجيل العميل المحتمل وإسناده إلى قائمة مبيعات المشروع."));
           event.currentTarget.reset();
         }}>
           <p className="eyebrow">{localize(ar, "New enquiry", "استفسار جديد")}</p>
@@ -403,10 +420,10 @@ function PreviewSalesOperations({ project, ar }: { project: string; ar: boolean 
         <section className="create-panel commercial-pipeline">
           <div className="section-heading"><div><p className="eyebrow">{localize(ar, "Active opportunity", "فرصة نشطة")}</p><h2>Ahmed Al Harbi</h2></div><span className="status-badge">{leadStatus}</span></div>
           <dl>
-            <div><dt>Project</dt><dd>{project}</dd></div>
-            <div><dt>Preferred unit</dt><dd>A-1204 · 3BR · Floor 12</dd></div>
-            <div><dt>Contact</dt><dd>+966 50 318 4472<br />ahmed@example.com</dd></div>
-            <div><dt>Evidence</dt><dd>Site visit · ID received</dd></div>
+            <div><dt>{localize(ar, "Project", "المشروع")}</dt><dd>{project}</dd></div>
+            <div><dt>{localize(ar, "Preferred unit", "الوحدة المفضلة")}</dt><dd>A-1204 · 3BR · {localize(ar, "Floor", "الطابق")} 12</dd></div>
+            <div><dt>{localize(ar, "Contact", "التواصل")}</dt><dd>+966 50 318 4472<br />ahmed@example.com</dd></div>
+            <div><dt>{localize(ar, "Evidence", "الدليل")}</dt><dd>{localize(ar, "Site visit · ID received", "زيارة موقع · تم استلام الهوية")}</dd></div>
           </dl>
           <div className="lead-actions">
             <button className="button button-primary" type="button" onClick={() => { setLeadStatus(localize(ar, "Reservation pending", "الحجز قيد الاعتماد")); setNotice(localize(ar, "Unit A-1204 placed in the reservation approval queue.", "تمت إضافة الوحدة A-1204 إلى قائمة اعتماد الحجوزات.")); }}>{localize(ar, "Create reservation", "إنشاء حجز")}</button>
@@ -416,22 +433,22 @@ function PreviewSalesOperations({ project, ar }: { project: string; ar: boolean 
       </section>
 
       <section className="commercial-work-grid">
-        <form className="create-panel" onSubmit={(event) => { event.preventDefault(); setNotice("Activity added to the auditable customer timeline."); }}>
+        <form className="create-panel" onSubmit={(event) => { event.preventDefault(); setNotice(localize(ar, "Activity added to the auditable customer timeline.", "تمت إضافة النشاط إلى السجل الزمني القابل للتدقيق للعميل.")); }}>
           <p className="eyebrow">{localize(ar, "Evidence timeline", "سجل الأدلة")}</p>
           <h2>{localize(ar, "Log sales activity", "تسجيل نشاط المبيعات")}</h2>
           <label><span>{localize(ar, "Activity note", "ملاحظة النشاط")}</span><textarea value={activity} onChange={(event) => setActivity(event.target.value)} required /></label>
           <button className="button button-primary">{localize(ar, "Save activity", "حفظ النشاط")}</button>
         </form>
         <section className="create-panel unit-review">
-          <p className="eyebrow">Selected inventory</p>
-          <h2>A-1204 · 3 Bedroom</h2>
+          <p className="eyebrow">{localize(ar, "Selected inventory", "المخزون المحدد")}</p>
+          <h2>A-1204 · {localize(ar, "3 Bedroom", "3 غرف نوم")}</h2>
           <dl>
-            <div><dt>Floor / area</dt><dd>12 · 162.3 m²</dd></div>
+            <div><dt>{localize(ar, "Floor / area", "الطابق / المساحة")}</dt><dd>12 · 162.3 m²</dd></div>
             <div>              <dt>{localize(ar, "List price", "السعر المعلن")}</dt><dd>SAR 1,980,000</dd></div>
-            <div><dt>Availability</dt><dd>Interest recorded</dd></div>
+            <div><dt>{localize(ar, "Availability", "حالة الإتاحة")}</dt><dd>{localize(ar, "Interest recorded", "تم تسجيل الاهتمام")}</dd></div>
             <div>              <dt>{localize(ar, "Construction", "الإنشاء")}</dt><dd>{localize(ar, "Structure", "الهيكل")} · 62%</dd></div>
           </dl>
-          <button className="button button-secondary" type="button" onClick={() => setNotice("Unit A-1204 opened in Project & unit control.")}>Open linked unit</button>
+          <button className="button button-secondary" type="button" onClick={() => setNotice(localize(ar, "Unit A-1204 opened in Project & unit control.", "تم فتح الوحدة A-1204 في إدارة المشروع والوحدات."))}>{localize(ar, "Open linked unit", "فتح الوحدة المرتبطة")}</button>
         </section>
       </section>
     </main>
@@ -662,13 +679,14 @@ function PortfolioDashboard({
         {liveState === "loading" ? <div className="attention-card attention-card-teal"><span>{localize(ar, "Live exceptions", "الاستثناءات الحية")}</span><strong>{localize(ar, "Loading governed exceptions…", "جار تحميل الاستثناءات المحكومة…")}</strong><small>{localize(ar, "Retaining commercial context", "الحفاظ على سياق العمل التجاري")}</small></div> : null}
         {liveState === "unavailable" ? <div className="attention-card attention-card-danger"><span>{localize(ar, "Live exceptions", "الاستثناءات الحية")}</span><strong>{localize(ar, "Live data unavailable", "البيانات الحية غير متاحة")}</strong><small>{localize(ar, "Last known snapshot is not presented as live", "لا يتم عرض آخر لقطة على أنها بيانات حية")}</small></div> : null}
         {liveState === "ready" && displayExceptions.length === 0 ? <div className="attention-card attention-card-teal"><span>{localize(ar, "Live exceptions", "الاستثناءات الحية")}</span><strong>{localize(ar, "No active governed exceptions", "لا توجد استثناءات محكومة نشطة")}</strong><small>{localize(ar, "No deterministic rule currently requires action", "لا توجد قاعدة حتمية تتطلب إجراءً حالياً")}</small></div> : null}
-        {displayExceptions.slice(0, 3).map((exception) => (
-          <button key={exception.id} type="button" className={`attention-card ${exceptionTone(exception.severity)}`} onClick={() => onOpenException(exception)}>
+        {displayExceptions.slice(0, 3).map((exception) => {
+          const copy = exceptionCopy(ar, exception);
+          return <button key={exception.id} type="button" className={`attention-card ${exceptionTone(exception.severity)}`} onClick={() => onOpenException(exception)}>
             <span>{exception.type === "STALE_LEAD" ? localize(ar, "Lead follow-up", "متابعة عميل محتمل") : localize(ar, "Hold expiry", "انتهاء الحجز المؤقت")}</span>
-            <strong>{localize(ar, exception.title, exception.type === "STALE_LEAD" ? "العميل المحتمل يحتاج متابعة" : "الحجز المؤقت يوشك على الانتهاء")}</strong>
-            <small>{exception.reason} · {exception.nextAction?.label ?? localize(ar, "Open record", "فتح السجل")} →</small>
-          </button>
-        ))}
+            <strong>{copy.title}</strong>
+            <small>{copy.reason} · {copy.action} →</small>
+          </button>;
+        })}
       </section>
       <section className="suite-analytics">
         <Chart
