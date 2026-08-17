@@ -2,10 +2,28 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { CommercialOperatorWorkspace } from "./CommercialOperatorWorkspace";
-import { CommercialHero3D } from "./CommercialHero3D";
+import { commercialApi, type CommercialException, type CommercialOverview } from "../lib/commercial-api";
 import { useI18n } from "./I18nProvider";
+import { CommercialHero3D } from "./CommercialHero3D";
 
 const localize = (ar: boolean, en: string, arabic: string) => ar ? arabic : en;
+
+function exceptionCopy(ar: boolean, exception: CommercialException) {
+  if (exception.type === "STALE_LEAD") {
+    const days = exception.ageDays ?? 0;
+    return {
+      title: localize(ar, exception.title, "العميل المحتمل يحتاج متابعة"),
+      reason: localize(ar, `No qualifying sales activity recorded for ${days} days.`, `لم يُسجَّل نشاط مبيعات مؤهل منذ ${days} أيام.`),
+      action: localize(ar, "Open lead", "فتح العميل المحتمل"),
+    };
+  }
+  const expired = exception.severity === "CRITICAL";
+  return {
+    title: localize(ar, exception.title, expired ? "انتهت صلاحية الحجز المؤقت" : "الحجز المؤقت يوشك على الانتهاء"),
+    reason: localize(ar, expired ? "The active hold has passed its expiry time." : "The active hold expires within the configured review window.", expired ? "تجاوز الحجز المؤقت النشط وقت انتهاء صلاحيته." : "ينتهي الحجز المؤقت النشط خلال نافذة المراجعة المحددة."),
+    action: localize(ar, "Review hold", "مراجعة الحجز المؤقت"),
+  };
+}
 
 type Tab = "portfolio" | "units" | "transfer" | "operations";
 type ProjectDashboardRecord = {
@@ -194,10 +212,62 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
   const [selectedUnit, setSelectedUnit] = useState("A-1204");
   const [interestOpen, setInterestOpen] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [liveOverview, setLiveOverview] = useState<CommercialOverview | null>(null);
+  const [liveExceptions, setLiveExceptions] = useState<CommercialException[]>([]);
+  const [liveState, setLiveState] = useState<"loading" | "ready" | "unavailable">(preview ? "ready" : "loading");
   const selected = useMemo(
     () => projects.find((item) => item.name === project) ?? projects[0]!,
     [project],
   );
+
+  useEffect(() => {
+    if (preview) return;
+    let active = true;
+    setLiveState("loading");
+    Promise.all([commercialApi.overview(), commercialApi.exceptions({ limit: 50 })])
+      .then(([overview, exceptionPage]) => {
+        if (!active) return;
+        setLiveOverview(overview);
+        setLiveExceptions(exceptionPage.items);
+        setLiveState("ready");
+      })
+      .catch(() => {
+        if (!active) return;
+        setLiveOverview(null);
+        setLiveExceptions([]);
+        setLiveState("unavailable");
+      });
+    return () => { active = false; };
+  }, [preview]);
+
+  function openException(exception: CommercialException) {
+    const liveProject = liveOverview?.projects.find((item) => item.id === exception.object.projectId);
+    if (liveProject) setProject(liveProject.name);
+    if (exception.type === "STALE_LEAD") setTab("operations");
+    if (exception.type === "EXPIRING_HOLD") setTab("units");
+  }
+
+  function exportReport() {
+    const rows = [
+      ["Section", "Project", "Record", "Status", "Value"],
+      ["Project", selected.name, "Construction progress", "Current snapshot", `${selected.progress}%`],
+      ["Project", selected.name, "Units", "Current snapshot", String(selected.units)],
+      ["Project", selected.name, "Available units", "Current snapshot", String(selected.available)],
+      ["Project", selected.name, "Pending units", "Current snapshot", String(selected.pending)],
+      ["Project", selected.name, "Sold units", "Current snapshot", String(selected.sold)],
+      ["Project", selected.name, "Lead count", "Current snapshot", String(selected.leads)],
+      ...unitsFor("A", 12).map((unit) => ["Unit", selected.name, unit[0], unit[6], unit[5]]),
+      ...transfers.filter((row) => row[1] === selected.name).map((row) => ["Title transfer", selected.name, row[0], row[6], row[4]]),
+    ];
+    const csv = rows.map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${selected.name.toLowerCase().replaceAll(/\\s+/g, "-")}-commercial-report.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <div className="commercial-suite" dir={ar ? "rtl" : "ltr"}>
@@ -207,6 +277,11 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           <h1>{localize(ar, "Sales & Development Command Center", "مركز قيادة المبيعات والتطوير")}</h1>
           <p>
             {localize(ar, "Projects, unit inventory, buyer evidence, reservations and closing readiness in one governed workspace.", "المشروعات ومخزون الوحدات وأدلة المشترين والحجوزات وجاهزية الإفراغ في مساحة عمل محكومة واحدة.")}
+          </p>
+          <p className="data-provenance" role="note">
+            {preview
+              ? localize(ar, "Development-only preview data. Do not use for operational decisions.", "بيانات معاينة مخصصة للتطوير فقط. لا تستخدم لاتخاذ قرارات تشغيلية.")
+              : localize(ar, "Dashboard snapshot data; sales operations below use governed live records.", "بيانات لقطة لوحة المعلومات؛ عمليات المبيعات أدناه تستخدم سجلات حية محكومة.")}
           </p>
         </div>
         <div className="suite-header-actions">
@@ -221,7 +296,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
               ))}
             </select>
           </label>
-          <button className="button button-secondary" type="button">
+          <button className="button button-secondary" type="button" onClick={exportReport}>
             {localize(ar, "Export report", "تصدير التقرير")}
           </button>
         </div>
@@ -237,24 +312,52 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
         ).map(([id, label]) => (
           <button
             key={id}
+            id={`commercial-tab-${id}`}
             type="button"
+            role="tab"
             aria-selected={tab === id}
+            aria-controls={`commercial-panel-${id}`}
+            tabIndex={tab === id ? 0 : -1}
             onClick={() => setTab(id)}
           >
             {label}
           </button>
         ))}
       </nav>
+      <div className="suite-context-bar" role="status">
+        <div>
+          <span className="context-label">{localize(ar, "Working context", "سياق العمل")}</span>
+          <strong>{project}</strong>
+          <small>{selected.phase} · {selected.progress}% {localize(ar, "construction", "إنشاء")}</small>
+        </div>
+        <div>
+          <span className="context-label">{localize(ar, "Data freshness", "حداثة البيانات")}</span>
+          <strong>{preview ? localize(ar, "Preview", "معاينة") : liveState === "ready" ? localize(ar, "Governed live", "حي محكوم") : liveState === "unavailable" ? localize(ar, "Live unavailable", "البيانات الحية غير متاحة") : localize(ar, "Loading live", "جار تحميل البيانات الحية")}</strong>
+          <small>{localize(ar, "Inventory and exception layer", "طبقة المخزون والاستثناءات")}</small>
+        </div>
+        <div>
+          <span className="context-label">{localize(ar, "Next best action", "أفضل إجراء تالٍ")}</span>
+          <strong>{preview ? localize(ar, "Review preview queue", "مراجعة قائمة المعاينة") : liveState === "ready" ? localize(ar, `Review ${liveExceptions.length} governed exceptions`, `مراجعة ${liveExceptions.length} استثناءات محكومة`) : liveState === "unavailable" ? localize(ar, "Refresh live data", "تحديث البيانات الحية") : localize(ar, "Loading exceptions", "جار تحميل الاستثناءات")}</strong>
+          <small>{localize(ar, "Derived from governed commercial records", "مشتقة من سجلات تجارية محكومة")}</small>
+        </div>
+      </div>
       {tab === "portfolio" ? (
+        <div id="commercial-panel-portfolio" role="tabpanel" aria-labelledby="commercial-tab-portfolio">
         <PortfolioDashboard
           selectedProject={project}
           onSelectProject={setProject}
           onOpenProject={() => setTab("units")}
-          onOpenTransfers={() => setTab("transfer")}
+            onOpenTransfers={() => setTab("transfer")}
+            liveOverview={liveOverview}
+            liveExceptions={preview ? null : liveExceptions}
+            liveState={liveState}
+            onOpenException={openException}
           ar={ar}
         />
+        </div>
       ) : null}
       {tab === "units" ? (
+        <div id="commercial-panel-units" role="tabpanel" aria-labelledby="commercial-tab-units">
         <UnitDashboard
           project={selected}
           selectedUnit={selectedUnit}
@@ -265,12 +368,17 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           setSaved={setSaved}
           ar={ar}
         />
+        </div>
       ) : null}
       {tab === "transfer" ? (
-        <TransferDashboard project={project} onProjectChange={setProject} ar={ar} />
+        <div id="commercial-panel-transfer" role="tabpanel" aria-labelledby="commercial-tab-transfer">
+          <TransferDashboard project={project} onProjectChange={setProject} ar={ar} />
+        </div>
       ) : null}
       {tab === "operations" ? (
-        preview ? <PreviewSalesOperations project={project} ar={ar} /> : <CommercialOperatorWorkspace />
+        <div id="commercial-panel-operations" role="tabpanel" aria-labelledby="commercial-tab-operations">
+        {preview ? <PreviewSalesOperations project={project} ar={ar} /> : <CommercialOperatorWorkspace />}
+        </div>
       ) : null}
     </div>
   );
@@ -297,7 +405,7 @@ function PreviewSalesOperations({ project, ar }: { project: string; ar: boolean 
       <section className="commercial-journey-grid">
         <form className="create-panel commercial-capture" onSubmit={(event) => {
           event.preventDefault();
-          setNotice("Lead captured and assigned to the project sales queue.");
+          setNotice(localize(ar, "Lead captured and assigned to the project sales queue.", "تم تسجيل العميل المحتمل وإسناده إلى قائمة مبيعات المشروع."));
           event.currentTarget.reset();
         }}>
           <p className="eyebrow">{localize(ar, "New enquiry", "استفسار جديد")}</p>
@@ -312,10 +420,10 @@ function PreviewSalesOperations({ project, ar }: { project: string; ar: boolean 
         <section className="create-panel commercial-pipeline">
           <div className="section-heading"><div><p className="eyebrow">{localize(ar, "Active opportunity", "فرصة نشطة")}</p><h2>Ahmed Al Harbi</h2></div><span className="status-badge">{leadStatus}</span></div>
           <dl>
-            <div><dt>Project</dt><dd>{project}</dd></div>
-            <div><dt>Preferred unit</dt><dd>A-1204 · 3BR · Floor 12</dd></div>
-            <div><dt>Contact</dt><dd>+966 50 318 4472<br />ahmed@example.com</dd></div>
-            <div><dt>Evidence</dt><dd>Site visit · ID received</dd></div>
+            <div><dt>{localize(ar, "Project", "المشروع")}</dt><dd>{project}</dd></div>
+            <div><dt>{localize(ar, "Preferred unit", "الوحدة المفضلة")}</dt><dd>A-1204 · 3BR · {localize(ar, "Floor", "الطابق")} 12</dd></div>
+            <div><dt>{localize(ar, "Contact", "التواصل")}</dt><dd>+966 50 318 4472<br />ahmed@example.com</dd></div>
+            <div><dt>{localize(ar, "Evidence", "الدليل")}</dt><dd>{localize(ar, "Site visit · ID received", "زيارة موقع · تم استلام الهوية")}</dd></div>
           </dl>
           <div className="lead-actions">
             <button className="button button-primary" type="button" onClick={() => { setLeadStatus(localize(ar, "Reservation pending", "الحجز قيد الاعتماد")); setNotice(localize(ar, "Unit A-1204 placed in the reservation approval queue.", "تمت إضافة الوحدة A-1204 إلى قائمة اعتماد الحجوزات.")); }}>{localize(ar, "Create reservation", "إنشاء حجز")}</button>
@@ -325,22 +433,22 @@ function PreviewSalesOperations({ project, ar }: { project: string; ar: boolean 
       </section>
 
       <section className="commercial-work-grid">
-        <form className="create-panel" onSubmit={(event) => { event.preventDefault(); setNotice("Activity added to the auditable customer timeline."); }}>
+        <form className="create-panel" onSubmit={(event) => { event.preventDefault(); setNotice(localize(ar, "Activity added to the auditable customer timeline.", "تمت إضافة النشاط إلى السجل الزمني القابل للتدقيق للعميل.")); }}>
           <p className="eyebrow">{localize(ar, "Evidence timeline", "سجل الأدلة")}</p>
           <h2>{localize(ar, "Log sales activity", "تسجيل نشاط المبيعات")}</h2>
           <label><span>{localize(ar, "Activity note", "ملاحظة النشاط")}</span><textarea value={activity} onChange={(event) => setActivity(event.target.value)} required /></label>
           <button className="button button-primary">{localize(ar, "Save activity", "حفظ النشاط")}</button>
         </form>
         <section className="create-panel unit-review">
-          <p className="eyebrow">Selected inventory</p>
-          <h2>A-1204 · 3 Bedroom</h2>
+          <p className="eyebrow">{localize(ar, "Selected inventory", "المخزون المحدد")}</p>
+          <h2>A-1204 · {localize(ar, "3 Bedroom", "3 غرف نوم")}</h2>
           <dl>
-            <div><dt>Floor / area</dt><dd>12 · 162.3 m²</dd></div>
-            <div><dt>List price</dt><dd>SAR 1,980,000</dd></div>
-            <div><dt>Availability</dt><dd>Interest recorded</dd></div>
-            <div><dt>Construction</dt><dd>Structure · 62%</dd></div>
+            <div><dt>{localize(ar, "Floor / area", "الطابق / المساحة")}</dt><dd>12 · 162.3 m²</dd></div>
+            <div>              <dt>{localize(ar, "List price", "السعر المعلن")}</dt><dd>SAR 1,980,000</dd></div>
+            <div><dt>{localize(ar, "Availability", "حالة الإتاحة")}</dt><dd>{localize(ar, "Interest recorded", "تم تسجيل الاهتمام")}</dd></div>
+            <div>              <dt>{localize(ar, "Construction", "الإنشاء")}</dt><dd>{localize(ar, "Structure", "الهيكل")} · 62%</dd></div>
           </dl>
-          <button className="button button-secondary" type="button" onClick={() => setNotice("Unit A-1204 opened in Project & unit control.")}>Open linked unit</button>
+          <button className="button button-secondary" type="button" onClick={() => setNotice(localize(ar, "Unit A-1204 opened in Project & unit control.", "تم فتح الوحدة A-1204 في إدارة المشروع والوحدات."))}>{localize(ar, "Open linked unit", "فتح الوحدة المرتبطة")}</button>
         </section>
       </section>
     </main>
@@ -356,11 +464,12 @@ function Metric({
   label: string;
   tone?: string;
 }) {
+  const arabic = /[\u0600-\u06FF]/.test(label);
   return (
     <article className="suite-metric">
       <span>{label}</span>
       <strong className={tone}>{value}</strong>
-      <small>Portfolio current view</small>
+      <small>{localize(arabic, "Portfolio snapshot", "لقطة المحفظة")}</small>
     </article>
   );
 }
@@ -377,16 +486,43 @@ function PortfolioDashboard({
   onSelectProject,
   onOpenProject,
   onOpenTransfers,
+  liveOverview,
+  liveExceptions,
+  liveState,
+  onOpenException,
   ar,
 }: {
   selectedProject: string;
   onSelectProject: (project: string) => void;
   onOpenProject: () => void;
   onOpenTransfers: () => void;
+  liveOverview: CommercialOverview | null;
+  liveExceptions: CommercialException[] | null;
+  liveState: "loading" | "ready" | "unavailable";
+  onOpenException: (exception: CommercialException) => void;
   ar: boolean;
 }) {
-  const focusedProject =
-    projects.find((item) => item.name === selectedProject) ?? projects[0]!;
+  const staticProject = projects.find((item) => item.name === selectedProject) ?? projects[0]!;
+  const liveProject = liveOverview?.projects.find((item) => item.name === selectedProject);
+  const focusedProject: ProjectDashboardRecord = liveProject ? {
+    ...staticProject,
+    units: liveProject.units.total,
+    available: liveProject.units.available,
+    pending: liveProject.units.held + liveProject.units.reserved,
+    sold: liveProject.units.sold,
+    leads: liveProject.leads ?? staticProject.leads,
+    value: liveOverview?.commercialValue.confirmedReservationsMinor && liveOverview.commercialValue.currency ? `${(Number(liveOverview.commercialValue.confirmedReservationsMinor) / 100000000).toFixed(1)}B` : staticProject.value,
+  } : staticProject;
+  const liveMetrics = liveOverview ? {
+    projects: liveOverview.scope.projects,
+    units: liveOverview.inventory.total,
+    sold: liveOverview.inventory.sold,
+    pending: (liveOverview.inventory.held ?? 0) + (liveOverview.inventory.reserved ?? 0),
+    leads: liveOverview.pipeline.total,
+    value: liveOverview.commercialValue.currency && liveOverview.commercialValue.confirmedReservationsMinor ? `${liveOverview.commercialValue.currency} ${(Number(liveOverview.commercialValue.confirmedReservationsMinor) / 100000000).toFixed(1)}B` : "—",
+  } : null;
+  const displayExceptions = liveExceptions ?? [];
+  const exceptionTone = (severity: CommercialException["severity"]) => severity === "CRITICAL" ? "attention-card-danger" : severity === "WARNING" ? "attention-card-warning" : "attention-card-teal";
   return (
     <main className="suite-dashboard">
       <section className="executive-hero">
@@ -395,7 +531,7 @@ function PortfolioDashboard({
           progress={focusedProject.progress}
         />
         <div className="executive-hero-copy">
-          <p className="eyebrow">{localize(ar, "Live development digital twin", "التوأم الرقمي المباشر للمشروع")}</p>
+          <p className="eyebrow">{localize(ar, "Development snapshot", "لقطة المشروع")}</p>
           <h2>{focusedProject.name}</h2>
           <p>
             {focusedProject.city} · {focusedProject.phase} · {localize(ar, "construction", "الإنشاء")} {" "}
@@ -408,12 +544,12 @@ function PortfolioDashboard({
         </div>
       </section>
       <section className="suite-metrics">
-        <Metric value="8" label={localize(ar, "Active projects", "المشروعات النشطة")} />
-        <Metric value="1,248" label={localize(ar, "Total units", "إجمالي الوحدات")} />
-        <Metric value="684" label={localize(ar, "Sold", "المباع")} tone="good" />
-        <Metric value="92" label={localize(ar, "Pending / reserved", "قيد الانتظار / محجوز")} />
-        <Metric value="147" label={localize(ar, "Active leads", "العملاء المحتملون النشطون")} />
-        <Metric value="SAR 1.84B" label={localize(ar, "Contracted value", "القيمة التعاقدية")} tone="good" />
+        <Metric value={liveState === "loading" ? "…" : liveState === "unavailable" ? "—" : String(liveMetrics?.projects ?? 8)} label={localize(ar, "Active projects", "المشروعات النشطة")} />
+        <Metric value={liveState === "loading" ? "…" : liveState === "unavailable" ? "—" : String(liveMetrics?.units ?? 1248)} label={localize(ar, "Total units", "إجمالي الوحدات")} />
+        <Metric value={liveState === "loading" ? "…" : liveState === "unavailable" ? "—" : String(liveMetrics?.sold ?? 684)} label={localize(ar, "Sold", "المباع")} tone="good" />
+        <Metric value={liveState === "loading" ? "…" : liveState === "unavailable" ? "—" : String(liveMetrics?.pending ?? 92)} label={localize(ar, "Pending / reserved", "قيد الانتظار / محجوز")} />
+        <Metric value={liveState === "loading" ? "…" : liveState === "unavailable" ? "—" : liveMetrics?.leads === null ? "—" : String(liveMetrics?.leads ?? 147)} label={localize(ar, "Active leads", "العملاء المحتملون النشطون")} />
+        <Metric value={liveState === "loading" ? "…" : liveState === "unavailable" ? "—" : liveMetrics?.value ?? "—"} label={localize(ar, "Confirmed reservation value", "قيمة الحجوزات المؤكدة")} tone="good" />
       </section>
       <section className="portfolio-layout">
         <div className="suite-panel">
@@ -534,24 +670,42 @@ function PortfolioDashboard({
           </button>
         </aside>
       </section>
+      <section className="suite-attention-grid">
+        <div className="suite-attention-intro">
+          <p className="eyebrow">{localize(ar, "Decision queue", "قائمة القرارات")}</p>
+          <h2>{localize(ar, "Attention before analytics", "الانتباه قبل التحليلات")}</h2>
+          <p>{localize(ar, "A focused queue for the few issues most likely to change this week’s commercial outcome.", "قائمة مركزة بأهم الاستثناءات التي قد تغير النتيجة التجارية لهذا الأسبوع.")}</p>
+        </div>
+        {liveState === "loading" ? <div className="attention-card attention-card-teal"><span>{localize(ar, "Live exceptions", "الاستثناءات الحية")}</span><strong>{localize(ar, "Loading governed exceptions…", "جار تحميل الاستثناءات المحكومة…")}</strong><small>{localize(ar, "Retaining commercial context", "الحفاظ على سياق العمل التجاري")}</small></div> : null}
+        {liveState === "unavailable" ? <div className="attention-card attention-card-danger"><span>{localize(ar, "Live exceptions", "الاستثناءات الحية")}</span><strong>{localize(ar, "Live data unavailable", "البيانات الحية غير متاحة")}</strong><small>{localize(ar, "Last known snapshot is not presented as live", "لا يتم عرض آخر لقطة على أنها بيانات حية")}</small></div> : null}
+        {liveState === "ready" && displayExceptions.length === 0 ? <div className="attention-card attention-card-teal"><span>{localize(ar, "Live exceptions", "الاستثناءات الحية")}</span><strong>{localize(ar, "No active governed exceptions", "لا توجد استثناءات محكومة نشطة")}</strong><small>{localize(ar, "No deterministic rule currently requires action", "لا توجد قاعدة حتمية تتطلب إجراءً حالياً")}</small></div> : null}
+        {displayExceptions.slice(0, 3).map((exception) => {
+          const copy = exceptionCopy(ar, exception);
+          return <button key={exception.id} type="button" className={`attention-card ${exceptionTone(exception.severity)}`} onClick={() => onOpenException(exception)}>
+            <span>{exception.type === "STALE_LEAD" ? localize(ar, "Lead follow-up", "متابعة عميل محتمل") : localize(ar, "Hold expiry", "انتهاء الحجز المؤقت")}</span>
+            <strong>{copy.title}</strong>
+            <small>{copy.reason} · {copy.action} →</small>
+          </button>;
+        })}
+      </section>
       <section className="suite-analytics">
         <Chart
-          title="Sales vs construction progress"
+          title={localize(ar, "Sales vs construction progress", "تقدم المبيعات مقابل الإنشاء")}
           values={[38, 46, 52, 59, 66, 71]}
           second={[24, 31, 39, 47, 54, 62]}
         />
         <Chart
-          title="Quarterly reservation value (SAR M)"
+          title={localize(ar, "Quarterly reservation value (SAR M)", "قيمة الحجوزات الفصلية (مليون ر.س)")}
           values={[31, 46, 52, 48, 67, 82]}
         />
         <article className="suite-panel suite-funnel">
-          <h2>Lead conversion</h2>
+          <h2>{localize(ar, "Lead conversion", "تحويل العملاء المحتملين")}</h2>
           {[
-            ["New leads", 147, 100],
-            ["Contacted", 98, 67],
-            ["Qualified", 62, 42],
-            ["Site visit", 34, 23],
-            ["Reserved", 16, 11],
+            [localize(ar, "New leads", "عملاء محتملون جدد"), 147, 100],
+            [localize(ar, "Contacted", "تم التواصل"), 98, 67],
+            [localize(ar, "Qualified", "مؤهل"), 62, 42],
+            [localize(ar, "Site visit", "زيارة موقع"), 34, 23],
+            [localize(ar, "Reserved", "محجوز"), 16, 11],
           ].map(([n, v, w]) => (
             <div key={String(n)}>
               <span>{n}</span>
@@ -561,22 +715,22 @@ function PortfolioDashboard({
           ))}
         </article>
         <article className="suite-panel financial-card">
-          <h2>Executive financial analysis</h2>
+          <h2>{localize(ar, "Executive financial analysis", "التحليل المالي التنفيذي")}</h2>
           <dl>
             <div>
-              <dt>Gross sales value</dt>
+              <dt>{localize(ar, "Gross sales value", "إجمالي قيمة المبيعات")}</dt>
               <dd>SAR 1.84B</dd>
             </div>
             <div>
-              <dt>Weighted forecast</dt>
+              <dt>{localize(ar, "Weighted forecast", "التوقع المرجح")}</dt>
               <dd>SAR 2.63B</dd>
             </div>
             <div>
-              <dt>Average price / m²</dt>
+              <dt>{localize(ar, "Average price / m²", "متوسط السعر / م²")}</dt>
               <dd>SAR 7,512</dd>
             </div>
             <div>
-              <dt>Variance to target</dt>
+              <dt>{localize(ar, "Variance to target", "الانحراف عن المستهدف")}</dt>
               <dd className="good">+8.9%</dd>
             </div>
           </dl>
@@ -589,34 +743,33 @@ function PortfolioDashboard({
       >
         <div className="suite-panel-heading">
           <div>
-            <h2>Executive closing summary</h2>
+            <h2>{localize(ar, "Executive closing summary", "ملخص الإغلاق التنفيذي")}</h2>
             <p>
-              Portfolio-level ownership-transfer readiness; detailed files
-              remain in their dedicated tab.
+              {localize(ar, "Portfolio-level ownership-transfer readiness; detailed files remain in their dedicated tab.", "جاهزية نقل الملكية على مستوى المحفظة؛ توجد الملفات التفصيلية في علامة التبويب المخصصة.")}
             </p>
           </div>
-          <strong>34 transfers in progress</strong>
+          <strong>{localize(ar, "34 transfers in progress", "34 عملية إفراغ جارية")}</strong>
         </div>
         <div className="closing-summary-grid">
           <div>
             <strong>18</strong>
-            <span>Ready for handoff</span>
+                <span>{localize(ar, "Ready for handoff", "جاهز للتسليم")}</span>
           </div>
           <div>
             <strong>9</strong>
-            <span>Awaiting documents</span>
+                <span>{localize(ar, "Awaiting documents", "بانتظار المستندات")}</span>
           </div>
           <div>
             <strong>5</strong>
-            <span>Government review</span>
+                <span>{localize(ar, "Government review", "المراجعة الحكومية")}</span>
           </div>
           <div>
             <strong>2</strong>
-            <span>Blocked</span>
+                <span>{localize(ar, "Blocked", "متعثر")}</span>
           </div>
           <div>
             <strong>SAR 84.6M</strong>
-            <span>Value in closing</span>
+                <span>{localize(ar, "Value in closing", "القيمة قيد الإغلاق")}</span>
           </div>
         </div>
       </button>
@@ -653,6 +806,18 @@ function Chart({
       </div>
     </article>
   );
+}
+
+function localizedUnitType(ar: boolean, value: string) {
+  return ar ? ({ "All unit types": "كل أنواع الوحدات", Studio: "استوديو", "2BR": "غرفتان", "3BR": "3 غرف" }[value] ?? value) : value;
+}
+
+function localizedUnitStatus(ar: boolean, value: string) {
+  return ar ? ({ "All statuses": "كل الحالات", Available: "متاح", Reserved: "محجوز", Sold: "مباع", Interest: "اهتمام", Held: "موقوف" }[value] ?? value) : value;
+}
+
+function localizedView(ar: boolean, value: string) {
+  return ar ? ({ "All views": "كل الإطلالات", Park: "حديقة", City: "مدينة" }[value] ?? value) : value;
 }
 
 function UnitDashboard({
@@ -703,6 +868,15 @@ function UnitDashboard({
   const selectedRow =
     floorUnits.find(({ row }) => row[0] === selectedUnit) ?? floorUnits[0]!;
 
+  useEffect(() => {
+    if (!interestOpen) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setInterestOpen(false);
+    }
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [interestOpen, setInterestOpen]);
+
   function chooseLocation(nextBuilding: string, nextFloor: number) {
     setBuilding(nextBuilding);
     setFloor(nextFloor);
@@ -737,7 +911,7 @@ function UnitDashboard({
                 aria-pressed={building === item}
                 onClick={() => chooseLocation(item, floor)}
               >
-                {item}
+                {localize(ar, item, item === "Building A" ? "المبنى أ" : "المبنى ب")}
               </button>
             ))}
           </div>
@@ -758,7 +932,7 @@ function UnitDashboard({
                         (row) => row[6] === "Available",
                       ).length
                     }{" "}
-                    available
+                    {localize(ar, "available", "متاح")}
                   </small>
                 </button>
               ),
@@ -770,7 +944,7 @@ function UnitDashboard({
             <div>
               <h2>{localize(ar, `${project.name} unit inventory`, `مخزون وحدات ${project.name}`)}</h2>
               <p>
-                {building} · {localize(ar, "Floor", "الدور")} {floor} {localize(ar, "of 18 · live commercial status", "من 18 · الحالة التجارية المباشرة")}
+                {localize(ar, building, building === "Building A" ? "المبنى أ" : "المبنى ب")} · {localize(ar, "Floor", "الدور")} {floor} {localize(ar, "of 18 · commercial snapshot", "من 18 · لقطة الحالة التجارية")}
               </p>
             </div>
             <button
@@ -794,25 +968,33 @@ function UnitDashboard({
               value={typeFilter}
               onChange={(event) => setTypeFilter(event.target.value)}
             >
-              <option>All unit types</option>
-              <option>Studio</option>
-              <option>2BR</option>
-              <option>3BR</option>
+              <option value="All unit types">{localizedUnitType(ar, "All unit types")}</option>
+              <option value="Studio">{localizedUnitType(ar, "Studio")}</option>
+              <option value="2BR">{localizedUnitType(ar, "2BR")}</option>
+              <option value="3BR">{localizedUnitType(ar, "3BR")}</option>
             </select>
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
             >
-              <option>All statuses</option>
-              <option>Available</option>
-              <option>Reserved</option>
-              <option>Sold</option>
+              <option value="All statuses">{localizedUnitStatus(ar, "All statuses")}</option>
+              <option value="Available">{localizedUnitStatus(ar, "Available")}</option>
+              <option value="Reserved">{localizedUnitStatus(ar, "Reserved")}</option>
+              <option value="Sold">{localizedUnitStatus(ar, "Sold")}</option>
             </select>
             <select>
-              <option>All views</option>
-              <option>Park</option>
-              <option>City</option>
+              <option value="All views">{localizedView(ar, "All views")}</option>
+              <option value="Park">{localizedView(ar, "Park")}</option>
+              <option value="City">{localizedView(ar, "City")}</option>
             </select>
+          </div>
+          <div className="unit-status-legend" aria-label={localize(ar, "Unit status legend", "دليل حالات الوحدات")}>
+            {(["Available", "Interest", "Held", "Reserved", "Sold"] as const).map((status) => (
+              <span key={status} className={`legend-item status-${status.toLowerCase()}`}>
+                <i aria-hidden="true" />
+                {localizedUnitStatus(ar, status)}
+              </span>
+            ))}
           </div>
           <div className="unit-table">
             <div className="unit-row unit-head">
@@ -842,7 +1024,7 @@ function UnitDashboard({
                         : ""
                     }
                   >
-                    {i === 6 ? status : x}
+                    {i === 1 ? localizedUnitType(ar, x) : i === 6 ? localizedUnitStatus(ar, status) : x}
                   </span>
                 ))}
               </button>
@@ -851,11 +1033,11 @@ function UnitDashboard({
           <div className="floor-map-heading">
             <div>
               <strong>
-                {building} · Floor {floor} layout
+                {localize(ar, building, building === "Building A" ? "المبنى أ" : "المبنى ب")} · {localize(ar, "Floor", "الدور")} {floor} {localize(ar, "layout", "مخطط")}
               </strong>
-              <span>6 units · 1,004.9 m² gross floor area</span>
+              <span>{localize(ar, "6 units · 1,004.9 m² gross floor area", "6 وحدات · 1,004.9 م² مساحة إجمالية للدور")}</span>
             </div>
-            <span>North ↑</span>
+            <span>{localize(ar, "North ↑", "الشمال ↑")}</span>
           </div>
           <div className="floor-plan-wrap">
             <img
@@ -870,7 +1052,7 @@ function UnitDashboard({
                 className={`floor-hotspot status-${status.toLowerCase()} ${selectedUnit === row[0] ? "selected" : ""}`}
                 style={floorHotspots[index]}
                 onClick={() => setSelectedUnit(row[0])}
-                aria-label={`Select unit ${row[0]}, ${status}`}
+                aria-label={localize(ar, `Select unit ${row[0]}, ${status}`, `اختيار الوحدة ${row[0]}، ${localizedUnitStatus(true, status)}`)}
               >
                 {row[0]}
               </button>
@@ -878,7 +1060,7 @@ function UnitDashboard({
           </div>
           <div
             className="floor-map"
-            aria-label={`${building} floor ${floor} unit status controls`}
+            aria-label={localize(ar, `${building} floor ${floor} unit status controls`, `${building === "Building A" ? "المبنى أ" : "المبنى ب"} أدوات حالة وحدات الدور ${floor}`)}
           >
             {floorUnits.map(({ row: u, status }) => (
               <button
@@ -901,38 +1083,39 @@ function UnitDashboard({
             <span
               className={`unit-status status-${selectedRow.status.toLowerCase()}`}
             >
-              {selectedRow.status}
+              {localizedUnitStatus(ar, selectedRow.status)}
             </span>
           </div>
           <dl>
             <div>
-              <dt>Type</dt>
+              <dt>{localize(ar, "Type", "النوع")}</dt>
               <dd>{selectedRow.row[1]} Apartment</dd>
             </div>
             <div>
-              <dt>Gross / net</dt>
+              <dt>{localize(ar, "Gross / net", "الإجمالي / الصافي")}</dt>
               <dd>
                 {selectedRow.row[3]} / {selectedRow.row[4]} m²
               </dd>
             </div>
             <div>
-              <dt>Orientation / view</dt>
+              <dt>{localize(ar, "Orientation / view", "الاتجاه / الإطلالة")}</dt>
               <dd>NW / Park</dd>
             </div>
             <div>
-              <dt>List price</dt>
+              <dt>{localize(ar, "List price", "السعر المعلن")}</dt>
               <dd>SAR {selectedRow.row[5]}</dd>
             </div>
             <div>
-              <dt>Price / m²</dt>
+              <dt>{localize(ar, "Price / m²", "السعر / م²")}</dt>
               <dd>SAR 12,205</dd>
             </div>
             <div>
-              <dt>Construction</dt>
+              <dt>{localize(ar, "Construction", "الإنشاء")}</dt>
               <dd>Structure · 62%</dd>
             </div>
           </dl>
-          <h3>Measurements</h3>
+          <details className="unit-detail-section" open>
+            <summary>{localize(ar, "Measurements", "القياسات")}</summary>
           <dl>
             <div>
               <dt>Living & dining</dt>
@@ -955,7 +1138,9 @@ function UnitDashboard({
               <dd>11.80 m²</dd>
             </div>
           </dl>
-          <h3>Price history</h3>
+          </details>
+          <details className="unit-detail-section">
+            <summary>{localize(ar, "Price history", "سجل الأسعار")}</summary>
           <dl>
             <div>
               <dt>18 May 2025</dt>
@@ -970,13 +1155,17 @@ function UnitDashboard({
               <dd>SAR 2,100,000</dd>
             </div>
           </dl>
-          <h3>Buyer activity evidence</h3>
+          </details>
+          <details className="unit-detail-section" open>
+            <summary>{localize(ar, "Buyer activity evidence", "أدلة نشاط المشتري")}</summary>
           <ol className="transfer-timeline">
             <li>Website enquiry received</li>
             <li>Call logged · no answer</li>
             <li>WhatsApp message delivered</li>
             <li>Brochure.pdf uploaded</li>
           </ol>
+          </details>
+          <div className="unit-action-stack">
           <button
             className="button button-primary"
             type="button"
@@ -996,6 +1185,7 @@ function UnitDashboard({
           >
             {localize(ar, "Create reservation", "إنشاء حجز")}
           </button>
+          </div>
         </aside>
       </section>
       {interestOpen ? (
@@ -1006,6 +1196,10 @@ function UnitDashboard({
         >
           <form
             className="suite-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="commercial-interest-title"
+
             onMouseDown={(e) => e.stopPropagation()}
             onSubmit={(e) => {
               e.preventDefault();
@@ -1019,14 +1213,15 @@ function UnitDashboard({
             <div className="suite-panel-heading">
               <div>
                 <p className="eyebrow">Buyer evidence</p>
-                <h2>Record interest for {selectedUnit}</h2>
+                <h2 id="commercial-interest-title">{localize(ar, `Record interest for ${selectedUnit}`, `تسجيل اهتمام للوحدة ${selectedUnit}`)}</h2>
               </div>
               <button
                 type="button"
                 className="button button-quiet"
                 onClick={() => setInterestOpen(false)}
+                autoFocus
               >
-                Close
+                {localize(ar, "Close", "إغلاق")}
               </button>
             </div>
             <label>

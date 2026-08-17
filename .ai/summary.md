@@ -10,7 +10,7 @@ R4C — a BIM-centered platform for governed real-estate development delivery, c
 - Modules: 6 declared, 1 discovered only
 - Drift: 0 error, 1 warning, 0 info
 - Generator: `kaaf` v0.7.0
-- Input digest: `c32f3819ec2d3b55…`
+- Input digest: `d244d01836a1fa29…`
 
 ## Modules
 
@@ -106,4 +106,4 @@ Full detail, with evidence and recommendations, in `.ai/drift.json`.
 Declarations come from `kaaf.repo.json` and `kaaf.module.json`. Discovery is a static
 read of the source: dynamic imports and runtime wiring are invisible to it, so the
 absence of a drift finding is not proof that none exists.
-<!-- kaaf:bodyDigest=ac40d49f759aae5f9363636b66288c4b218fc3c25ec19da94c3e90352c0d7098 -->
+<!-- kaaf:bodyDigest=4bde68c51ef592b4fad821c7771953418d3be0d81e46ce8ad37f105243f82493 -->

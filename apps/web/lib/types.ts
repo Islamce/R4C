@@ -157,3 +157,66 @@ export interface AuthSessionResponse {
   refreshTokenExpiresInSeconds: number;
   user: SessionUser;
 }
+
+export interface WbsImportRowPayload {
+  rowNumber: number;
+  code: string;
+  name: string;
+  parentCode?: string;
+  sortOrder?: number;
+  plannedFrom?: string;
+  plannedTo?: string;
+  weight?: number;
+}
+
+export interface WbsImportIssue {
+  rowNumber: number;
+  code: string;
+  field: "code" | "name" | "parentCode" | "plannedFrom" | "plannedTo" | "weight" | "general";
+  reasonCode:
+    | "DUPLICATE_CODE"
+    | "DATE_ORDER"
+    | "SELF_PARENT"
+    | "PARENT_NOT_FOUND"
+    | "HIERARCHY_CYCLE"
+    | "EXISTING_CODE";
+  message: string;
+}
+
+export interface WbsImportPreviewRow {
+  rowNumber: number;
+  code: string;
+  name: string;
+  parentCode: string | null;
+  sortOrder: number;
+  plannedFrom: string | null;
+  plannedTo: string | null;
+  weight: number;
+  depth: number;
+  parentSource: "root" | "existing" | "import";
+}
+
+export interface WbsImportPreview {
+  projectId: string;
+  sourceName: string | null;
+  checksum: string;
+  canCommit: boolean;
+  summary: {
+    receivedRows: number;
+    validRows: number;
+    invalidRows: number;
+    rootRows: number;
+    existingParentLinks: number;
+    importedParentLinks: number;
+  };
+  rows: WbsImportPreviewRow[];
+  issues: WbsImportIssue[];
+}
+
+export interface WbsImportCommitReceipt {
+  projectId: string;
+  checksum: string;
+  sourceName: string | null;
+  createdCount: number;
+  created: Array<{ id: string; code: string; parentCode: string | null }>;
+}

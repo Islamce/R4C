@@ -136,6 +136,32 @@ enum NotificationChannel {
   IN_APP
 }
 
+enum SalesQuotationStatus {
+  DRAFT
+  INTERNAL_REVIEW
+  APPROVED_TO_SEND
+  SENT
+  VIEWED
+  CUSTOMER_ACCEPTED
+  CUSTOMER_DECLINED
+  EXPIRED
+  WITHDRAWN
+  SUPERSEDED
+}
+
+enum CustomerDecisionType {
+  ACCEPTED
+  DECLINED
+  CLARIFICATION_REQUESTED
+}
+
+enum QuotationDeliveryStatus {
+  QUEUED
+  DISPATCHED
+  DELIVERED
+  FAILED
+}
+
 enum NotificationStatus {
   PENDING
   SENT
@@ -399,6 +425,10 @@ model Tenant {
   unitHolds          UnitHold[]
   reservations       Reservation[]
   passwordResetTokens PasswordResetToken[]
+  salesQuotations SalesQuotation[]
+  quotationApprovalTokens QuotationApprovalToken[]
+  quotationDecisions CustomerDecision[]
+  quotationDeliveries QuotationDelivery[]
 }
 
 model User {
@@ -461,6 +491,10 @@ model User {
   unitHoldsCreated          UnitHold[]          @relation("UnitHoldCreator")
   reservationsCreated       Reservation[]       @relation("ReservationCreator")
   reservationsApproved      Reservation[]       @relation("ReservationApprover")
+  quotationsCreated         SalesQuotation[]     @relation("QuotationCreator")
+  quotationsReviewed        SalesQuotation[]     @relation("QuotationReviewer")
+  quotationsApprovedToSend  SalesQuotation[]     @relation("QuotationApprover")
+  quotationDecisions        CustomerDecision[]   @relation("QuotationDecisionActor")
 }
 
 model Role {
@@ -553,6 +587,7 @@ model Project {
   paymentPlans      PaymentPlan[]
   projectMedia      ProjectMedia[]
   leads             Lead[]
+  salesQuotations   SalesQuotation[]
 
   @@unique([tenantId, code])
   @@unique([id, tenantId])
@@ -679,6 +714,7 @@ model Unit {
   leads        Lead[]
   holds        UnitHold[]
   reservations Reservation[]
+  salesQuotations SalesQuotation[]
 
   @@unique([projectId, code])
   @@unique([floorId, number])
@@ -702,6 +738,7 @@ model Customer {
   tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   leads           Lead[]
   reservations    Reservation[]
+  salesQuotations SalesQuotation[]
 
   @@unique([tenantId, phoneNormalized, emailNormalized])
   @@unique([id, tenantId])
@@ -736,6 +773,7 @@ model Lead {
   activities               SalesActivity[]
   holds                    UnitHold[]
   reservations             Reservation[]
+  salesQuotations          SalesQuotation[]
 
   @@unique([id, tenantId])
   @@index([tenantId, assignedToId, status, createdAt])
@@ -856,6 +894,7 @@ model UnitPriceRevision {
   unit           Unit                    @relation(fields: [unitId], references: [id], onDelete: Restrict)
   createdBy      User                    @relation("UnitPriceRevisionCreator", fields: [createdById], references: [id], onDelete: Restrict)
   reservations   Reservation[]
+  salesQuotations SalesQuotation[]
 
   @@unique([unitId, revision])
   @@unique([id, tenantId])
@@ -872,9 +911,124 @@ model PaymentPlan {
   project      Project                  @relation(fields: [projectId, tenantId], references: [id, tenantId], onDelete: Cascade)
   installments PaymentPlanInstallment[]
   reservations Reservation[]
+  salesQuotations SalesQuotation[]
 
   @@unique([id, tenantId])
   @@index([tenantId, projectId])
+}
+
+model SalesQuotation {
+  id                    String               @id @default(uuid())
+  tenantId              String
+  quotationNumber       String               @db.VarChar(48)
+  revision              Int                  @default(1)
+  leadId                String
+  customerId            String
+  projectId             String
+  unitId                String
+  sourcePriceRevisionId String
+  paymentPlanId         String
+  currency              String               @db.VarChar(3)
+  status                SalesQuotationStatus @default(DRAFT)
+  expiresAt             DateTime
+  termsSnapshot         Json?
+  priceSnapshot         Json?
+  paymentPlanSnapshot   Json?
+  customerSnapshot      Json?
+  unitSnapshot          Json?
+  snapshotChecksum      String?              @db.VarChar(128)
+  previewChecksum       String?              @db.VarChar(128)
+  renderedDocumentKey   String?              @db.VarChar(512)
+  renderedDocumentChecksum String?           @db.VarChar(128)
+  createdById           String
+  reviewedById          String?
+  approvedToSendById    String?
+  reviewedAt            DateTime?
+  approvedToSendAt      DateTime?
+  sentAt                DateTime?
+  viewedAt              DateTime?
+  withdrawnAt           DateTime?
+  supersedesId          String?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  tenant                Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lead                  Lead                 @relation(fields: [leadId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  customer              Customer             @relation(fields: [customerId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  project               Project              @relation(fields: [projectId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  unit                  Unit                 @relation(fields: [unitId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  sourcePriceRevision   UnitPriceRevision    @relation(fields: [sourcePriceRevisionId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  paymentPlan           PaymentPlan          @relation(fields: [paymentPlanId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  createdBy             User                 @relation("QuotationCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  reviewedBy            User?                @relation("QuotationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  approvedToSendBy      User?                @relation("QuotationApprover", fields: [approvedToSendById], references: [id], onDelete: SetNull)
+  supersedes            SalesQuotation?      @relation("QuotationRevision", fields: [supersedesId], references: [id], onDelete: SetNull)
+  revisions             SalesQuotation[]     @relation("QuotationRevision")
+  approvalTokens        QuotationApprovalToken[]
+  customerDecisions     CustomerDecision[]
+  deliveries            QuotationDelivery[]
+
+  @@unique([tenantId, quotationNumber, revision])
+  @@index([tenantId, status, expiresAt])
+  @@index([tenantId, leadId, createdAt])
+  @@index([tenantId, customerId, createdAt])
+  @@index([tenantId, unitId, status])
+}
+
+model QuotationApprovalToken {
+  id          String         @id @default(uuid())
+  tenantId    String
+  quotationId String
+  tokenHash   String         @unique @db.VarChar(128)
+  purpose     String         @db.VarChar(64)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  revokedAt   DateTime?
+  attempts    Int            @default(0)
+  createdAt   DateTime       @default(now())
+  quotation   SalesQuotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  decisions   CustomerDecision[]
+
+  @@index([tenantId, quotationId, expiresAt])
+}
+
+model CustomerDecision {
+  id               String               @id @default(uuid())
+  tenantId         String
+  quotationId      String
+  approvalTokenId  String?
+  decision         CustomerDecisionType
+  comment          String?              @db.Text
+  identityEvidence Json?
+  clientMetadata   Json?
+  evidenceChecksum String?              @db.VarChar(128)
+  actorId          String?
+  createdAt        DateTime             @default(now())
+  quotation        SalesQuotation       @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  approvalToken    QuotationApprovalToken? @relation(fields: [approvalTokenId], references: [id], onDelete: SetNull)
+  tenant           Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  actor            User?                @relation("QuotationDecisionActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, quotationId, createdAt])
+}
+
+model QuotationDelivery {
+  id                String                   @id @default(uuid())
+  tenantId          String
+  quotationId       String
+  channel           NotificationChannel
+  status            QuotationDeliveryStatus @default(QUEUED)
+  recipientMasked   String                   @db.VarChar(320)
+  providerMessageId String?                  @db.VarChar(320)
+  dispatchedAt      DateTime?
+  deliveredAt       DateTime?
+  failedAt          DateTime?
+  lastError         String?                  @db.Text
+  createdAt         DateTime                 @default(now())
+  quotation         SalesQuotation           @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  tenant            Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, quotationId, status, createdAt])
 }
 
 model PaymentPlanInstallment {

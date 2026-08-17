@@ -3,7 +3,10 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-RUN useradd --create-home --uid 10001 r4c
+RUN apt-get update \
+    && apt-get upgrade --yes \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --uid 10001 r4c
 WORKDIR /app
 
 COPY pyproject.toml ./

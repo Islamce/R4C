@@ -49,11 +49,44 @@ export interface UnitContext {
 export interface UnitHold { id: string; unitId: string; leadId: string; status: string; holdExpiresAt: string }
 export interface Reservation { id: string; status: string; currency: string; basePriceSnapshotMinor: string; listPriceSnapshotMinor: string; reservationAmountMinor: string; sourcePriceRevisionId: string; paymentPlanId: string; confirmedAt: string }
 
+export interface CommercialOverview {
+  generatedAt: string;
+  tenantId: string;
+  scope: { projectId: string | null; projects: number };
+  provenance: { inventory: "GOVERNED_LIVE"; pipeline: "GOVERNED_LIVE" | "PARTIAL"; closing: "NOT_MODELED" | "PARTIAL"; transfer: "NOT_MODELED" };
+  inventory: Record<string, number>;
+  pipeline: { visible: boolean; total: number | null; byStatus: Record<string, number> | null };
+  commercialValue: { currency: string | null; confirmedReservationsMinor: string | null; status: "DERIVED" | "NOT_EVALUABLE" | "UNAVAILABLE" };
+  closing: { status: "PARTIAL" | "NOT_MODELED"; activePackages: number | null; readyPackages: number | null; blockedRequirements: number | null };
+  projects: Array<{ id: string; code: string; name: string; status: string; units: { total: number; available: number; held: number; reserved: number; sold: number }; leads: number | null; activeHolds: number; confirmedReservations: number }>;
+}
+
+export type CommercialException = {
+  id: string;
+  tenantId: string;
+  type: "STALE_LEAD" | "EXPIRING_HOLD";
+  severity: "INFO" | "WARNING" | "CRITICAL";
+  object: { projectId?: string; unitId?: string; leadId?: string; holdId?: string };
+  ownerId?: string;
+  title: string;
+  reason: string;
+  occurredAt: string;
+  dueAt?: string;
+  ageDays?: number;
+  exposure?: { amount: string; currency: string };
+  nextAction?: { code: string; label: string; route: string };
+  evidence: Array<{ sourceType: string; sourceId: string }>;
+};
+
+export interface CommercialExceptionPage { generatedAt: string; tenantId: string; items: CommercialException[]; limit: number }
+
 function commercialPath(path: string) {
   return `/api/backend/commercial/${path}`;
 }
 
 export const commercialApi = {
+  overview: (projectId?: string) => clientApi<CommercialOverview>(commercialPath(`overview${projectId ? `?projectId=${encodeURIComponent(projectId)}` : ""}`)),
+  exceptions: (params?: { projectId?: string; limit?: number }) => clientApi<CommercialExceptionPage>(commercialPath(`exceptions?${new URLSearchParams({ ...(params?.projectId ? { projectId: params.projectId } : {}), limit: String(params?.limit ?? 50) }).toString()}`)),
   leads: (all: boolean) => clientApi<LeadPage>(commercialPath(all ? "leads/all?pageSize=100" : "leads?pageSize=100")),
   lead: (id: string, all: boolean) => clientApi<CommercialLead>(commercialPath(all ? `leads/all/${id}` : `leads/${id}`)),
   createCustomer: (body: Record<string, unknown>) => clientApi<{ customer: CommercialLead["customer"]; reused: boolean }>(commercialPath("customers"), json("POST", body)),

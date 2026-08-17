@@ -1,5 +1,5 @@
-import { Type } from "class-transformer";
 import { DevelopmentPhaseStatus, LeadStatus, SalesActivityType, TranslationLocale, UnitStatus } from "@prisma/client";
+import { Type } from "class-transformer";
 import {
   ArrayMinSize,
   IsArray,
@@ -19,6 +19,33 @@ import {
   Min,
   ValidateNested,
 } from "class-validator";
+
+export class CommercialOverviewQueryDto {
+  @IsOptional()
+  @IsUUID()
+  projectId?: string;
+}
+
+export class CommercialExceptionsQueryDto {
+  @IsOptional()
+  @IsUUID()
+  projectId?: string;
+
+  @IsOptional()
+  @IsIn(["STALE_LEAD", "EXPIRING_HOLD"])
+  type?: "STALE_LEAD" | "EXPIRING_HOLD";
+
+  @IsOptional()
+  @IsIn(["INFO", "WARNING", "CRITICAL"])
+  severity?: "INFO" | "WARNING" | "CRITICAL";
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit: number = 50;
+}
 
 export class ProjectQueryDto {
   @IsUUID()

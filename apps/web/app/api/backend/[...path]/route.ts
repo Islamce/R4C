@@ -7,7 +7,9 @@ import {
 } from "../../../../lib/server-session";
 
 const readPaths = [
+  /^commercial\/(?:overview|exceptions)(?:\/[^/]+)?$/,
   /^commercial\/(?:phases|buildings|floors|unit-types|units)(?:\/[^/]+)?$/,
+
   /^commercial\/units\/[^/]+\/prices$/,
   /^commercial\/projects\/[^/]+\/payment-plans$/,
   /^commercial\/leads(?:\/all)?(?:\/[^/]+)?$/,
@@ -16,6 +18,7 @@ const readPaths = [
   /^bim-models\/[^/]+\/(?:viewer-manifest|visual-state|4d-state|5d-state|material-state|quality-state|safety-state|turnover-state)$/,
   /^bim-models\/[^/]+\/elements\/global\/[^/]+$/,
   /^projects\/[^/]+\/wbs$/,
+  /^quotations(?:\/[^/]+)?(?:\/preview-document)?$/,
 ];
 
 const writePaths = [
@@ -25,6 +28,8 @@ const writePaths = [
   /^commercial\/holds\/[^/]+\/(?:cancel|confirm)$/,
   /^bim-models\/[^/]+\/wbs-links$/,
   /^wbs\/[^/]+\/progress$/,
+  /^quotations$/,
+  /^quotations\/[^/]+(?:\/(?:submit|return|approve-to-send|withdraw|revision|synthetic-preview-link))?$/,
 ];
 
 function permitted(path: string, method: string) {

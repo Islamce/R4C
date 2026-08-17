@@ -16,6 +16,8 @@
     "test:seed": "node --test test/seed-e2e.mjs",
     "test:rate-limit": "node --test test/rate-limit-e2e.mjs",
     "test:auth-session": "node --test test/auth-session-e2e.mjs",
+    "test:wbs-import": "pnpm build && node --test test/wbs-import-service.test.mjs",
+    "test:quotations": "pnpm build && node --test test/quotation-service.test.mjs",
     "seed": "tsx prisma/seed.ts",
     "seed:uat": "tsx prisma/seed-uat.ts",
     "prisma:generate": "prisma generate",

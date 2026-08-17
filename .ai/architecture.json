@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "51e55c176e199fb780587ba15ba9746f1ac28e9426958553e923d5a0660347e4",
+    "bodyDigest": "bd434ca8c2c40715ffa22ec4db2ad5b9eace0698c7f8cc391cd137f8df4f4715",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "c32f3819ec2d3b55434f02f53918f86032e8dd287887658cdcf42904c3b6da05",
+    "inputDigest": "d244d01836a1fa2967237c1617e37241a0d148bb93633287741544396243261a",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -84,13 +84,13 @@
   "modules": [
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 95 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 103 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
       "dependsOn": [],
       "discovery": {
-        "codeFileCount": 95,
+        "codeFileCount": 103,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -100,7 +100,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 99
+        "sourceFileCount": 107
       },
       "id": "r4c-api",
       "ownedEntities": [
@@ -248,13 +248,13 @@
     },
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 2 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 9 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
       "dependsOn": [],
       "discovery": {
-        "codeFileCount": 2,
+        "codeFileCount": 9,
         "discovered": true,
         "entryPoints": [
           "scripts/generate-production-env.sh",
@@ -262,11 +262,12 @@
         ],
         "languages": [
           "json",
+          "python",
           "shell"
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 3
+        "sourceFileCount": 10
       },
       "id": "r4c-scripts",
       "ownedEntities": [],
@@ -280,7 +281,7 @@
     },
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 60 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 73 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
@@ -288,7 +289,7 @@
         "r4c-contracts"
       ],
       "discovery": {
-        "codeFileCount": 60,
+        "codeFileCount": 73,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -298,7 +299,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 63
+        "sourceFileCount": 76
       },
       "id": "r4c-web",
       "ownedEntities": [],
