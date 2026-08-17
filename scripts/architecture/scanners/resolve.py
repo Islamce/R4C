@@ -305,9 +305,12 @@ class Resolver:
         if path is None:
             return None
         try:
-            return rel(path, self.root)
+            relative = rel(path, self.root)
         except ValueError:
             return None  # outside the repository
+        if any(part in EXCLUDED_DIR_NAMES for part in Path(relative).parts):
+            return None  # generated output or dependency, not repository source
+        return relative
 
 
 def _entry_point_candidates(package: dict) -> list[str]:
