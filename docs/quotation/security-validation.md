@@ -1,6 +1,8 @@
 # R4C Quotation Security Validation
 
-**Scope:** source-level and local focused validation for the buyer sales-quotation MVP. This document records implemented controls and local evidence only. It is not authenticated production UAT, a penetration test, migration evidence, or deployment approval.
+**Candidate SHA:** `b8b38d12ef8c1e7ea1db192670d8da411f10e738`
+
+**Scope:** source-level and local focused validation for the buyer sales-quotation MVP. This document records implemented controls and local evidence only. It is not authenticated production UAT, a penetration test, or deployment approval.
 
 ## Server-enforced safeguards
 
@@ -11,7 +13,7 @@
 | Public token opacity | The token is generated as 48 random bytes, stored hash-only, and resolved only by hash. Public failure paths use the generic `Quotation link is unavailable` error. | Modified/malformed-token regression passes. | Rate-limit runtime verification requires a deployed non-production environment. |
 | Token expiry/revocation/consumption | Resolution rejects expired, revoked, consumed, wrong-purpose, or unknown tokens. A new synthetic preview link revokes existing active links. | Expired-token and malformed-token regressions pass. | Database/UAT evidence pending. |
 | Terminal-state rejection | A quotation outside the customer-visible states cannot receive a decision. Already accepted/declined and superseded status therefore reject the decision before a token claim. | Already-decided and superseded-quotation regressions pass. | Database/UAT evidence pending. |
-| Concurrent decision safety | The public decision transaction atomically claims the token with `updateMany` constrained by token ID, unconsumed/unrevoked state, and expiry. A claim count other than one returns the generic error and creates no decision. | Optimistic token-claim-loss regression passes. | A real concurrent PostgreSQL race rehearsal is pending. |
+| Concurrent decision safety | The public decision transaction atomically claims the token with `updateMany` constrained by token ID, unconsumed/unrevoked state, and expiry. A claim count other than one returns the generic error and creates no decision. | Optimistic token-claim-loss regression passes. | A real concurrent PostgreSQL race rehearsal remains pending. |
 | Clarification data quality | `CLARIFICATION_REQUESTED` without a comment is rejected by `recordCustomerDecision` before the token is consumed. | Service regression and buyer UX required-field audit pass. | Authenticated UAT pending. |
 | No commercial side effect | Customer acceptance records decision evidence and terminal quotation status only; it does not create a unit hold, reservation, sale, invoice, or payment obligation. | Acceptance regression confirms zero hold/reservation calls and source assertion passes. | Process policy and downstream workflow remain separate. |
 | Document truthfulness | The preview endpoint returns `SYNTHETIC_HTML_DOCUMENT_PREVIEW`, and staff/buyer UI labels it a controlled HTML document preview. | Browser audit covers staff and buyer preview dialogs. | No generated/stored/downloadable PDF exists; see `document-control-gap.md`. |
@@ -20,6 +22,10 @@
 
 On the feature branch, `pnpm --filter @r4c/api test:quotations` completed successfully with **10 passing tests** and no failures. The suite includes acceptance recording, expiry rejection, terminal quotation rejection, superseded quotation rejection, optimistic token-claim loss, malformed-token generic failure, clarification-comment enforcement, no-hold/no-reservation source separation, tenant-scoped staff lookup, and controller permission/rate-limit assertions.
 
+## Additional Exact-SHA Qualification
+
+The candidate’s seven source migrations, including the buyer quotation migration, were applied to an isolated local PostgreSQL rehearsal database and Prisma reported the schema up to date. The seed/API end-to-end suite then passed against that same disposable runtime, including the explicit persisted `commercial:quotation:read-all` check for `SALES_MANAGER`. This proves the migration and seed compatibility in a disposable local environment only; it does not establish Neon schema state or deployed role assignment.
+
 ## Explicit limitations
 
-The controls above have not been authenticated against a deployed tenant, a real database migration, a provider-hosted rate limiter, or a production environment. No customer identity verification, legal signature, real dispatch provider, payment, reservation, or document-file archival is implemented or inferred by this validation. Any production release remains gated on migration rehearsal, exact deployed SHA evidence, provider/runtime checks, synthetic UAT, pull-request qualification, and explicit Founder G9 authorization.
+The controls above have not been authenticated against a deployed tenant, a provider-hosted rate limiter, or a production environment. No customer identity verification, legal signature, real dispatch provider, payment, reservation, or document-file archival is implemented or inferred by this validation. Any production release remains gated on exact deployed SHA evidence, provider/runtime checks, authenticated non-production UAT, pull-request qualification, and explicit Founder G9 authorization.
