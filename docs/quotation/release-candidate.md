@@ -1,6 +1,7 @@
 # Buyer Sales Quotation MVP — Release Candidate Record
 
-**Release candidate:** `b8b38d12ef8c1e7ea1db192670d8da411f10e738`  
+**Release candidate:** `c219a46c7a9c875a9600dd12b9795970014fbf0e`
+
 **Review branch:** `feat/commercial-command-center-hardening`  
 **Pull request:** [#74](https://github.com/Islamce/R4C/pull/74)  
 **Release state:** **READY FOR FOUNDER REVIEW — AWAITING G9 AUTHORIZATION**
@@ -44,7 +45,7 @@ PR #74’s prior checks ran against an earlier head SHA (`888004fe17ca92acbaec73
 
 The prior KAAF context check reported generated `.ai` artifacts as stale. They were regenerated and checked. The prior supply-chain job reported high-severity SheetJS `xlsx` vulnerabilities. The browser WBS flow now uses Papa Parse for CSV, `read-excel-file/browser` for XLSX input, and a committed static XLSX template; the production audit is now clean.
 
-> CI must be re-run on this exact candidate SHA after the branch is published. Earlier failing checks cannot qualify or disqualify an unpublished candidate SHA.
+> PR #74 was re-run on this exact candidate SHA after the remediation commits. It completed with **12 successful checks**, no failures or pending checks, and one intentionally skipped announce check. The resolved checks include KAAF generated-context verification, seed verification, supply-chain verification, CI validation, auth-session verification, commercial workspace regressions, and the Phase 7 deployment verification workflow.
 
 ## Deployment Gate
 

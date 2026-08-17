@@ -1,7 +1,8 @@
 # Buyer Sales Quotation MVP — Non-Production UAT Report
 
 **Prepared by:** Manus AI  
-**Candidate SHA:** `b8b38d12ef8c1e7ea1db192670d8da411f10e738`  
+**Candidate SHA:** `c219a46c7a9c875a9600dd12b9795970014fbf0e`
+
 **Branch:** `feat/commercial-command-center-hardening`  
 **Assessment date:** 2026-08-17 UTC  
 **Assessment status:** **PASS FOR REVIEW ONLY — NOT A PRODUCTION DEPLOYMENT AUTHORIZATION**

@@ -1,6 +1,7 @@
 # Buyer Sales Quotation MVP — Shared-Hosting Compatibility Record
 
-**Candidate SHA:** `b8b38d12ef8c1e7ea1db192670d8da411f10e738`  
+**Candidate SHA:** `c219a46c7a9c875a9600dd12b9795970014fbf0e`
+
 **Target topology:** Hostinger managed Node.js web/API services, Neon PostgreSQL, Upstash Redis, Cloudflare R2  
 **Assessment status:** **LOCAL COMPATIBILITY QUALIFIED; PROVIDER BOUNDARIES UNVERIFIED**
 
