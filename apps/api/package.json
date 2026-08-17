@@ -27,22 +27,22 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.850.0",
-    "@aws-sdk/s3-request-presigner": "^3.850.0",
-    "@nestjs/common": "^11.1.0",
+    "@aws-sdk/client-s3": "^3.1110.0",
+    "@aws-sdk/s3-request-presigner": "^3.1110.0",
+    "@nestjs/common": "^11.1.29",
     "@nestjs/config": "^4.0.2",
-    "@nestjs/core": "^11.1.0",
+    "@nestjs/core": "^11.1.29",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^11.1.0",
+    "@nestjs/platform-express": "^11.1.29",
     "@nestjs/throttler": "^6.5.0",
-    "@prisma/adapter-pg": "6.19.3",
-    "@prisma/client": "^6.12.0",
-    "bullmq": "^5.56.0",
+    "@prisma/adapter-pg": "7.9.1",
+    "@prisma/client": "^7.9.1",
+    "bullmq": "^6.1.0",
     "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.2",
+    "class-validator": "^0.15.1",
     "hash-wasm": "4.12.0",
-    "ioredis": "^5.6.1",
+    "ioredis": "^6.0.0",
     "nodemailer": "^9.0.5",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -51,11 +51,11 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
-    "@types/node": "^22.15.0",
+    "@types/node": "^26.2.0",
     "@types/nodemailer": "^8.0.1",
     "@types/passport-jwt": "^4.0.1",
-    "prisma": "^6.12.0",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.0"
+    "prisma": "^7.9.1",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
   }
 }
