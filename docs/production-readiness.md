@@ -1,5 +1,28 @@
 # Production readiness and release controls
 
+## Release candidate freeze
+
+- Status: `RC FREEZE ACTIVE`
+- RC SHA: `06c405de56d4d6bc2cfe2788393cf40f3462614c`
+- Frozen: 2026-08-10 00:15 Asia/Riyadh
+- Post-merge evidence: all 12 required branch-protection checks passed on the RC SHA.
+- Local evidence: Windows verification and the complete repository-owned synthetic IFC to
+  BIM worker, semantics, GLB, storage, and authenticated viewer journey passed.
+- Governance: `main` requires an up-to-date pull request, one independent approval,
+  resolved conversations, and all required checks; administrator enforcement is active
+  and force pushes and branch deletion are disabled.
+- Deferred from v1: PRs #18, #20, #31, #37, and broad JavaScript/framework dependency work.
+- Deployment status: not deployed. No authenticated/reachable Hostinger VPS, production
+  environment file, real domain configuration, or Cloudflare zone token was available
+  from the execution environment.
+- Hosted Alomran UAT: blocked until deployment.
+- PostgreSQL and MinIO restore rehearsal: blocked until deployment; use only the isolated
+  restore targets documented in `docs/deploy-hostinger-vps.md`.
+
+No feature, cleanup, dependency-modernization, architecture, or UI work may enter this
+release. A launch-blocking change requires a focused branch, independent approval, all
+required checks, and a new recorded RC SHA after merge.
+
 Phase 11 turned the compile-only gate into an executable release rehearsal. Phase 12 extended it through the authenticated HTTP boundary and real PostgreSQL, Redis, and S3-compatible services. Phase 13 adds a blocking software-supply-chain security gate.
 
 ## CI release gate

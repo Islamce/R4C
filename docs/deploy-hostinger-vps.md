@@ -482,16 +482,42 @@ Test that the file is non-empty:
 ls -lh /opt/r4c/backups/postgres-*.dump
 ```
 
-### PostgreSQL restore into an empty database
+### PostgreSQL restore rehearsal into an isolated database
 
-Perform restores during a maintenance window and test them on a separate server first:
+Never restore a rehearsal dump over the active UAT or production database. Create a
+controlled empty database in the same PostgreSQL container, restore into it, validate
+critical records, retain the evidence, and remove only that explicitly named test
+database when the rehearsal is complete:
 
 ```bash
-cat /opt/r4c/backups/postgres-YYYYMMDDTHHMMSSZ.dump | \
-  $COMPOSE exec -T postgres pg_restore \
-    --clean --if-exists --no-owner \
-    -U "$POSTGRES_USER" \
-    -d "$POSTGRES_DB"
+dump=/opt/r4c/backups/postgres-YYYYMMDDTHHMMSSZ.dump
+test -s "$dump"
+sha256sum --check "$dump.sha256"
+
+restore_stamp=$(date -u +%Y%m%dT%H%M%SZ)
+restore_db="r4c_restore_${restore_stamp}"
+[[ "$restore_db" =~ ^r4c_restore_[0-9]{8}T[0-9]{6}Z$ ]] || { echo "Unsafe restore database name" >&2; exit 1; }
+
+$COMPOSE exec -T postgres createdb -U "$POSTGRES_USER" "$restore_db"
+cat "$dump" | $COMPOSE exec -T postgres pg_restore \
+  --no-owner --exit-on-error \
+  -U "$POSTGRES_USER" \
+  -d "$restore_db"
+
+for table in Tenant User Role Project WbsProgressUpdate ProjectBudget BimModel BimGeometryArtifact; do
+  count=$($COMPOSE exec -T postgres psql -U "$POSTGRES_USER" -d "$restore_db" -Atc \
+    "SELECT count(*) FROM \"$table\";")
+  printf 'RESTORE_TABLE table=%s rows=%s\n' "$table" "$count"
+done
+
+$COMPOSE exec -T postgres pg_restore --list < "$dump" | head
+```
+
+After the evidence is retained and the exact target is rechecked:
+
+```bash
+[[ "$restore_db" =~ ^r4c_restore_[0-9]{8}T[0-9]{6}Z$ ]] || { echo "Unsafe restore database name" >&2; exit 1; }
+$COMPOSE exec -T postgres dropdb -U "$POSTGRES_USER" "$restore_db"
 ```
 
 ### MinIO bucket backup
@@ -521,20 +547,48 @@ sha256sum "/opt/r4c/backups/minio-$stamp.tar.gz" \
   > "/opt/r4c/backups/minio-$stamp.tar.gz.sha256"
 ```
 
-### MinIO restore
+### MinIO restore rehearsal into an isolated bucket
+
+Extract the backup into a controlled directory and restore it to a new bucket. Never
+mirror a rehearsal directly into the active application bucket:
 
 ```bash
-restore_dir=/opt/r4c/backups/minio-RESTORE_DIRECTORY
+archive=/opt/r4c/backups/minio-YYYYMMDDTHHMMSSZ.tar.gz
+sha256sum --check "$archive.sha256"
+restore_stamp=$(date -u +%Y%m%dT%H%M%SZ)
+restore_dir="/opt/r4c/backups/minio-restore-$restore_stamp"
+restore_bucket="${S3_BUCKET}-restore-$restore_stamp"
+mkdir -p "$restore_dir"
+tar -xzf "$archive" -C "$restore_dir" --strip-components=1
 
 docker run --rm \
   --network r4c_backend \
   -e MINIO_ROOT_USER \
   -e MINIO_ROOT_PASSWORD \
-  -e S3_BUCKET \
+  -e RESTORE_BUCKET="$restore_bucket" \
   -v "$restore_dir:/restore:ro" \
   --entrypoint /bin/sh \
   minio/mc:RELEASE.2025-07-21T05-28-08Z \
-  -ec 'mc alias set r4c http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; mc mirror --overwrite /restore "r4c/$S3_BUCKET"'
+  -ec 'mc alias set r4c http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; mc mb --ignore-existing "r4c/$RESTORE_BUCKET"; mc anonymous set none "r4c/$RESTORE_BUCKET"; mc mirror --overwrite /restore "r4c/$RESTORE_BUCKET"; mc ls --recursive --summarize "r4c/$RESTORE_BUCKET"; first=$(mc find "r4c/$RESTORE_BUCKET" --type f --print | head -n 1); test -n "$first"; mc stat "$first"'
+```
+
+Compare the reported object count and bytes with the backup source. For BIM evidence,
+download one restored `.glb` object and verify its first four bytes are `glTF`. Remove
+the isolated bucket and extracted directory only after evidence is retained and the exact
+`*-restore-*` targets have been checked.
+
+```bash
+case "$restore_bucket" in "$S3_BUCKET"-restore-*) ;; *) echo "Unsafe restore bucket name" >&2; exit 1;; esac
+docker run --rm \
+  --network r4c_backend \
+  -e MINIO_ROOT_USER \
+  -e MINIO_ROOT_PASSWORD \
+  -e RESTORE_BUCKET="$restore_bucket" \
+  --entrypoint /bin/sh \
+  minio/mc:RELEASE.2025-07-21T05-28-08Z \
+  -ec 'mc alias set r4c http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; mc rb --force "r4c/$RESTORE_BUCKET"'
+case "$restore_dir" in /opt/r4c/backups/minio-restore-*) ;; *) echo "Unsafe restore directory" >&2; exit 1;; esac
+rm -rf -- "$restore_dir"
 ```
 
 Copy backups off the VPS after every backup. Hostinger VPS snapshots are useful, but they are not a replacement for independently stored PostgreSQL and MinIO backups.

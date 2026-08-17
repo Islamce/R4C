@@ -424,3 +424,27 @@ PR #33 (`feat/local-development-runtime`) added personal-computer bootstrap scri
 - Fix: ignore only `EXE002` for this bind-mount lint pass, while retaining all other Ruff rules; rely on canonical GitHub CI for the unmodified Linux mode-bit check.
 - Validation: require the remaining Ruff rules and the complete worker pytest suite to pass locally, then require the pull-request CI BIM-worker job to pass without an ignore.
 - Recurrence prevention: use a canonical Git archive or CI checkout when validating Unix executable bits from Windows.
+
+### Failure 22 — Hostinger VPS access is unavailable from the RC execution environment
+
+- Date/time: 2026-08-10 00:18 Asia/Riyadh.
+- Environment: Windows 11 release execution workstation; RC SHA `06c405de56d4d6bc2cfe2788393cf40f3462614c`.
+- Command/workflow: read-only Hostinger VPS readiness probe using the two exact endpoints already present in the workstation SSH known-hosts file, port `65002`, user `deploy`, and the two available public-key identities.
+- Exact error: every connection timed out before SSH authentication.
+- Earliest causal failure: no reachable, identified R4C VPS endpoint or authenticated Hostinger console session is available; no production environment file, real domain values, or Cloudflare token is present locally.
+- Classification: External-access blocker.
+- Fix: the owner must provide a reachable R4C VPS hostname/IP and SSH port, authorize the existing public key for a non-root deployment account with Docker and required sudo access, and provide the real domain/DNS configuration through a secure channel.
+- Validation: run the read-only host audit, identify any existing deployment and SHA, then execute the controlled runbook from the frozen RC.
+- Recurrence prevention: maintain a named SSH host entry for the R4C deployment target and a private operator inventory outside source control.
+
+### Failure 23 — recovery examples targeted active PostgreSQL and MinIO data
+
+- Date/time: 2026-08-10 00:22 Asia/Riyadh.
+- Environment: RC deployment runbook review at `06c405de56d4d6bc2cfe2788393cf40f3462614c`.
+- Command/workflow: pre-deployment backup/restore rehearsal audit.
+- Exact error: the PostgreSQL example restored into `$POSTGRES_DB`, and the MinIO example mirrored into `$S3_BUCKET`; both are active application targets.
+- Earliest causal failure: the day-two examples described operational restores but did not provide the mandatory isolated rehearsal targets required before production GO.
+- Classification: Documentation defect.
+- Fix: restore PostgreSQL into an explicitly named `r4c_restore_*` database and MinIO into an explicitly named `*-restore-*` bucket, validate critical records and object readability, and delete only the verified rehearsal targets after evidence retention.
+- Validation: require command review and the Phase 7 documentation-triggered production deployment check, then execute the rehearsal on the actual VPS without overwriting active UAT data.
+- Recurrence prevention: recovery documentation must distinguish destructive incident restoration from non-destructive acceptance rehearsals.
