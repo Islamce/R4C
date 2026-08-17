@@ -43,6 +43,7 @@ const COMMERCIAL_ROLE_DEFINITIONS = [
     ],
   },
 ] as const;
+const CONFIGURED_COMMERCIAL_PERMISSION_CODES = COMMERCIAL_ROLE_DEFINITIONS.flatMap(({ permissions }) => permissions);
 const PERMISSION_LITERAL = /(["'`])([a-z][a-z0-9-]*(?::[a-z][a-z0-9-]*)+)\1/g;
 const REQUIRE_PERMISSIONS = /@RequirePermissions\s*\(([\s\S]*?)\)/g;
 
@@ -140,11 +141,12 @@ async function main() {
 
   const sourceRoot = path.resolve(process.cwd(), "src");
   const derived = await derivePermissionCodes(sourceRoot);
-  const viewerPermissionCodes = derived.codes.filter(isReadOnlyPermission);
+  const permissionCodes = [...new Set([...derived.codes, ...CONFIGURED_COMMERCIAL_PERMISSION_CODES])].sort();
+  const viewerPermissionCodes = permissionCodes.filter(isReadOnlyPermission);
 
   const existingTenant = await prisma.tenant.findUnique({ where: { code: tenantCode } });
   const existingPermissions = await prisma.permission.findMany({
-    where: { code: { in: derived.codes } },
+    where: { code: { in: permissionCodes } },
   });
   const existingPermissionByCode = new Map(
     existingPermissions.map((permission) => [permission.code, permission]),
@@ -165,7 +167,7 @@ async function main() {
     });
 
     const permissions = [];
-    for (const code of derived.codes) {
+    for (const code of permissionCodes) {
       permissions.push(
         await tx.permission.upsert({
           where: { code },
@@ -176,7 +178,7 @@ async function main() {
     }
 
     const roleDefinitions = [
-      { code: "ADMIN", name: "Administrator", permissions: derived.codes },
+      { code: "ADMIN", name: "Administrator", permissions: permissionCodes },
       { code: "VIEWER", name: "Viewer", permissions: viewerPermissionCodes },
       { ...COMMERCIAL_ROLE_DEFINITIONS[0] },
       {
@@ -207,7 +209,7 @@ async function main() {
       seededRoles.set(definition.code, role);
       const permissionIds = definition.permissions.map((code) => {
         const id = permissionIdByCode.get(code);
-        if (!id) throw new Error(`Derived permission ${code} was not persisted`);
+        if (!id) throw new Error(`Configured permission ${code} was not persisted`);
         return id;
       });
       const existingLinks = await tx.rolePermission.findMany({ where: { roleId: role.id } });
@@ -264,7 +266,7 @@ async function main() {
     };
   });
 
-  const permissionUpdates = derived.codes.filter((code) => {
+  const permissionUpdates = permissionCodes.filter((code) => {
     const existing = existingPermissionByCode.get(code);
     return existing !== undefined && existing.name !== permissionName(code);
   }).length;
@@ -280,7 +282,7 @@ async function main() {
   const summary: SeedChangeSummary = {
     created: {
       tenants: existingTenant ? 0 : 1,
-      permissions: derived.codes.length - existingPermissions.length,
+      permissions: permissionCodes.length - existingPermissions.length,
       roles: ["ADMIN", "VIEWER", "SALES_AGENT", "SALES_MANAGER"].filter(
         (code) => !result.existingRoleByCode.has(code),
       ).length,
@@ -312,8 +314,8 @@ async function main() {
       rolePermissionLinks: result.removedRolePermissionLinks,
     },
     totals: {
-      permissions: derived.codes.length,
-      adminPermissions: derived.codes.length,
+      permissions: permissionCodes.length,
+      adminPermissions: permissionCodes.length,
       viewerPermissions: viewerPermissionCodes.length,
       tenants: 1,
       roles: 4,

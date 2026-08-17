@@ -1,26 +1,33 @@
 {
   "_meta": {
     "artifact": "modules/r4c-scripts.json",
-    "bodyDigest": "2e7328612efbfa56eacd650585f229510a13fc3c69127e41eb67e1eb1b41ec27",
+    "bodyDigest": "622870e483d03f60e68382a7429dc27d30d731891afdcf3aabf7e1dd27f44bc8",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "c32f3819ec2d3b55434f02f53918f86032e8dd287887658cdcf42904c3b6da05",
+    "inputDigest": "de87ceb135f1a32a6bb4f38a44ecef47188bc22baa3e6c16f5facfb9de907a26",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 2 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 9 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
   "dependedOnBy": [],
   "dependsOn": [],
   "discovery": {
     "codeFiles": [
+      "scripts/audit-quotation-interactions.py",
+      "scripts/audit-quotation-responsive.py",
+      "scripts/capture-commercial-qa.py",
+      "scripts/capture-quotation-qa.py",
+      "scripts/debug-commercial-arabic-hydration.py",
       "scripts/generate-production-env.sh",
-      "scripts/local-setup.sh"
+      "scripts/local-setup.sh",
+      "scripts/validate-commercial-arabic-qa.py",
+      "scripts/validate-commercial-qa.py"
     ],
     "discovered": true,
     "entryPoints": [
@@ -29,14 +36,22 @@
     ],
     "languages": [
       "json",
+      "python",
       "shell"
     ],
     "parseErrors": [],
     "publicSymbols": [],
     "sourceFiles": [
+      "scripts/audit-quotation-interactions.py",
+      "scripts/audit-quotation-responsive.py",
+      "scripts/capture-commercial-qa.py",
+      "scripts/capture-quotation-qa.py",
+      "scripts/debug-commercial-arabic-hydration.py",
       "scripts/generate-production-env.sh",
       "scripts/kaaf.module.json",
-      "scripts/local-setup.sh"
+      "scripts/local-setup.sh",
+      "scripts/validate-commercial-arabic-qa.py",
+      "scripts/validate-commercial-qa.py"
     ]
   },
   "driftFindings": [],

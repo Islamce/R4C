@@ -152,6 +152,7 @@ test(
     assert.ok(!rolePermissions.get("SALES_AGENT")?.includes("commercial:reservation:confirm"));
     assert.ok(!rolePermissions.get("SALES_AGENT")?.includes("commercial:payment-plan:manage"));
     assert.ok(rolePermissions.get("SALES_MANAGER")?.includes("commercial:reservation:confirm"));
+    assert.ok(rolePermissions.get("SALES_MANAGER")?.includes("commercial:quotation:read-all"));
     console.log(`SEED_FIRST_RUN counts=${JSON.stringify(afterFirst)}`);
 
     const secondRun = runSeed(strongPassword);

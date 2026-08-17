@@ -1,6 +1,7 @@
 "use client";
 
-import * as XLSX from "xlsx";
+import { readSheet } from "read-excel-file/browser";
+import Papa from "papaparse";
 import {
   useEffect,
   useMemo,
@@ -152,27 +153,18 @@ export function WbsImportWizard({
   }
 
   function downloadTemplate(format: TemplateFormat) {
-    const worksheet = XLSX.utils.aoa_to_sheet(TEMPLATE_ROWS.map((row) => [...row]));
-    worksheet["!cols"] = [
-      { wch: 16 },
-      { wch: 34 },
-      { wch: 18 },
-      { wch: 14 },
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 12 },
-    ];
     if (format === "csv") {
       downloadBlob(
         "r4c-wbs-import-template.csv",
         "text/csv;charset=utf-8",
-        `\ufeff${XLSX.utils.sheet_to_csv(worksheet)}`,
+        `\ufeff${TEMPLATE_ROWS.map((row) => row.map(csvCell).join(",")).join("\n")}`,
       );
       return;
     }
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "WBS import");
-    XLSX.writeFile(workbook, "r4c-wbs-import-template.xlsx", { compression: true });
+    const anchor = document.createElement("a");
+    anchor.href = "/templates/r4c-wbs-import-template.xlsx";
+    anchor.download = "r4c-wbs-import-template.xlsx";
+    anchor.click();
   }
 
   async function readFile(event: ChangeEvent<HTMLInputElement>) {
@@ -190,19 +182,17 @@ export function WbsImportWizard({
     }
 
     try {
-      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: false });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = firstSheetName ? workbook.Sheets[firstSheetName] : undefined;
-      if (!worksheet) {
-        setNotice(text("The workbook does not contain a worksheet.", "لا يحتوي المصنف على ورقة عمل."));
-        return;
+      let matrix: unknown[][];
+      if (lowerName.endsWith(".csv")) {
+        const parsed = Papa.parse<string[]>(await file.text(), { skipEmptyLines: "greedy" });
+        if (parsed.errors.length) {
+          setNotice(text("The CSV file could not be read.", "تعذرت قراءة ملف CSV."));
+          return;
+        }
+        matrix = parsed.data;
+      } else {
+        matrix = await readSheet(file);
       }
-      const matrix = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
-        header: 1,
-        defval: "",
-        raw: false,
-        blankrows: false,
-      });
       if (matrix.length < 2) {
         setNotice(text("The file must contain a header row and at least one WBS row.", "يجب أن يحتوي الملف على صف عناوين وصف واحد على الأقل لهيكل العمل."));
         return;
