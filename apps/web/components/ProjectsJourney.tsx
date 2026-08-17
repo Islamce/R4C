@@ -7,6 +7,7 @@ import type { MessageKey } from "../lib/i18n";
 import type { ProjectRecord, ProjectStatus } from "../lib/types";
 import { useI18n } from "./I18nProvider";
 import { EmptyState, ErrorState, LoadingState } from "./StatePrimitives";
+import { WbsImportWizard } from "./WbsImportWizard";
 
 function StatusBadge({ status }: { status: ProjectStatus }) {
   const { t } = useI18n();
@@ -26,6 +27,7 @@ export function ProjectsJourney() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState(false);
+  const [showWbsImport, setShowWbsImport] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -89,13 +91,24 @@ export function ProjectsJourney() {
           <h1>{t("projects.title")}</h1>
           <p>{t("projects.subtitle")}</p>
         </div>
-        <button
-          className="button button-primary"
-          type="button"
-          onClick={() => setShowCreate((current) => !current)}
-        >
-          {t("projects.new")}
-        </button>
+        <div className="project-page-actions">
+          {projects.length ? (
+            <button
+              className="button button-secondary"
+              type="button"
+              onClick={() => setShowWbsImport((current) => !current)}
+            >
+              {locale === "ar" ? "استيراد هيكل العمل" : "Import WBS"}
+            </button>
+          ) : null}
+          <button
+            className="button button-primary"
+            type="button"
+            onClick={() => setShowCreate((current) => !current)}
+          >
+            {t("projects.new")}
+          </button>
+        </div>
       </header>
 
       {showCreate ? (
@@ -142,6 +155,13 @@ export function ProjectsJourney() {
       ) : null}
 
       {created ? <div className="success-banner">{t("projects.createSuccess")}</div> : null}
+      {showWbsImport && projects.length ? (
+        <WbsImportWizard
+          projects={projects}
+          onClose={() => setShowWbsImport(false)}
+          onImported={load}
+        />
+      ) : null}
       {loading ? <LoadingState /> : null}
       {!loading && failed ? <ErrorState onRetry={load} /> : null}
       {!loading && !failed && projects.length === 0 ? (

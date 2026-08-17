@@ -1,7 +1,12 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { AuthContext, CurrentUser } from "../common/auth-context";
 import { RequirePermissions } from "../common/authorization";
-import { CreateProjectDto, CreateWbsNodeDto } from "./projects.dto";
+import {
+  CommitWbsImportDto,
+  CreateProjectDto,
+  CreateWbsNodeDto,
+  PreviewWbsImportDto,
+} from "./projects.dto";
 import { ProjectsService } from "./projects.service";
 
 @Controller("projects")
@@ -37,5 +42,25 @@ export class ProjectsController {
     @Body() body: CreateWbsNodeDto,
   ) {
     return this.projects.createWbsNode(user.tenantId, projectId, user.userId, body);
+  }
+
+  @Post(":projectId/wbs/import/preview")
+  @RequirePermissions("wbs:create")
+  previewWbsImport(
+    @CurrentUser() user: AuthContext,
+    @Param("projectId") projectId: string,
+    @Body() body: PreviewWbsImportDto,
+  ) {
+    return this.projects.previewWbsImport(user.tenantId, projectId, body);
+  }
+
+  @Post(":projectId/wbs/import/commit")
+  @RequirePermissions("wbs:create")
+  commitWbsImport(
+    @CurrentUser() user: AuthContext,
+    @Param("projectId") projectId: string,
+    @Body() body: CommitWbsImportDto,
+  ) {
+    return this.projects.commitWbsImport(user.tenantId, projectId, user.userId, body);
   }
 }
