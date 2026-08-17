@@ -48,7 +48,7 @@ const labels = {
     lead: "Lead ID", plan: "Payment plan ID", expiry: "Validity expiry", terms: "Controlled terms", save: "Save draft", submit: "Submit for review",
     approve: "Approve to send", return: "Return to draft", withdraw: "Withdraw", revise: "Create revision", preview: "Open PDF preview", link: "Generate test link",
     decision: "Decision state", acceptance: "Acceptance is recorded only. It does not create a hold, reservation, sale, invoice, or payment obligation.",
-    status: "Status", amount: "Quoted list price", validity: "Valid until", customer: "Customer", unit: "Unit", project: "Project", action: "Last action", snapshot: "Snapshot evidence", payment: "Payment schedule",
+    status: "Status", amount: "Quoted list price", validity: "Valid until", customer: "Customer", unit: "Unit", project: "Project", action: "Last action", snapshot: "Snapshot evidence", payment: "Payment schedule", refresh: "Refresh quotation register", closePreview: "Close document preview", formHint: "Use canonical IDs from the governed lead and payment-plan records. The server revalidates availability, pricing, and plan scope before a draft is created.",
   },
   ar: {
     eyebrow: "مساحة العمل التجارية المحكومة",
@@ -65,7 +65,7 @@ const labels = {
     lead: "معرّف العميل المحتمل", plan: "معرّف خطة الدفع", expiry: "انتهاء الصلاحية", terms: "الشروط المحكومة", save: "حفظ المسودة", submit: "إرسال للمراجعة",
     approve: "اعتماد للإرسال", return: "إعادة إلى مسودة", withdraw: "سحب", revise: "إنشاء مراجعة", preview: "فتح معاينة PDF", link: "إنشاء رابط اختبار",
     decision: "حالة القرار", acceptance: "يتم تسجيل القبول فقط. لا ينشئ حجزًا أو بيعًا أو فاتورة أو التزام دفع.",
-    status: "الحالة", amount: "سعر القائمة المعروض", validity: "صالح حتى", customer: "العميل", unit: "الوحدة", project: "المشروع", action: "آخر إجراء", snapshot: "دليل اللقطة", payment: "جدول الدفع",
+    status: "الحالة", amount: "سعر القائمة المعروض", validity: "صالح حتى", customer: "العميل", unit: "الوحدة", project: "المشروع", action: "آخر إجراء", snapshot: "دليل اللقطة", payment: "جدول الدفع", refresh: "تحديث سجل عروض الأسعار", closePreview: "إغلاق معاينة المستند", formHint: "استخدم المعرّفات القياسية من سجلات العملاء المحتملين وخطط الدفع المحكومة. يعيد الخادم التحقق من الإتاحة والسعر ونطاق الخطة قبل إنشاء المسودة.",
   },
 } as const;
 
@@ -97,6 +97,13 @@ export function QuotationWorkspace() {
   const [form, setForm] = useState({ leadId: "", paymentPlanId: "", expiresAt: "", terms: "" });
   const [testToken, setTestToken] = useState("");
   const [pdfPreview, setPdfPreview] = useState<SalesQuotation | null>(null);
+
+  useEffect(() => {
+    if (!pdfPreview) return;
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") setPdfPreview(null); };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [pdfPreview]);
 
   const load = useCallback(async () => {
     setBusy(true);
@@ -162,6 +169,7 @@ export function QuotationWorkspace() {
     if (!selected) return;
     if (synthetic) {
       if (action === "link") setTestToken("synthetic-buyer-token-preview");
+      if (action === "preview") setPdfPreview(selected);
       setNotice(copy.synthetic);
       return;
     }
@@ -208,7 +216,7 @@ export function QuotationWorkspace() {
 
       <section className="quotation-layout" aria-label={copy.title}>
         <aside className="quotation-register card-surface">
-          <div className="quotation-section-heading"><div><p>{copy.eyebrow}</p><h2>{copy.list}</h2></div><button type="button" onClick={() => void load()} disabled={busy}>↻</button></div>
+          <div className="quotation-section-heading"><div><p>{copy.eyebrow}</p><h2>{copy.list}</h2></div><button type="button" aria-label={copy.refresh} title={copy.refresh} onClick={() => void load()} disabled={busy}>↻</button></div>
           <div className="quotation-list" aria-busy={busy}>
             {quotations.map((quotation) => (
               <button key={quotation.id} type="button" className={`quotation-list-item ${selected?.id === quotation.id ? "is-selected" : ""}`} onClick={() => void selectQuotation(quotation)}>
@@ -225,6 +233,7 @@ export function QuotationWorkspace() {
           <section className="quotation-panel card-surface" aria-labelledby="quotation-draft-title">
             <div className="quotation-section-heading"><div><p>{copy.eyebrow}</p><h2 id="quotation-draft-title">{copy.newQuote}</h2></div><span className="quotation-mode">{synthetic ? "UAT" : "LIVE API"}</span></div>
             <form className="quotation-builder" onSubmit={submitDraft}>
+              <p className="quotation-form-hint">{copy.formHint}</p>
               <label>{copy.lead}<input required value={form.leadId} onChange={(event) => setForm({ ...form, leadId: event.target.value })} placeholder="UUID" /></label>
               <label>{copy.plan}<input required value={form.paymentPlanId} onChange={(event) => setForm({ ...form, paymentPlanId: event.target.value })} placeholder="UUID" /></label>
               <label>{copy.expiry}<input required type="datetime-local" value={form.expiresAt} onChange={(event) => setForm({ ...form, expiresAt: event.target.value })} /></label>
@@ -233,8 +242,8 @@ export function QuotationWorkspace() {
             </form>
           </section>
 
-          {pdfPreview ? <section className="quotation-pdf-preview card-surface" aria-label={copy.document}>
-            <header><div><p>{copy.eyebrow}</p><h2>{copy.document}</h2></div><button type="button" onClick={() => setPdfPreview(null)}>×</button></header>
+          {pdfPreview ? <section className="quotation-pdf-preview card-surface" role="dialog" aria-modal="true" aria-label={copy.document} tabIndex={-1}>
+            <header><div><p>{copy.eyebrow}</p><h2>{copy.document}</h2></div><button type="button" aria-label={copy.closePreview} title={copy.closePreview} onClick={() => setPdfPreview(null)}>×</button></header>
             <div className="quotation-pdf-paper">
               <div className="quotation-pdf-brand">KYNOX / R4C <span>{copy.synthetic}</span></div>
               <h2>{pdfPreview.quotationNumber} · R{pdfPreview.revision}</h2>

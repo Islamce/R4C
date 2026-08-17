@@ -30,7 +30,7 @@ export function FlutterSalesCompanionPreview() {
 }
 
 function FlutterScreen({ screen, t }: { screen: Screen; t: Record<string, string> }) {
-  if (screen === "offline") return <section className="flutter-state-card warning"><strong>{t.offline}</strong><button>{t.retry}</button></section>;
+  if (screen === "offline") return <section className="flutter-state-card warning"><strong>{t.offline}</strong><p>{t.noConnection}</p><button>{t.retry}</button></section>;
   if (screen === "session") return <section className="flutter-state-card"><strong>{t.signIn}</strong><button>{t.login}</button></section>;
   if (screen === "home") return <><div className="flutter-stat-row"><div><span>Active projects</span><strong>03</strong></div><div><span>Follow ups</span><strong>08</strong></div></div><section className="flutter-list-card"><span className="flutter-pill">LIVE · GOVERNED</span><h3>{t.project}</h3><p>{t.projectCode} · 42 available units</p><button>{t.inventory}</button></section><section className="flutter-list-card accent"><h3>{t.decision}</h3><p>{t.accepted}</p><button>{t.handoff}</button></section></>;
   if (screen === "inventory" || screen === "unit") return <><label className="flutter-search">⌕ <input placeholder={t.inventory} /></label><section className="flutter-unit-card"><span className="flutter-pill">{t.available}</span><h3>{t.unitCode}</h3><p>3 BR · 176.4 m² · Level 08</p><strong>{t.price}</strong><button>{screen === "inventory" ? t.unit : t.capture}</button></section></>;
