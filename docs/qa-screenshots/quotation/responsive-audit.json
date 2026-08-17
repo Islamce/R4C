@@ -1,0 +1,185 @@
+{
+  "base": "http://127.0.0.1:3010",
+  "checks": [
+    {
+      "surface": "staff",
+      "locale": "en",
+      "viewport": "1440x1100",
+      "direction": "ltr",
+      "documentWidth": 1440,
+      "viewportWidth": 1440,
+      "result": "passed"
+    },
+    {
+      "surface": "staff",
+      "locale": "en",
+      "viewport": "1024x1000",
+      "direction": "ltr",
+      "documentWidth": 1024,
+      "viewportWidth": 1024,
+      "result": "passed"
+    },
+    {
+      "surface": "staff",
+      "locale": "en",
+      "viewport": "768x1024",
+      "direction": "ltr",
+      "documentWidth": 768,
+      "viewportWidth": 768,
+      "result": "passed"
+    },
+    {
+      "surface": "staff",
+      "locale": "en",
+      "viewport": "430x932",
+      "direction": "ltr",
+      "documentWidth": 430,
+      "viewportWidth": 430,
+      "result": "passed"
+    },
+    {
+      "surface": "staff",
+      "locale": "en",
+      "viewport": "360x800",
+      "direction": "ltr",
+      "documentWidth": 360,
+      "viewportWidth": 360,
+      "result": "passed"
+    },
+    {
+      "surface": "buyer",
+      "locale": "en",
+      "viewport": "1440x1100",
+      "direction": "ltr",
+      "documentWidth": 1440,
+      "viewportWidth": 1440,
+      "result": "passed"
+    },
+    {
+      "surface": "buyer",
+      "locale": "en",
+      "viewport": "1024x1000",
+      "direction": "ltr",
+      "documentWidth": 1024,
+      "viewportWidth": 1024,
+      "result": "passed"
+    },
+    {
+      "surface": "buyer",
+      "locale": "en",
+      "viewport": "768x1024",
+      "direction": "ltr",
+      "documentWidth": 768,
+      "viewportWidth": 768,
+      "result": "passed"
+    },
+    {
+      "surface": "buyer",
+      "locale": "en",
+      "viewport": "430x932",
+      "direction": "ltr",
+      "documentWidth": 430,
+      "viewportWidth": 430,
+      "result": "passed"
+    },
+    {
+      "surface": "buyer",
+      "locale": "en",
+      "viewport": "360x800",
+      "direction": "ltr",
+      "documentWidth": 360,
+      "viewportWidth": 360,
+      "result": "passed"
+    },
+    {
+      "surface": "staff",
+      "locale": "ar",
+      "viewport": "1440x1100",
+      "direction": "rtl",
+      "documentWidth": 1440,
+      "viewportWidth": 1440,
+      "result": "passed"
+    },
+    {
+      "surface": "staff",
+      "locale": "ar",
+      "viewport": "1024x1000",
+      "direction": "rtl",
+      "documentWidth": 1024,
+      "viewportWidth": 1024,
+      "result": "passed"
+    },
+    {
+      "surface": "staff",
+      "locale": "ar",
+      "viewport": "768x1024",
+      "direction": "rtl",
+      "documentWidth": 768,
+      "viewportWidth": 768,
+      "result": "passed"
+    },
+    {
+      "surface": "staff",
+      "locale": "ar",
+      "viewport": "430x932",
+      "direction": "rtl",
+      "documentWidth": 430,
+      "viewportWidth": 430,
+      "result": "passed"
+    },
+    {
+      "surface": "staff",
+      "locale": "ar",
+      "viewport": "360x800",
+      "direction": "rtl",
+      "documentWidth": 360,
+      "viewportWidth": 360,
+      "result": "passed"
+    },
+    {
+      "surface": "buyer",
+      "locale": "ar",
+      "viewport": "1440x1100",
+      "direction": "rtl",
+      "documentWidth": 1440,
+      "viewportWidth": 1440,
+      "result": "passed"
+    },
+    {
+      "surface": "buyer",
+      "locale": "ar",
+      "viewport": "1024x1000",
+      "direction": "rtl",
+      "documentWidth": 1024,
+      "viewportWidth": 1024,
+      "result": "passed"
+    },
+    {
+      "surface": "buyer",
+      "locale": "ar",
+      "viewport": "768x1024",
+      "direction": "rtl",
+      "documentWidth": 768,
+      "viewportWidth": 768,
+      "result": "passed"
+    },
+    {
+      "surface": "buyer",
+      "locale": "ar",
+      "viewport": "430x932",
+      "direction": "rtl",
+      "documentWidth": 430,
+      "viewportWidth": 430,
+      "result": "passed"
+    },
+    {
+      "surface": "buyer",
+      "locale": "ar",
+      "viewport": "360x800",
+      "direction": "rtl",
+      "documentWidth": 360,
+      "viewportWidth": 360,
+      "result": "passed"
+    }
+  ]
+}
