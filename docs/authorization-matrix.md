@@ -39,3 +39,31 @@ The commercial controllers already exposed inventory read/manage/status, publish
 ## Residual gaps
 
 Production memberships do not exist until a separately authorized seed/administrative operation is performed. The source fixtures do not authorize or perform that operation. Customer discovery remains deliberately bounded to Lead-returned data; no broad customer search was added.
+
+
+## Proposed buyer sales-quotation MVP capabilities
+
+The buyer sales-quotation MVP adds narrow capabilities to the existing commercial roles. It does not alter the existing meaning of `commercial:hold:create` or `commercial:reservation:confirm`.
+
+| Capability | Sales Agent | Sales Manager | Admin/Owner | Boundary |
+| --- | ---: | ---: | ---: | --- |
+| `commercial:quotation:create` | Yes | Yes | Yes | Create or edit only accessible drafts and submit for review. |
+| `commercial:quotation:read-own` | Yes | Yes | Yes | Read quotations attached to leads visible through own-lead scope. |
+| `commercial:quotation:preview` | Yes | Yes | Yes | Generate synthetic/local preview only; it is not a delivery authorization. |
+| `commercial:quotation:read-all` | No | Yes | Yes | Tenant-scoped manager visibility. |
+| `commercial:quotation:review` | No | Yes | Yes | Return a draft with reason or approve to send; own-draft approval is denied. |
+| `commercial:quotation:withdraw` | No | Yes | Yes | Withdraw eligible non-terminal quotation revision without deleting evidence. |
+| Existing `commercial:hold:create` | Existing mapping | Existing mapping | Existing mapping | Customer acceptance neither grants nor invokes hold creation. |
+| Existing `commercial:reservation:confirm` | No | Yes | Yes | Reservation handoff remains a separately guarded internal step. |
+
+Customer access uses no staff role or JWT. It is limited to a short-lived, single-purpose opaque approval token that can view one scoped quotation and submit one allowed decision. The token cannot enumerate customers, units, leads, quotations, projects, or tenants.
+
+### Quotation negative-test requirements
+
+1. A sales agent cannot read a quotation attached to another agent’s lead unless a distinct all-visibility permission exists.
+2. A quotation creator cannot approve that same quotation.
+3. A caller without quotation-review permission cannot move a quotation from `INTERNAL_REVIEW` to `APPROVED_TO_SEND`.
+4. Customer token validation must return one generic failure for missing, expired, revoked, consumed, foreign, and malformed tokens.
+5. Customer acceptance must change no `UnitHold`, `Reservation`, `Lead.status`, price, payment-plan, or payment record.
+6. Reservation handoff must deny callers without the existing reservation confirmation permission.
+7. Every allowed quotation transition must emit tenant-scoped audit evidence.

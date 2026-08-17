@@ -72,3 +72,12 @@ export const SearchExportRateLimit = () =>
       ttl: RATE_LIMIT_WINDOW_MS,
     },
   });
+
+
+export const QuotationApprovalRateLimit = () =>
+  Throttle({
+    default: {
+      limit: environmentLimit("RATE_LIMIT_QUOTATION_APPROVAL_PER_MINUTE", 10),
+      ttl: RATE_LIMIT_WINDOW_MS,
+    },
+  });

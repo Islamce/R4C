@@ -25,6 +25,9 @@ const COMMERCIAL_ROLE_DEFINITIONS = [
       "commercial:activity:log",
       "commercial:hold:create",
       "commercial:hold:release",
+      "commercial:quotation:create",
+      "commercial:quotation:read-own",
+      "commercial:quotation:preview",
     ],
   },
   {
@@ -34,6 +37,9 @@ const COMMERCIAL_ROLE_DEFINITIONS = [
       "commercial:lead:view-all",
       "commercial:lead:reassign",
       "commercial:reservation:confirm",
+      "commercial:quotation:read-all",
+      "commercial:quotation:review",
+      "commercial:quotation:withdraw",
     ],
   },
 ] as const;

@@ -20,6 +20,7 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { PrismaService } from "./prisma/prisma.service";
 import { ProgressModule } from "./progress/progress.module";
 import { QualityModule } from "./quality/quality.module";
+import { QuotationModule } from "./quotations/quotation.module";
 import { ProjectsModule } from "./projects/projects.module";
 import { ScheduleModule } from "./schedule/schedule.module";
 import { StorageModule } from "./storage/storage.module";
@@ -90,6 +91,7 @@ class HealthController {
     AuthModule,
     TenantsModule,
     CommercialModule,
+    QuotationModule,
     CostModule,
     DocumentsModule,
     HseModule,

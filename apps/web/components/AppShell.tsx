@@ -69,6 +69,7 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
 
   const projectsActive = pathname.startsWith("/projects");
   const commercialActive = pathname.startsWith("/commercial");
+  const quotationsActive = pathname.startsWith("/quotations");
 
   return (
     <div className="app-shell" dir={locale === "ar" ? "rtl" : "ltr"}>
@@ -98,6 +99,14 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
             >
               <span className="nav-index" aria-hidden="true">02</span>
               {t("commercial.nav")}
+            </Link>
+            <Link
+              className={quotationsActive ? "nav-link nav-link-active" : "nav-link"}
+              href={preview ? "/design-preview?surface=quotations" : "/quotations"}
+              aria-current={quotationsActive ? "page" : undefined}
+            >
+              <span className="nav-index" aria-hidden="true">03</span>
+              {locale === "ar" ? "عروض المشترين" : "Buyer quotations"}
             </Link>
           </section>
         </nav>
