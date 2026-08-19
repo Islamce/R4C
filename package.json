@@ -12,6 +12,11 @@
       "onFail": "warn"
     }
   },
+  "pnpm": {
+    "overrides": {
+      "deepmerge-ts": ">=8.0.0"
+    }
+  },
   "scripts": {
     "build": "cd apps/api && node_modules/.bin/prisma generate && node_modules/.bin/nest build && cd ../web && node_modules/.bin/next build && cp -r .next/static .next/standalone/apps/web/.next/static",
     "dev": "pnpm -r --parallel dev",
