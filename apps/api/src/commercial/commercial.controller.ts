@@ -30,6 +30,7 @@ import {
   UpdatePhaseDto,
   UpdateUnitDto,
   UpdateUnitTypeDto,
+  WithdrawLeadConsentDto,
 } from "./commercial.dto";
 import { CommercialService } from "./commercial.service";
 
@@ -290,6 +291,11 @@ export class CommercialController {
   @Patch("leads/:id/assignee") @RequirePermissions("commercial:lead:reassign")
   reassignLead(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: AssignLeadDto) {
     return this.commercial.reassignLead(user, id, body.assignedToId);
+  }
+
+  @Post("leads/:id/consent/withdraw") @RequirePermissions("commercial:lead:qualify")
+  withdrawLeadConsent(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: WithdrawLeadConsentDto) {
+    return this.commercial.withdrawLeadConsent(user, id, body);
   }
 
   @Get("assignees") @RequirePermissions("commercial:lead:reassign")
