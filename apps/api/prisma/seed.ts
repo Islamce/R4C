@@ -256,7 +256,7 @@ async function main() {
       addedRolePermissionLinks,
       removedRolePermissionLinks,
     };
-  });
+  }, { timeout: 60_000 });
 
   const permissionUpdates = derived.codes.filter((code) => {
     const existing = existingPermissionByCode.get(code);
