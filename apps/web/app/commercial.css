@@ -385,6 +385,8 @@
 
 .commercial-suite {
   width: min(1500px, 100%);
+  min-width: 0;
+  max-width: 100%;
   margin: 0 auto;
   padding: clamp(1rem, 2.5vw, 2rem);
   background: #f6f8fa;
@@ -432,13 +434,17 @@
 }
 .suite-tabs {
   display: flex;
+  width: 100%;
+  max-width: 100%;
   gap: 0.25rem;
   margin-bottom: 1rem;
   padding: 0.3rem;
   border: 1px solid var(--line);
   border-radius: 9px;
   background: #fff;
-  overflow: auto;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
 }
 .suite-tabs button {
   min-height: 43px;
@@ -469,6 +475,8 @@
 }
 .suite-dashboard {
   display: grid;
+  min-width: 0;
+  max-width: 100%;
   gap: 1rem;
   transform-origin: 50% 0;
   animation: dashboard-enter 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
@@ -536,6 +544,8 @@
 }
 .suite-metric,
 .suite-panel {
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--line);
   border-radius: 9px;
   background: #fff;
@@ -622,7 +632,11 @@
   margin-bottom: 0.8rem;
 }
 .suite-table {
-  overflow: auto;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
 }
 .suite-table-row {
   min-width: 1050px;
@@ -648,6 +662,8 @@
 }
 .portfolio-layout {
   display: grid;
+  min-width: 0;
+  max-width: 100%;
   grid-template-columns: minmax(0, 1fr) 250px;
   gap: 1rem;
   align-items: start;
@@ -1337,8 +1353,14 @@
     flex-direction: column;
   }
   .suite-header-actions {
+    width: 100%;
     align-items: stretch;
     flex-direction: column;
+  }
+  .suite-header-actions label,
+  .suite-header-actions select,
+  .suite-header-actions .button {
+    width: 100%;
   }
   .unit-layout,
   .transfer-file,
@@ -1381,6 +1403,13 @@
   }
   .suite-header h1 {
     font-size: 1.7rem;
+    line-height: 1.08;
+  }
+  .suite-tabs {
+    scroll-snap-type: inline proximity;
+  }
+  .suite-tabs button {
+    scroll-snap-align: start;
   }
   .suite-modal {
     grid-template-columns: 1fr;
@@ -1399,9 +1428,30 @@
     padding: 1.35rem;
     background: rgb(5 28 41 / 56%);
   }
+  .executive-hero-copy h2 {
+    font-size: clamp(1.9rem, 10vw, 2.6rem);
+  }
+  .project-summary-drawer .project-visual {
+    aspect-ratio: 16 / 9;
+  }
   .floor-hotspot {
     min-width: 58px;
     padding: 0.28rem 0.38rem;
     font-size: 0.55rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .suite-analytics {
+    grid-template-columns: 1fr;
+  }
+  .chart-card {
+    min-height: 220px;
+  }
+  .closing-summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .closing-summary-grid div:last-child {
+    grid-column: 1 / -1;
   }
 }
