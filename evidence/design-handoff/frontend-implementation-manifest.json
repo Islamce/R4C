@@ -1,0 +1,41 @@
+{
+  "product": "R4C",
+  "branch": "manus/design-handoff",
+  "implementationCommit": "474f3d026b01eb5dcf885cace70b1159e6dd24d7",
+  "handoffHead": "060ef13b7337a9baa3b9cfcbdaa3cf6ae2d362d5",
+  "integrationStatus": "REVIEWED_AND_RECONCILED",
+  "frontendFiles": [
+    "apps/web/app/(authenticated)/sales/page.tsx",
+    "apps/web/app/sales.css",
+    "apps/web/components/SalesCommandCenter.tsx",
+    "apps/web/lib/crm-api.ts",
+    "apps/web/lib/sales-i18n.ts",
+    "apps/web/app/styles.css",
+    "apps/web/components/AppShell.tsx",
+    "apps/web/test/crm-ui-contract.test.mjs"
+  ],
+  "integrationFiles": [
+    "apps/web/app/api/backend/[...path]/route.ts",
+    "apps/api/src/app.module.ts",
+    "apps/api/src/crm/crm.controller.ts",
+    "apps/api/src/crm/crm.dto.ts",
+    "apps/api/src/crm/crm.module.ts",
+    "apps/api/src/crm/crm.service.ts",
+    "apps/api/prisma/schema.prisma",
+    "apps/api/prisma/migrations/20260823130000_canonical_crm/migration.sql"
+  ],
+  "selection": {
+    "visualFoundation": "Manus Sales Command Center",
+    "functionalFoundation": "Recovered canonical CRM and Commercial implementation",
+    "refinementsRetained": [
+      "responsive one-column mobile composition",
+      "keyboard-contained contextual drawers",
+      "reduced-motion support",
+      "robust locale cookie contract",
+      "Windows-safe UI contract tests",
+      "BigInt JSON serialization",
+      "deterministic development preview"
+    ]
+  },
+  "production": "NOT_DEPLOYED"
+}

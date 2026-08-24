@@ -18,6 +18,8 @@
 
 The source and implementation use the same R4C shell, pale mint workspace, dark operating-overview and opportunity surfaces, typography hierarchy, control treatment, responsive stacking, and populated content. The implementation reproduces the source counts (2 contacts, 5 opportunities), selected SAR 1,250,000 discovery opportunity, one note activity, and three completed tasks.
 
+The Manus implementation commit `474f3d0` was also compared directly with the recovered/refined branch. Its Sales composition, route, localization, CRM client, and API/schema companion are preserved. Where the branches differed, the final product retains the refined branch's focus-managed drawers, responsive containment, reduced-motion behavior, extended contract tests, Windows-safe locale/test paths, and API BigInt serialization. See `docs/R4C-DESIGN-SOURCE-RECONCILIATION.md`.
+
 The side-by-side full-page capture shows a duplicated opportunity interior on the implementation side. DOM inspection found exactly one `section.sales-opportunity-panel`; the focused non-stitched viewport confirms the rendered panel is not duplicated. This is a full-page screenshot stitching artifact caused by transformed/animated content and is not an application defect.
 
 The desktop comparison is proportional rather than pixel-identical because the in-app browser caps captures at 1280×720. Mobile source density was normalized from 390 px to 375 px for the side-by-side comparison. No actionable P0, P1, or P2 visual mismatch remains.
