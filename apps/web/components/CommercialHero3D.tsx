@@ -2,13 +2,16 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 export function CommercialHero3D({
   project,
   progress,
+  modelUrl,
 }: {
   project: string;
   progress: number;
+  modelUrl?: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
 
@@ -96,6 +99,28 @@ export function CommercialHero3D({
     ground.receiveShadow = true;
     scene.add(ground, group);
 
+    const importedModel = new THREE.Group();
+    scene.add(importedModel);
+    if (modelUrl) {
+      new GLTFLoader().load(modelUrl, (gltf) => {
+        const model = gltf.scene;
+        const bounds = new THREE.Box3().setFromObject(model);
+        const size = bounds.getSize(new THREE.Vector3());
+        const center = bounds.getCenter(new THREE.Vector3());
+        const scale = 7 / Math.max(size.x, size.y, size.z, 1);
+        model.scale.setScalar(scale);
+        model.position.set(-center.x * scale, -bounds.min.y * scale, -center.z * scale);
+        model.traverse((object) => {
+          if (object instanceof THREE.Mesh) {
+            object.castShadow = true;
+            object.receiveShadow = true;
+          }
+        });
+        importedModel.add(model);
+        group.visible = false;
+      });
+    }
+
     let pointerX = 0;
     let pointerY = 0;
     const onPointer = (event: PointerEvent) => {
@@ -118,6 +143,10 @@ export function CommercialHero3D({
         (pointerX + Math.sin(time * 0.00025) * 0.035 - group.rotation.y) *
         0.045;
       group.rotation.x += (pointerY - group.rotation.x) * 0.04;
+      importedModel.rotation.y +=
+        (pointerX + Math.sin(time * 0.00025) * 0.035 - importedModel.rotation.y) *
+        0.045;
+      importedModel.rotation.x += (pointerY - importedModel.rotation.x) * 0.04;
       renderer.render(scene, camera);
       frame = requestAnimationFrame(animate);
     };
@@ -138,7 +167,7 @@ export function CommercialHero3D({
       });
       renderer.domElement.remove();
     };
-  }, [progress]);
+  }, [progress, modelUrl]);
 
   return (
     <div

@@ -1,13 +1,62 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Cube, Eye, FileArrowUp, ImageSquare, PlugsConnected, ShieldCheck, UploadSimple, X } from "@phosphor-icons/react";
 import { CommercialOperatorWorkspace } from "./CommercialOperatorWorkspace";
 import { CommercialHero3D } from "./CommercialHero3D";
 import { useI18n } from "./I18nProvider";
+import { SalesPipelineWorkspace, type UnitReservationHandoff } from "./SalesPipelineWorkspace";
+import { clientApi } from "../lib/client-api";
+import type { BrowserSessionUser } from "../lib/types";
 
 const localize = (ar: boolean, en: string, arabic: string) => ar ? arabic : en;
+const projectDisplayName = (ar: boolean, name: string) => ({
+  "Riyadh Heights": localize(ar, "Riyadh Heights", "مرتفعات الرياض"),
+  "Jeddah Marina": localize(ar, "Jeddah Marina", "مارينا جدة"),
+  "Al Khobar Residences": localize(ar, "Al Khobar Residences", "مساكن الخبر"),
+  "Qurtubah Gardens": localize(ar, "Qurtubah Gardens", "حدائق قرطبة"),
+  "Dammam View": localize(ar, "Dammam View", "واجهة الدمام"),
+}[name] ?? name);
+const cityDisplayName = (ar: boolean, city: string) => ({
+  Riyadh: localize(ar, "Riyadh", "الرياض"),
+  Jeddah: localize(ar, "Jeddah", "جدة"),
+  "Al Khobar": localize(ar, "Al Khobar", "الخبر"),
+  Dammam: localize(ar, "Dammam", "الدمام"),
+}[city] ?? city);
+const unitStatusLabel = (ar: boolean, status: string) => ({
+  Available: localize(ar, "Available", "متاحة"),
+  Reserved: localize(ar, "Reserved", "محجوزة"),
+  Sold: localize(ar, "Sold", "مباعة"),
+  Interest: localize(ar, "Interest", "مسجل عليها اهتمام"),
+  Held: localize(ar, "Held", "حجز مؤقت"),
+}[status] ?? status);
+const buyerDisplayName = (ar: boolean, name: string) => ({
+  "Ahmed Al Harbi": localize(ar, "Ahmed Al Harbi", "أحمد الحربي"),
+  "Noura Al Qahtani": localize(ar, "Noura Al Qahtani", "نورة القحطاني"),
+  "Faisal Al Dosari": localize(ar, "Faisal Al Dosari", "فيصل الدوسري"),
+  "Maha Al Otaibi": localize(ar, "Maha Al Otaibi", "مها العتيبي"),
+  "Sara Al Mutairi": localize(ar, "Sara Al Mutairi", "سارة المطيري"),
+}[name] ?? name);
+const transferStatusLabel = (ar: boolean, status: string) => ({
+  "Not submitted": localize(ar, "Not submitted", "لم يُرسل"),
+  Approved: localize(ar, "Approved", "معتمد"),
+  "In review": localize(ar, "In review", "قيد المراجعة"),
+  Ready: localize(ar, "Ready", "جاهز"),
+}[status] ?? status);
+const transferBlockerLabel = (ar: boolean, blocker: string) => ({
+  "Mortgagee approval": localize(ar, "Mortgagee approval", "موافقة الجهة المرتهنة"),
+  "RETT tax reference": localize(ar, "RETT tax reference", "مرجع ضريبة التصرفات العقارية"),
+  "Buyer IBAN": localize(ar, "Buyer IBAN", "رقم آيبان المشتري"),
+  "—": "—",
+}[blocker] ?? blocker);
 
-type Tab = "portfolio" | "units" | "transfer" | "operations";
+type Tab = "pipeline" | "portfolio" | "units" | "transfer" | "operations";
+type ProjectAssets = {
+  modelUrl?: string;
+  modelName?: string;
+  galleryUrl?: string;
+  galleryName?: string;
+};
 type ProjectDashboardRecord = {
   name: string;
   city: string;
@@ -138,89 +187,80 @@ const floorHotspots = [
   { left: "77%", top: "70%" },
 ];
 
-const transfers: UnitDashboardRow[] = [
-  [
-    "RH-A-1204",
-    "Riyadh Heights",
-    "Ahmed Al Harbi",
-    "2,310,000",
-    "78%",
-    "Mortgagee approval",
-    "Not submitted",
-  ],
-  [
-    "JM-B-0911",
-    "Jeddah Marina",
-    "Noura Al Qahtani",
-    "1,850,000",
-    "100%",
-    "—",
-    "Approved",
-  ],
-  [
-    "KR-C-0703",
-    "Al Khobar Residences",
-    "Faisal Al Dosari",
-    "2,975,000",
-    "65%",
-    "RETT tax reference",
-    "In review",
-  ],
-  [
-    "QG-D-0308",
-    "Qurtubah Gardens",
-    "Maha Al Otaibi",
-    "1,620,000",
-    "90%",
-    "—",
-    "Ready",
-  ],
-  [
-    "DV-A-0506",
-    "Dammam View",
-    "Sara Al Mutairi",
-    "1,740,000",
-    "82%",
-    "Buyer IBAN",
-    "Not submitted",
-  ],
-];
+const transferTemplates = [
+  ["RH", "Riyadh Heights", "Ahmed Al Harbi"],
+  ["JM", "Jeddah Marina", "Noura Al Qahtani"],
+  ["KR", "Al Khobar Residences", "Faisal Al Dosari"],
+  ["QG", "Qurtubah Gardens", "Maha Al Otaibi"],
+  ["DV", "Dammam View", "Sara Al Mutairi"],
+] as const;
+const transfers: UnitDashboardRow[] = Array.from({ length: 34 }, (_, index) => {
+  const template = transferTemplates[index % transferTemplates.length]!;
+  const sequence = String(1204 + index).padStart(4, "0");
+  const readiness = ["78%", "100%", "65%", "90%", "82%"][index % 5]!;
+  const blocker = ["Mortgagee approval", "—", "RETT tax reference", "—", "Buyer IBAN"][index % 5]!;
+  const status = ["Not submitted", "Approved", "In review", "Ready", "Not submitted"][index % 5]!;
+  return [`${template[0]}-${String.fromCharCode(65 + (index % 4))}-${sequence}`, template[1], template[2], (1620000 + index * 37000).toLocaleString("en-US"), readiness, blocker, status];
+});
 
 export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolean }) {
   const { locale } = useI18n();
   const ar = locale === "ar";
-  const [tab, setTab] = useState<Tab>("portfolio");
+  const [tab, setTab] = useState<Tab>("pipeline");
   const [project, setProject] = useState("Riyadh Heights");
   const [selectedUnit, setSelectedUnit] = useState("A-1204");
   const [interestOpen, setInterestOpen] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [unitReservation, setUnitReservation] = useState<UnitReservationHandoff | null>(null);
+  const [isAdmin, setIsAdmin] = useState(preview);
+  const [projectAssets, setProjectAssets] = useState<Record<string, ProjectAssets>>({});
   const selected = useMemo(
     () => projects.find((item) => item.name === project) ?? projects[0]!,
     [project],
   );
 
+  useEffect(() => {
+    if (preview) return;
+    clientApi<{ user: BrowserSessionUser }>("/api/session")
+      .then(({ user }) => setIsAdmin(user.role === "ADMIN" || user.permissions.includes("commercial:manage")))
+      .catch(() => setIsAdmin(false));
+  }, [preview]);
+
+  useEffect(() => {
+    const onCommercialTab = (event: Event) => {
+      const nextTab = (event as CustomEvent<Tab>).detail;
+      if (["pipeline", "portfolio", "units", "transfer", "operations"].includes(nextTab)) setTab(nextTab);
+    };
+    window.addEventListener("r4c:commercial-tab", onCommercialTab);
+    return () => window.removeEventListener("r4c:commercial-tab", onCommercialTab);
+  }, []);
+
+  function uploadProjectAsset(kind: "model" | "gallery", file: File) {
+    const url = URL.createObjectURL(file);
+    setProjectAssets((current) => {
+      const previous = current[project] ?? {};
+      const previousUrl = kind === "model" ? previous.modelUrl : previous.galleryUrl;
+      if (previousUrl) URL.revokeObjectURL(previousUrl);
+      return {
+        ...current,
+        [project]: kind === "model"
+          ? { ...previous, modelUrl: url, modelName: file.name }
+          : { ...previous, galleryUrl: url, galleryName: file.name },
+      };
+    });
+  }
+
   return (
     <div className="commercial-suite" dir={ar ? "rtl" : "ltr"}>
-      <header className="suite-header">
+      <header className="suite-header suite-header-compact">
         <div>
-          <p className="eyebrow">{localize(ar, "Commercial intelligence", "الذكاء التجاري")}</p>
-          <h1>{localize(ar, "Sales & Development Command Center", "مركز قيادة المبيعات والتطوير")}</h1>
+          <p className="eyebrow">{localize(ar, "Kynox portfolio · commercial", "محفظة KYNOX · القطاع التجاري")}</p>
+          <h1>{localize(ar, "Commercial workspace", "مساحة العمل التجارية")}</h1>
           <p>
-            {localize(ar, "Projects, unit inventory, buyer evidence, reservations and closing readiness in one governed workspace.", "المشروعات ومخزون الوحدات وأدلة المشترين والحجوزات وجاهزية الإفراغ في مساحة عمل محكومة واحدة.")}
+            {localize(ar, "Leads, interests, temporary reservations and confirmed bookings in one governed workspace.", "العملاء المحتملون والاهتمامات والحجوزات المؤقتة والحجوزات المؤكدة في مساحة عمل محكومة واحدة.")}
           </p>
         </div>
         <div className="suite-header-actions">
-          <label>
-            <span>{localize(ar, "Project", "المشروع")}</span>
-            <select
-              value={project}
-              onChange={(event) => setProject(event.target.value)}
-            >
-              {projects.map((item) => (
-                <option key={item.name}>{item.name}</option>
-              ))}
-            </select>
-          </label>
           <button className="button button-secondary" type="button">
             {localize(ar, "Export report", "تصدير التقرير")}
           </button>
@@ -229,6 +269,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
       <nav className="suite-tabs" aria-label={localize(ar, "Commercial dashboards", "لوحات المعلومات التجارية")}>
         {(
           [
+            ["pipeline", localize(ar, "Sales pipeline", "مسار المبيعات")],
             ["portfolio", localize(ar, "Executive overview", "النظرة التنفيذية")],
             ["units", localize(ar, "Project & unit control", "إدارة المشروع والوحدات")],
             ["transfer", localize(ar, "Title transfer file", "ملف الإفراغ العقاري")],
@@ -245,12 +286,38 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           </button>
         ))}
       </nav>
+      {tab !== "pipeline" ? (
+        <section className="commercial-project-switcher" aria-label={localize(ar, "Project selection", "اختيار المشروع")}>
+          <div>
+            <span>{localize(ar, "Active project", "المشروع النشط")}</span>
+            <strong>{projectDisplayName(ar, project)}</strong>
+          </div>
+          <label>
+            <span>{localize(ar, "Switch project", "تغيير المشروع")}</span>
+            <select value={project} onChange={(event) => setProject(event.target.value)}>
+              {projects.map((item) => <option value={item.name} key={item.name}>{projectDisplayName(ar, item.name)}</option>)}
+            </select>
+          </label>
+          <div className="project-switcher-links" role="list" aria-label={localize(ar, "Available projects", "المشروعات المتاحة")}>
+            {projects.map((item) => (
+              <button type="button" role="listitem" key={item.name} className={project === item.name ? "active" : ""} onClick={() => setProject(item.name)}>
+                <span>{projectDisplayName(ar, item.name)}</span>
+                <small>{cityDisplayName(ar, item.city)} · {item.units} {localize(ar, "units", "وحدة")}</small>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      {tab === "pipeline" ? <SalesPipelineWorkspace externalReservation={unitReservation} /> : null}
       {tab === "portfolio" ? (
         <PortfolioDashboard
           selectedProject={project}
           onSelectProject={setProject}
           onOpenProject={() => setTab("units")}
           onOpenTransfers={() => setTab("transfer")}
+          isAdmin={isAdmin}
+          assets={projectAssets[project]}
+          onUploadAsset={uploadProjectAsset}
           ar={ar}
         />
       ) : null}
@@ -263,6 +330,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           setInterestOpen={setInterestOpen}
           saved={saved}
           setSaved={setSaved}
+          onReservation={setUnitReservation}
           ar={ar}
         />
       ) : null}
@@ -351,16 +419,18 @@ function Metric({
   value,
   label,
   tone,
+  caption = "Portfolio current view",
 }: {
   value: string;
   label: string;
   tone?: string;
+  caption?: string;
 }) {
   return (
     <article className="suite-metric">
       <span>{label}</span>
       <strong className={tone}>{value}</strong>
-      <small>Portfolio current view</small>
+      <small>{caption}</small>
     </article>
   );
 }
@@ -377,12 +447,18 @@ function PortfolioDashboard({
   onSelectProject,
   onOpenProject,
   onOpenTransfers,
+  isAdmin,
+  assets,
+  onUploadAsset,
   ar,
 }: {
   selectedProject: string;
   onSelectProject: (project: string) => void;
   onOpenProject: () => void;
   onOpenTransfers: () => void;
+  isAdmin: boolean;
+  assets?: ProjectAssets;
+  onUploadAsset: (kind: "model" | "gallery", file: File) => void;
   ar: boolean;
 }) {
   const focusedProject =
@@ -393,18 +469,30 @@ function PortfolioDashboard({
         <CommercialHero3D
           project={focusedProject.name}
           progress={focusedProject.progress}
+          modelUrl={assets?.modelUrl}
         />
         <div className="executive-hero-copy">
           <p className="eyebrow">{localize(ar, "Live development digital twin", "التوأم الرقمي المباشر للمشروع")}</p>
-          <h2>{focusedProject.name}</h2>
+          <h2>{projectDisplayName(ar, focusedProject.name)}</h2>
           <p>
-            {focusedProject.city} · {focusedProject.phase} · {localize(ar, "construction", "الإنشاء")} {" "}
+            {cityDisplayName(ar, focusedProject.city)} · {localize(ar, focusedProject.phase, focusedProject.phase === "Structure" ? "الهيكل الإنشائي" : focusedProject.phase === "Finishing" ? "التشطيبات" : "الأعمال الأولية")} · {localize(ar, "construction", "الإنشاء")} {" "}
             {focusedProject.progress}%
           </p>
           <div>
             <span>{localize(ar, "Drag across the model", "حرّك المؤشر فوق النموذج")}</span>
             <strong>{focusedProject.sold} {localize(ar, "units sold", "وحدة مباعة")}</strong>
           </div>
+          {isAdmin ? (
+            <label className="admin-asset-upload admin-model-upload">
+              <Cube size={20} weight="duotone" aria-hidden="true" />
+              <span>{assets?.modelName ?? localize(ar, "Upload project model (GLB)", "رفع نموذج المشروع (GLB)")}</span>
+              <UploadSimple size={18} weight="bold" aria-hidden="true" />
+              <input type="file" accept=".glb,model/gltf-binary" onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) onUploadAsset("model", file);
+              }} />
+            </label>
+          ) : null}
         </div>
       </section>
       <section className="suite-metrics">
@@ -459,10 +547,10 @@ function PortfolioDashboard({
                 onClick={() => onSelectProject(p.name)}
               >
                 <strong>
-                  {p.name}
-                  <small>{p.city}</small>
+                  {projectDisplayName(ar, p.name)}
+                  <small>{cityDisplayName(ar, p.city)}</small>
                 </strong>
-                <span>{p.phase}</span>
+                <span>{localize(ar, p.phase, p.phase === "Structure" ? "الهيكل الإنشائي" : p.phase === "Finishing" ? "التشطيبات" : "الأعمال الأولية")}</span>
                 <span>
                   {p.progress}%<Bar value={p.progress} />
                 </span>
@@ -477,19 +565,32 @@ function PortfolioDashboard({
           </div>
         </div>
         <aside className="suite-panel project-summary-drawer">
-          <img
-            className="project-visual"
-            src="/assets/commercial/riyadh-heights.png"
-            alt={`${focusedProject.name} residential development`}
-          />
+          <div className="project-visual-wrap">
+            <img
+              className="project-visual"
+              src={assets?.galleryUrl ?? "/assets/commercial/riyadh-heights.png"}
+              alt={`${focusedProject.name} residential development`}
+            />
+            {isAdmin ? (
+              <label className="admin-asset-upload admin-gallery-upload">
+                <ImageSquare size={20} weight="duotone" aria-hidden="true" />
+                <span>{assets?.galleryName ?? localize(ar, "Upload project gallery", "رفع معرض صور المشروع")}</span>
+                <UploadSimple size={18} weight="bold" aria-hidden="true" />
+                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) onUploadAsset("gallery", file);
+                }} />
+              </label>
+            ) : null}
+          </div>
           <div className="project-summary-title">
-            <strong>{focusedProject.name}</strong>
-            <span>{focusedProject.city}</span>
+            <strong>{projectDisplayName(ar, focusedProject.name)}</strong>
+            <span>{cityDisplayName(ar, focusedProject.city)}</span>
           </div>
           <dl>
             <div>
               <dt>{localize(ar, "Current phase", "المرحلة الحالية")}</dt>
-              <dd>{focusedProject.phase}</dd>
+              <dd>{localize(ar, focusedProject.phase, focusedProject.phase === "Structure" ? "الهيكل الإنشائي" : focusedProject.phase === "Finishing" ? "التشطيبات" : "الأعمال الأولية")}</dd>
             </div>
             <div>
               <dt>{localize(ar, "Total units", "إجمالي الوحدات")}</dt>
@@ -663,6 +764,7 @@ function UnitDashboard({
   setInterestOpen,
   saved,
   setSaved,
+  onReservation,
   ar,
 }: {
   project: ProjectDashboardRecord;
@@ -672,6 +774,7 @@ function UnitDashboard({
   setInterestOpen: (v: boolean) => void;
   saved: boolean;
   setSaved: (v: boolean) => void;
+  onReservation: (reservation: UnitReservationHandoff) => void;
   ar: boolean;
 }) {
   const [building, setBuilding] = useState("Building A");
@@ -682,6 +785,8 @@ function UnitDashboard({
   const [statusOverrides, setStatusOverrides] = useState<
     Record<string, string>
   >({});
+  const [reservationOpen, setReservationOpen] = useState(false);
+  const [reservationReference, setReservationReference] = useState("");
   const floorUnits = useMemo(
     () =>
       unitsFor(building, floor).map((row) => ({
@@ -712,7 +817,7 @@ function UnitDashboard({
     <main className="suite-dashboard">
       <section className="suite-metrics">
         <Metric value={`${project.progress}%`} label={localize(ar, "Construction", "الإنشاء")} />
-        <Metric value={project.phase} label={localize(ar, "Current phase", "المرحلة الحالية")} />
+        <Metric value={localize(ar, project.phase, project.phase === "Structure" ? "الهيكل الإنشائي" : project.phase === "Finishing" ? "التشطيبات" : "الأعمال الأولية")} label={localize(ar, "Current phase", "المرحلة الحالية")} />
         <Metric value={String(project.units)} label={localize(ar, "Total units", "إجمالي الوحدات")} />
         <Metric
           value={String(project.available)}
@@ -730,18 +835,18 @@ function UnitDashboard({
             <small>{localize(ar, "320 units across 2 buildings", "320 وحدة ضمن مبنيين")}</small>
           </div>
           <div className="building-switcher">
-            {["Building A", "Building B"].map((item) => (
+            {["Building A", "Building B"].map((item, index) => (
               <button
                 type="button"
                 key={item}
                 aria-pressed={building === item}
                 onClick={() => chooseLocation(item, floor)}
               >
-                {item}
+                {localize(ar, item, `المبنى ${index === 0 ? "أ" : "ب"}`)}
               </button>
             ))}
           </div>
-          <div className="floor-list" aria-label="Select floor">
+          <div className="floor-list" aria-label={localize(ar, "Select floor", "اختيار الدور")}>
             {Array.from({ length: 18 }, (_, index) => 18 - index).map(
               (item) => (
                 <button
@@ -752,13 +857,13 @@ function UnitDashboard({
                 >
                   <span>{localize(ar, "Floor", "الدور")} {item}</span>
                   <small>
-                    6 units ·{" "}
+                    6 {localize(ar, "units", "وحدات")} ·{" "}
                     {
                       unitsFor(building, item).filter(
                         (row) => row[6] === "Available",
                       ).length
                     }{" "}
-                    available
+                    {localize(ar, "available", "متاحة")}
                   </small>
                 </button>
               ),
@@ -768,9 +873,9 @@ function UnitDashboard({
         <div className="suite-panel unit-main">
           <div className="suite-panel-heading">
             <div>
-              <h2>{localize(ar, `${project.name} unit inventory`, `مخزون وحدات ${project.name}`)}</h2>
+              <h2>{localize(ar, `${project.name} unit inventory`, `مخزون وحدات ${projectDisplayName(ar, project.name)}`)}</h2>
               <p>
-                {building} · {localize(ar, "Floor", "الدور")} {floor} {localize(ar, "of 18 · live commercial status", "من 18 · الحالة التجارية المباشرة")}
+                {localize(ar, building, building === "Building A" ? "المبنى أ" : "المبنى ب")} · {localize(ar, "Floor", "الدور")} {floor} {localize(ar, "of 18 · live commercial status", "من 18 · الحالة التجارية المباشرة")}
               </p>
             </div>
             <button
@@ -794,24 +899,24 @@ function UnitDashboard({
               value={typeFilter}
               onChange={(event) => setTypeFilter(event.target.value)}
             >
-              <option>All unit types</option>
-              <option>Studio</option>
-              <option>2BR</option>
-              <option>3BR</option>
+              <option value="All unit types">{localize(ar, "All unit types", "كل أنواع الوحدات")}</option>
+              <option value="Studio">{localize(ar, "Studio", "استوديو")}</option>
+              <option value="2BR">{localize(ar, "2BR", "غرفتان")}</option>
+              <option value="3BR">{localize(ar, "3BR", "ثلاث غرف")}</option>
             </select>
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
             >
-              <option>All statuses</option>
-              <option>Available</option>
-              <option>Reserved</option>
-              <option>Sold</option>
+              <option value="All statuses">{localize(ar, "All statuses", "كل الحالات")}</option>
+              <option value="Available">{unitStatusLabel(ar, "Available")}</option>
+              <option value="Reserved">{unitStatusLabel(ar, "Reserved")}</option>
+              <option value="Sold">{unitStatusLabel(ar, "Sold")}</option>
             </select>
             <select>
-              <option>All views</option>
-              <option>Park</option>
-              <option>City</option>
+              <option>{localize(ar, "All views", "كل الإطلالات")}</option>
+              <option>{localize(ar, "Park", "الحديقة")}</option>
+              <option>{localize(ar, "City", "المدينة")}</option>
             </select>
           </div>
           <div className="unit-table">
@@ -842,7 +947,7 @@ function UnitDashboard({
                         : ""
                     }
                   >
-                    {i === 6 ? status : x}
+                    {i === 6 ? unitStatusLabel(ar, status) : x}
                   </span>
                 ))}
               </button>
@@ -851,17 +956,17 @@ function UnitDashboard({
           <div className="floor-map-heading">
             <div>
               <strong>
-                {building} · Floor {floor} layout
+                {localize(ar, `${building} · Floor ${floor} layout`, `${building === "Building A" ? "المبنى أ" : "المبنى ب"} · مخطط الدور ${floor}`)}
               </strong>
-              <span>6 units · 1,004.9 m² gross floor area</span>
+              <span>{localize(ar, "6 units · 1,004.9 m² gross floor area", "6 وحدات · 1,004.9 م² إجمالي مساحة الدور")}</span>
             </div>
-            <span>North ↑</span>
+            <span>{localize(ar, "North ↑", "الشمال ↑")}</span>
           </div>
           <div className="floor-plan-wrap">
             <img
               className="floor-plan-image"
               src="/assets/commercial/floor-12-layout.png"
-              alt={`${building} floor ${floor} architectural unit layout`}
+              alt={localize(ar, `${building} floor ${floor} architectural unit layout`, `المخطط المعماري للدور ${floor} في ${building === "Building A" ? "المبنى أ" : "المبنى ب"}`)}
             />
             {floorUnits.map(({ row, status }, index) => (
               <button
@@ -870,7 +975,7 @@ function UnitDashboard({
                 className={`floor-hotspot status-${status.toLowerCase()} ${selectedUnit === row[0] ? "selected" : ""}`}
                 style={floorHotspots[index]}
                 onClick={() => setSelectedUnit(row[0])}
-                aria-label={`Select unit ${row[0]}, ${status}`}
+                aria-label={localize(ar, `Select unit ${row[0]}, ${status}`, `اختيار الوحدة ${row[0]}، ${unitStatusLabel(ar, status)}`)}
               >
                 {row[0]}
               </button>
@@ -901,82 +1006,83 @@ function UnitDashboard({
             <span
               className={`unit-status status-${selectedRow.status.toLowerCase()}`}
             >
-              {selectedRow.status}
+              {unitStatusLabel(ar, selectedRow.status)}
             </span>
           </div>
           <dl>
             <div>
-              <dt>Type</dt>
-              <dd>{selectedRow.row[1]} Apartment</dd>
+              <dt>{localize(ar, "Type", "النوع")}</dt>
+              <dd>{localize(ar, `${selectedRow.row[1]} Apartment`, selectedRow.row[1] === "2BR" ? "شقة غرفتين" : selectedRow.row[1] === "3BR" ? "شقة ثلاث غرف" : selectedRow.row[1] === "Studio" ? "استوديو" : "شقة غرفة واحدة")}</dd>
             </div>
             <div>
-              <dt>Gross / net</dt>
+              <dt>{localize(ar, "Gross / net", "الإجمالي / الصافي")}</dt>
               <dd>
-                {selectedRow.row[3]} / {selectedRow.row[4]} m²
+                {selectedRow.row[3]} / {selectedRow.row[4]} {localize(ar, "m²", "م²")}
               </dd>
             </div>
             <div>
-              <dt>Orientation / view</dt>
-              <dd>NW / Park</dd>
+              <dt>{localize(ar, "Orientation / view", "الاتجاه / الإطلالة")}</dt>
+              <dd>{localize(ar, "NW / Park", "شمال غربي / الحديقة")}</dd>
             </div>
             <div>
-              <dt>List price</dt>
-              <dd>SAR {selectedRow.row[5]}</dd>
+              <dt>{localize(ar, "List price", "السعر المعلن")}</dt>
+              <dd>{selectedRow.row[5]} {localize(ar, "SAR", "ر.س")}</dd>
             </div>
             <div>
-              <dt>Price / m²</dt>
-              <dd>SAR 12,205</dd>
+              <dt>{localize(ar, "Price / m²", "السعر / م²")}</dt>
+              <dd>12,205 {localize(ar, "SAR", "ر.س")}</dd>
             </div>
             <div>
-              <dt>Construction</dt>
-              <dd>Structure · 62%</dd>
+              <dt>{localize(ar, "Construction", "الإنشاء")}</dt>
+              <dd>{localize(ar, "Structure · 62%", "الهيكل الإنشائي · 62%")}</dd>
             </div>
           </dl>
-          <h3>Measurements</h3>
+          <h3>{localize(ar, "Measurements", "المساحات التفصيلية")}</h3>
           <dl>
             <div>
-              <dt>Living & dining</dt>
-              <dd>38.40 m²</dd>
+              <dt>{localize(ar, "Living & dining", "المعيشة والطعام")}</dt>
+              <dd>38.40 {localize(ar, "m²", "م²")}</dd>
             </div>
             <div>
-              <dt>Kitchen</dt>
-              <dd>12.30 m²</dd>
+              <dt>{localize(ar, "Kitchen", "المطبخ")}</dt>
+              <dd>12.30 {localize(ar, "m²", "م²")}</dd>
             </div>
             <div>
-              <dt>Master bedroom</dt>
-              <dd>20.10 m²</dd>
+              <dt>{localize(ar, "Master bedroom", "غرفة النوم الرئيسية")}</dt>
+              <dd>20.10 {localize(ar, "m²", "م²")}</dd>
             </div>
             <div>
-              <dt>Bedrooms 2 & 3</dt>
-              <dd>29.70 m²</dd>
+              <dt>{localize(ar, "Bedrooms 2 & 3", "غرفتا النوم 2 و3")}</dt>
+              <dd>29.70 {localize(ar, "m²", "م²")}</dd>
             </div>
             <div>
-              <dt>Balcony</dt>
-              <dd>11.80 m²</dd>
+              <dt>{localize(ar, "Balcony", "الشرفة")}</dt>
+              <dd>11.80 {localize(ar, "m²", "م²")}</dd>
             </div>
           </dl>
-          <h3>Price history</h3>
+          <h3>{localize(ar, "Price history", "سجل الأسعار")}</h3>
           <dl>
             <div>
-              <dt>18 May 2025</dt>
-              <dd>SAR 1,980,000</dd>
+              <dt>{localize(ar, "18 May 2025", "18 مايو 2025")}</dt>
+              <dd>1,980,000 {localize(ar, "SAR", "ر.س")}</dd>
             </div>
             <div>
-              <dt>05 May 2025</dt>
-              <dd>SAR 2,050,000</dd>
+              <dt>{localize(ar, "05 May 2025", "05 مايو 2025")}</dt>
+              <dd>2,050,000 {localize(ar, "SAR", "ر.س")}</dd>
             </div>
             <div>
-              <dt>20 Apr 2025</dt>
-              <dd>SAR 2,100,000</dd>
+              <dt>{localize(ar, "20 Apr 2025", "20 أبريل 2025")}</dt>
+              <dd>2,100,000 {localize(ar, "SAR", "ر.س")}</dd>
             </div>
           </dl>
-          <h3>Buyer activity evidence</h3>
+          <h3>{localize(ar, "Buyer activity evidence", "سجل تفاعل المشتري")}</h3>
           <ol className="transfer-timeline">
-            <li>Website enquiry received</li>
-            <li>Call logged · no answer</li>
-            <li>WhatsApp message delivered</li>
-            <li>Brochure.pdf uploaded</li>
+            <li>{localize(ar, "Website enquiry received", "تم استلام استفسار من الموقع")}</li>
+            <li>{localize(ar, "Call logged · no answer", "تم تسجيل مكالمة · لا توجد إجابة")}</li>
+            <li>{localize(ar, "WhatsApp message delivered", "تم تسليم رسالة واتساب")}</li>
+            <li>{localize(ar, "Brochure uploaded", "تم رفع كتيب المشروع")}</li>
           </ol>
+          {reservationReference ? <p className="success-message" role="status">{localize(ar, `Reservation ${reservationReference} is linked to unit ${selectedRow.row[0]}.`, `تم إنشاء الحجز ${reservationReference} وربطه بالوحدة ${selectedRow.row[0]} والعميل.`)}</p> : null}
           <button
             className="button button-primary"
             type="button"
@@ -987,17 +1093,36 @@ function UnitDashboard({
           <button
             className="button button-secondary"
             type="button"
-            onClick={() =>
-              setStatusOverrides((current) => ({
-                ...current,
-                [selectedRow.row[0]]: "Reserved",
-              }))
-            }
+            onClick={() => setReservationOpen(true)}
           >
             {localize(ar, "Create reservation", "إنشاء حجز")}
           </button>
         </aside>
       </section>
+      {reservationOpen ? (
+        <div className="suite-modal-backdrop" role="presentation" onMouseDown={() => setReservationOpen(false)}>
+          <form className="suite-modal reservation-modal" onMouseDown={(event) => event.stopPropagation()} onSubmit={(event) => {
+            event.preventDefault();
+            const reference = `RSV-${selectedRow.row[0]}-${String(Date.now()).slice(-4)}`;
+            const form = new FormData(event.currentTarget);
+            setStatusOverrides((current) => ({ ...current, [selectedRow.row[0]]: "Reserved" }));
+            setReservationReference(reference);
+            onReservation({ reference, customer: String(form.get("customer")), phone: String(form.get("mobile")), project: project.name, unit: selectedRow.row[0] });
+            setReservationOpen(false);
+          }}>
+            <div className="suite-panel-heading">
+              <div><p className="eyebrow">{localize(ar, "Reservation", "الحجز")}</p><h2>{localize(ar, `Create reservation for ${selectedRow.row[0]}`, `إنشاء حجز للوحدة ${selectedRow.row[0]}`)}</h2></div>
+              <button type="button" className="button button-quiet" onClick={() => setReservationOpen(false)}>{localize(ar, "Close", "إغلاق")}</button>
+            </div>
+            <label>{localize(ar, "Customer name", "اسم العميل")}<input name="customer" required defaultValue={localize(ar, "Mohammed Abdullah", "محمد عبدالله")} /></label>
+            <label>{localize(ar, "Saudi mobile", "رقم الجوال السعودي")}<input name="mobile" required inputMode="tel" defaultValue="+966 50 123 4567" /></label>
+            <label>{localize(ar, "Reservation amount", "مبلغ الحجز")}<input name="amount" required inputMode="decimal" defaultValue="50,000" /></label>
+            <label>{localize(ar, "Expiry", "تاريخ انتهاء الحجز")}<input name="expiry" required type="date" defaultValue="2026-08-27" /></label>
+            <label className="check-row"><input type="checkbox" required defaultChecked /><span>{localize(ar, "Customer identity and consent were verified", "تم التحقق من هوية العميل وموافقته")}</span></label>
+            <button className="button button-primary">{localize(ar, "Confirm and link reservation", "تأكيد الحجز وربطه بالوحدة")}</button>
+          </form>
+        </div>
+      ) : null}
       {interestOpen ? (
         <div
           className="suite-modal-backdrop"
@@ -1018,27 +1143,27 @@ function UnitDashboard({
           >
             <div className="suite-panel-heading">
               <div>
-                <p className="eyebrow">Buyer evidence</p>
-                <h2>Record interest for {selectedUnit}</h2>
+                <p className="eyebrow">{localize(ar, "Buyer evidence", "بيانات المشتري")}</p>
+                <h2>{localize(ar, `Record interest for ${selectedUnit}`, `تسجيل اهتمام بالوحدة ${selectedUnit}`)}</h2>
               </div>
               <button
                 type="button"
                 className="button button-quiet"
                 onClick={() => setInterestOpen(false)}
               >
-                Close
+                {localize(ar, "Close", "إغلاق")}
               </button>
             </div>
             <label>
-              Full name
-              <input required defaultValue="Mohammed Abdullah" />
+              {localize(ar, "Full name", "الاسم الكامل")}
+              <input required defaultValue={localize(ar, "Mohammed Abdullah", "محمد عبدالله")} />
             </label>
             <label>
-              Mobile number
+              {localize(ar, "Mobile number", "رقم الجوال")}
               <input required inputMode="tel" defaultValue="+966 50 123 4567" />
             </label>
             <label>
-              Email
+              {localize(ar, "Email", "البريد الإلكتروني")}
               <input
                 required
                 type="email"
@@ -1046,31 +1171,31 @@ function UnitDashboard({
               />
             </label>
             <label>
-              Source
+              {localize(ar, "Source", "المصدر")}
               <select>
-                <option>Website</option>
-                <option>Sales agent</option>
-                <option>Referral</option>
+                <option>{localize(ar, "Website", "الموقع الإلكتروني")}</option>
+                <option>{localize(ar, "Sales agent", "مندوب المبيعات")}</option>
+                <option>{localize(ar, "Referral", "إحالة")}</option>
               </select>
             </label>
             <label>
-              Notes
-              <textarea defaultValue="Interested in park-view units on high floors." />
+              {localize(ar, "Notes", "الملاحظات")}
+              <textarea defaultValue={localize(ar, "Interested in park-view units on high floors.", "مهتم بوحدات الأدوار العليا المطلة على الحديقة.")} />
             </label>
             <label>
-              Evidence attachment
+              {localize(ar, "Evidence attachment", "مرفق الإثبات")}
               <input type="file" />
             </label>
             <label className="check-row">
               <input type="checkbox" required defaultChecked />
-              <span>Buyer consent to contact is recorded</span>
+              <span>{localize(ar, "Buyer consent to contact is recorded", "تم تسجيل موافقة المشتري على التواصل")}</span>
             </label>
             {saved ? (
               <p className="success-message">
-                Interest and buyer evidence saved.
+                {localize(ar, "Interest and buyer evidence saved.", "تم حفظ الاهتمام وبيانات المشتري.")}
               </p>
             ) : null}
-            <button className="button button-primary">Save interest</button>
+            <button className="button button-primary">{localize(ar, "Save interest", "حفظ الاهتمام")}</button>
           </form>
         </div>
       ) : null}
@@ -1092,33 +1217,42 @@ function TransferDashboard({
     transfers.find((row) => row[1] === project)?.[0] ?? transfers[0]![0],
   );
   const [documentsRequested, setDocumentsRequested] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [integrationOpen, setIntegrationOpen] = useState(false);
+  const [reviewNote, setReviewNote] = useState("");
+  const [uploadedDocuments, setUploadedDocuments] = useState<Record<string, Record<string, string>>>({});
+  const [reviewDecisions, setReviewDecisions] = useState<Record<string, Record<string, "approved" | "changes">>>({});
   const projectRows = rows.filter((row) => row[1] === project);
   const selectedTransfer =
     rows.find((row) => row[0] === selectedId) ?? projectRows[0] ?? rows[0]!;
   const approved = selectedTransfer[4] === "100%";
+  const currentUploads = uploadedDocuments[selectedTransfer[0]] ?? {};
+  const currentDecisions = reviewDecisions[selectedTransfer[0]] ?? {};
 
   useEffect(() => {
     const next = rows.find((row) => row[1] === project);
     if (next) setSelectedId(next[0]);
   }, [project, rows]);
 
-  const checks: [string, string][] = [
-    ["Seller identity / representative", "Verified"],
-    ["Buyer identity", "Verified"],
-    ["Electronic title deed / property sheet", "Verified"],
-    ["Active beneficiary IBAN", "Verified"],
+  const checks: [string, string, string, string][] = [
+    ["seller-id", localize(ar, "Seller identity / representative", "هوية البائع / الممثل النظامي"), "Verified", localize(ar, "Verified", "متحقق")],
+    ["buyer-id", localize(ar, "Buyer identity", "هوية المشتري"), "Verified", localize(ar, "Verified", "متحقق")],
+    ["title-deed", localize(ar, "Electronic title deed / property sheet", "الصك الإلكتروني / صحيفة العقار"), "Verified", localize(ar, "Verified", "متحقق")],
+    ["beneficiary-iban", localize(ar, "Active beneficiary IBAN", "آيبان المستفيد النشط"), "Verified", localize(ar, "Verified", "متحقق")],
     [
-      "Real estate transaction tax reference",
-      approved
+      "rett-reference",
+      localize(ar, "Real estate transaction tax reference", "مرجع ضريبة التصرفات العقارية"),
+      currentUploads["rett-reference"] ? "Awaiting approval" : approved
         ? "Verified"
         : documentsRequested
           ? "Awaiting approval"
           : "Missing",
+      currentUploads["rett-reference"] ? localize(ar, "Uploaded for review", "مرفوع للمراجعة") : approved ? localize(ar, "Verified", "متحقق") : documentsRequested ? localize(ar, "Awaiting approval", "بانتظار الاعتماد") : localize(ar, "Missing", "ناقص"),
     ],
-    ["Unit subdivision document", "Not applicable"],
-    ["Mortgagee approval", approved ? "Verified" : "Awaiting approval"],
-    ["Signed sales contract", "Verified"],
-    ["Evidence attachments", "Verified"],
+    ["subdivision", localize(ar, "Unit subdivision document", "مستند فرز الوحدة"), "Not applicable", localize(ar, "Not applicable", "لا ينطبق")],
+    ["mortgagee", localize(ar, "Mortgagee approval", "موافقة الجهة المرتهنة"), currentUploads.mortgagee ? "Awaiting approval" : approved ? "Verified" : "Awaiting approval", currentUploads.mortgagee ? localize(ar, "Uploaded for review", "مرفوع للمراجعة") : approved ? localize(ar, "Verified", "متحقق") : localize(ar, "Awaiting approval", "بانتظار الاعتماد")],
+    ["sales-contract", localize(ar, "Signed sales contract", "عقد البيع الموقّع"), "Verified", localize(ar, "Verified", "متحقق")],
+    ["evidence", localize(ar, "Evidence attachments", "مرفقات الإثبات"), "Verified", localize(ar, "Verified", "متحقق")],
   ];
   function approveReadiness() {
     setRows((current) =>
@@ -1129,31 +1263,24 @@ function TransferDashboard({
       ),
     );
   }
-  function submitTransfer() {
-    setRows((current) =>
-      current.map((row) =>
-        row[0] === selectedTransfer[0]
-          ? [row[0], row[1], row[2], row[3], row[4], row[5], "Approved"]
-          : row,
-      ),
-    );
-  }
   return (
     <main className="suite-dashboard">
       <section className="suite-metrics transfer-metrics">
-        <Metric value="34" label={localize(ar, "Transfers in progress", "عمليات الإفراغ الجارية")} />
+        <Metric value={String(rows.length)} label={localize(ar, "Transfers in progress", "عمليات الإفراغ الجارية")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
         <Metric
-          value={String(18 + rows.filter((row) => row[6] === "Ready").length)}
+          value={String(rows.filter((row) => row[6] === "Ready" || row[6] === "Approved").length)}
           label={localize(ar, "Ready for handoff", "جاهز للتسليم")}
           tone="good"
+          caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")}
         />
         <Metric
           value={String(rows.filter((row) => row[5] !== "—").length)}
           label={localize(ar, "Awaiting documents", "بانتظار المستندات")}
+          caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")}
         />
-        <Metric value="5" label={localize(ar, "Government review", "المراجعة الحكومية")} />
-        <Metric value="2" label={localize(ar, "Blocked", "متعثر")} />
-        <Metric value="SAR 84.6M" label={localize(ar, "Value in closing", "القيمة قيد الإغلاق")} />
+        <Metric value={String(rows.filter((row) => row[6] === "In review").length)} label={localize(ar, "Government review", "المراجعة الحكومية")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
+        <Metric value={String(rows.filter((row) => Number(row[4].replace("%", "")) < 70).length)} label={localize(ar, "Blocked", "متعثر")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
+        <Metric value={localize(ar, "SAR 84.6M", "84.6 مليون ر.س")} label={localize(ar, "Value in closing", "القيمة قيد الإغلاق")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
       </section>
       <section className="suite-panel">
         <div className="suite-panel-heading">
@@ -1162,6 +1289,7 @@ function TransferDashboard({
             <p>
               {localize(ar, "Sold-unit closing, compliance and authorized government handoff", "إغلاق الوحدات المباعة والامتثال والتسليم عبر القنوات الحكومية المعتمدة")}
             </p>
+            <small>{localize(ar, `${projectRows.length} of ${rows.length} files in the current project view`, `${projectRows.length} من أصل ${rows.length} ملفاً ضمن عرض المشروع الحالي`)}</small>
           </div>
           <div className="suite-filter-row">
             <select
@@ -1169,7 +1297,7 @@ function TransferDashboard({
               onChange={(event) => onProjectChange(event.target.value)}
             >
               {projects.map((item) => (
-                <option key={item.name}>{item.name}</option>
+                <option key={item.name} value={item.name}>{projectDisplayName(ar, item.name)}</option>
               ))}
             </select>
             <button className="button button-secondary">{localize(ar, "Export queue", "تصدير القائمة")}</button>
@@ -1199,9 +1327,7 @@ function TransferDashboard({
                 setDocumentsRequested(false);
               }}
             >
-              {r.map((x, i) => (
-                <span key={i}>{i === 3 ? `SAR ${x}` : x}</span>
-              ))}
+              {r.map((x, i) => <span key={i}>{i === 1 ? projectDisplayName(ar, x) : i === 2 ? buyerDisplayName(ar, x) : i === 3 ? localize(ar, `SAR ${x}`, `${x} ر.س`) : i === 5 ? transferBlockerLabel(ar, x) : i === 6 ? transferStatusLabel(ar, x) : x}</span>)}
             </button>
           ))}
           {projectRows.length === 0 ? (
@@ -1218,21 +1344,21 @@ function TransferDashboard({
               <p className="eyebrow">ملف الإفراغ</p>
               <h2>{localize(ar, "Title Transfer File", "ملف الإفراغ العقاري")} · {selectedTransfer[0]}</h2>
               <p>
-                {selectedTransfer[1]} · {selectedTransfer[2]} · SAR{" "}
-                {selectedTransfer[3]}
+                {projectDisplayName(ar, selectedTransfer[1])} · {buyerDisplayName(ar, selectedTransfer[2])} · {localize(ar, `SAR ${selectedTransfer[3]}`, `${selectedTransfer[3]} ر.س`)}
               </p>
             </div>
             <strong>{selectedTransfer[4]} {localize(ar, "ready", "جاهز")}</strong>
           </div>
           <div className="checklist">
-            {checks.map(([label, status]) => (
-              <div key={label}>
-                <span>{label}</span>
+            {checks.map(([id, label, status, statusLabel]) => (
+              <div key={id} className="transfer-document-row">
+                <span><b>{label}</b>{currentUploads[id] ? <small>{currentUploads[id]}</small> : null}</span>
                 <strong
                   className={`check-${status.toLowerCase().replaceAll(" ", "-")}`}
                 >
-                  {status}
+                  {statusLabel}
                 </strong>
+                <label className="transfer-upload-control"><FileArrowUp size={16} /><span>{localize(ar, "Upload / replace", "رفع / استبدال")}</span><input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(event) => { const file = event.target.files?.[0]; if (file) setUploadedDocuments((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: file.name } })); }} /></label>
               </div>
             ))}
           </div>
@@ -1249,23 +1375,23 @@ function TransferDashboard({
           </button>
           <button
             className="button button-primary"
-            onClick={approveReadiness}
-            disabled={approved}
+            onClick={() => setReviewOpen(true)}
           >
-            {localize(ar, "Approve readiness", "اعتماد الجاهزية")}
+            <ShieldCheck size={18} />{approved ? localize(ar, "Open approved review", "فتح المراجعة المعتمدة") : localize(ar, "Manager review & approval", "مراجعة واعتماد المدير")}
           </button>
           <button
-            className="button button-primary"
-            disabled={!approved || selectedTransfer[6] === "Approved"}
-            onClick={submitTransfer}
+            className="button button-secondary"
+            onClick={() => setIntegrationOpen(true)}
           >
-            {localize(ar, "Submit to authorized government channel", "الإرسال إلى القناة الحكومية المعتمدة")}
+            <PlugsConnected size={18} />{localize(ar, "Government integration setup (deferred)", "إعداد الربط الحكومي (مؤجل)")}
           </button>
           <p>
             {localize(ar, "Final ownership transfer is completed through the authorized government service and requires approved integration access. R4C prepares and governs the transfer file; it does not issue title deeds.", "يُستكمل نقل الملكية النهائي عبر الخدمة الحكومية المعتمدة ويتطلب صلاحية تكامل معتمدة. تقوم R4C بإعداد ملف الإفراغ وحوكمته ولا تُصدر صكوك الملكية.")}
           </p>
         </aside>
       </section>
+      {reviewOpen ? <div className="suite-modal-backdrop" role="presentation" onMouseDown={() => setReviewOpen(false)}><section className="suite-modal transfer-review-modal" role="dialog" aria-modal="true" aria-labelledby="transfer-review-title" onMouseDown={(event) => event.stopPropagation()}><header><div><p className="eyebrow">{localize(ar, "Supervisor gate", "بوابة اعتماد المشرف")}</p><h2 id="transfer-review-title">{localize(ar, "Review every customer document", "مراجعة جميع ملفات العميل")}</h2><span>{selectedTransfer[0]} · {buyerDisplayName(ar, selectedTransfer[2])}</span></div><button type="button" aria-label={localize(ar, "Close", "إغلاق")} onClick={() => setReviewOpen(false)}><X size={21} /></button></header><div className="review-role-banner"><ShieldCheck size={22} weight="duotone" /><div><strong>{localize(ar, "Sales manager / supervisor approval", "اعتماد مدير / مشرف المبيعات")}</strong><span>{localize(ar, "Final readiness cannot be approved by the sales agent who prepared the file.", "لا يمكن لمندوب المبيعات مُعدّ الملف اعتماد الجاهزية النهائية.")}</span></div><b>{localize(ar, "Authorized reviewer", "مراجع مخوّل")}</b></div><div className="review-document-list">{checks.map(([id, label, status, statusLabel]) => <article key={id}><div><strong>{label}</strong><span>{currentUploads[id] ?? localize(ar, "Existing governed document", "مستند محكوم قائم")}</span></div><i className={`check-${status.toLowerCase().replaceAll(" ", "-")}`}>{statusLabel}</i><button type="button" onClick={() => setReviewDecisions((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: "approved" } }))}><Eye size={16} />{currentDecisions[id] === "approved" ? localize(ar, "Reviewed", "تمت المراجعة") : localize(ar, "Review & approve", "مراجعة واعتماد")}</button><button type="button" className="review-change" onClick={() => setReviewDecisions((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: "changes" } }))}>{localize(ar, "Request correction", "طلب تصحيح")}</button></article>)}</div><label className="review-note"><span>{localize(ar, "Supervisor review note", "ملاحظة المراجع")}</span><textarea value={reviewNote} onChange={(event) => setReviewNote(event.target.value)} placeholder={localize(ar, "Record the approval basis or required action", "سجّل أساس الاعتماد أو الإجراء المطلوب")} /></label><footer><button className="button button-secondary" type="button" onClick={() => setReviewOpen(false)}>{localize(ar, "Save review draft", "حفظ مسودة المراجعة")}</button><button className="button button-primary" type="button" disabled={Object.values(currentDecisions).includes("changes")} onClick={() => { approveReadiness(); setReviewOpen(false); }}>{localize(ar, "Approve file readiness", "اعتماد جاهزية الملف")}</button></footer></section></div> : null}
+      {integrationOpen ? <div className="suite-modal-backdrop" role="presentation" onMouseDown={() => setIntegrationOpen(false)}><section className="suite-modal government-integration-modal" role="dialog" aria-modal="true" aria-labelledby="integration-title" onMouseDown={(event) => event.stopPropagation()}><header><div><p className="eyebrow">{localize(ar, "Integration blueprint", "مخطط الربط")}</p><h2 id="integration-title">{localize(ar, "Authorized government channel", "القناة الحكومية المعتمدة")}</h2></div><button type="button" aria-label={localize(ar, "Close", "إغلاق")} onClick={() => setIntegrationOpen(false)}><X size={21} /></button></header><div className="integration-status"><PlugsConnected size={26} weight="duotone" /><div><strong>{localize(ar, "Integration deferred pending authority agreement", "الربط مؤجل لحين الاتفاق مع الجهة")}</strong><span>{localize(ar, "The operational contract is prepared without activating external transmission.", "تم إعداد عقد التشغيل دون تفعيل الإرسال الخارجي.")}</span></div><b>{localize(ar, "Not connected", "غير متصل")}</b></div><div className="integration-contract"><label><span>{localize(ar, "Authority / service", "الجهة / الخدمة")}</span><input value={localize(ar, "To be agreed", "تحدد بعد الاتفاق")} readOnly /></label><label><span>{localize(ar, "Exchange method", "طريقة التبادل")}</span><select defaultValue="api"><option value="api">API</option><option value="file">{localize(ar, "Secure file exchange", "تبادل ملفات آمن")}</option></select></label><label><span>{localize(ar, "Authentication", "المصادقة")}</span><input value={localize(ar, "Authority-issued credentials — pending", "بيانات اعتماد تصدرها الجهة — معلقة")} readOnly /></label><label><span>{localize(ar, "Endpoint", "نقطة الربط")}</span><input value="https://authority.example/api/transfer" readOnly dir="ltr" /></label></div><section><h3>{localize(ar, "Prepared payload", "البيانات المجهزة للإرسال")}</h3><ul><li>{localize(ar, "Transfer reference and unit", "مرجع الإفراغ والوحدة")}</li><li>{localize(ar, "Buyer and seller verified identities", "هويتا البائع والمشتري المتحقق منهما")}</li><li>{localize(ar, "Approved document manifest and hashes", "بيان المستندات المعتمدة وبصماتها")}</li><li>{localize(ar, "Manager approval and audit trail", "اعتماد المدير وسجل التدقيق")}</li></ul></section><footer><button className="button button-secondary" type="button" disabled>{localize(ar, "Test connection after agreement", "اختبار الاتصال بعد الاتفاق")}</button><button className="button button-primary" type="button" onClick={() => setIntegrationOpen(false)}>{localize(ar, "Save deferred integration draft", "حفظ مسودة الربط المؤجل")}</button></footer></section></div> : null}
     </main>
   );
 }

@@ -1,18 +1,18 @@
 {
   "_meta": {
     "artifact": "modules/r4c-web.json",
-    "bodyDigest": "781f50d7d56bacc16cd80d899b8322c730e552e007baae4c25111c5926ca842e",
+    "bodyDigest": "d4fc1f70f74e6a75b9670952120904b703f458079a064b8005699e445ee0bd09",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "c32f3819ec2d3b55434f02f53918f86032e8dd287887658cdcf42904c3b6da05",
+    "inputDigest": "77f9154b8f2eb6bf287fb29cf129a55ade05006babd29675092b3fe6e9027d04",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 60 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 62 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
   "dependedOnBy": [],
@@ -21,6 +21,7 @@
   ],
   "discovery": {
     "codeFiles": [
+      "apps/web/app/(authenticated)/admin/users/page.tsx",
       "apps/web/app/(authenticated)/commercial/page.tsx",
       "apps/web/app/(authenticated)/cost-control/page.tsx",
       "apps/web/app/(authenticated)/layout.tsx",
@@ -61,6 +62,7 @@
       "apps/web/components/ProjectDetail.tsx",
       "apps/web/components/ProjectsJourney.tsx",
       "apps/web/components/ResetPasswordForm.tsx",
+      "apps/web/components/SalesPipelineWorkspace.tsx",
       "apps/web/components/StatePrimitives.tsx",
       "apps/web/lib/client-api.ts",
       "apps/web/lib/commercial-api.ts",
@@ -92,6 +94,7 @@
     "parseErrors": [],
     "publicSymbols": [],
     "sourceFiles": [
+      "apps/web/app/(authenticated)/admin/users/page.tsx",
       "apps/web/app/(authenticated)/commercial/page.tsx",
       "apps/web/app/(authenticated)/cost-control/page.tsx",
       "apps/web/app/(authenticated)/layout.tsx",
@@ -132,6 +135,7 @@
       "apps/web/components/ProjectDetail.tsx",
       "apps/web/components/ProjectsJourney.tsx",
       "apps/web/components/ResetPasswordForm.tsx",
+      "apps/web/components/SalesPipelineWorkspace.tsx",
       "apps/web/components/StatePrimitives.tsx",
       "apps/web/kaaf.module.json",
       "apps/web/lib/client-api.ts",

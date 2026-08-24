@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { Buildings, CalendarCheck, ChartLineUp, Files, Gauge, GlobeHemisphereEast, HouseLine, ShieldCheck, SignOut, SquaresFour, UserCircle, UserGear, UsersThree } from "@phosphor-icons/react";
 import { clientApi, ClientApiError } from "../lib/client-api";
 import type { BrowserSessionUser } from "../lib/types";
 import { useI18n } from "./I18nProvider";
@@ -74,9 +75,9 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
     <div className="app-shell" dir={locale === "ar" ? "rtl" : "ltr"}>
       <aside className="app-sidebar">
         <div className="brand-lockup">
-          <span className="brand-mark" aria-hidden="true">{t("common.brand")}</span>
+          <span className="brand-mark kynox-brand-symbol" aria-hidden="true"><Buildings size={29} weight="duotone" /></span>
           <div>
-            <strong>{t("common.brand")}</strong>
+            <strong>KYNOX</strong>
             <span>{t("common.platform")}</span>
           </div>
         </div>
@@ -88,7 +89,7 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
               href={preview ? "/design-preview" : "/projects"}
               aria-current={projectsActive ? "page" : undefined}
             >
-              <span className="nav-index" aria-hidden="true">01</span>
+              <Buildings className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
               {locale === "ar" ? "المشروعات والتطوير" : "Developments"}
             </Link>
             <Link
@@ -96,21 +97,42 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
               href={preview ? "/design-preview" : "/commercial"}
               aria-current={commercialActive ? "page" : undefined}
             >
-              <span className="nav-index" aria-hidden="true">02</span>
+              <ChartLineUp className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
               {t("commercial.nav")}
             </Link>
+            {user?.role === "ADMIN" ? (
+              <Link className={pathname.startsWith("/admin/users") ? "nav-link nav-link-active" : "nav-link"} href="/admin/users">
+                <UserGear className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
+                {locale === "ar" ? "المستخدمون والصلاحيات" : "Users & access"}
+              </Link>
+            ) : null}
+          </section>
+          <section className="kynox-sidebar-tools" aria-label={locale === "ar" ? "أدوات العمل التجاري" : "Commercial tools"}>
+            {([
+              ["portfolio", Gauge, locale === "ar" ? "المحفظة" : "Portfolio"],
+              ["pipeline", UsersThree, locale === "ar" ? "العملاء" : "Customers"],
+              ["units", HouseLine, locale === "ar" ? "الوحدات" : "Units"],
+              ["transfer", Files, locale === "ar" ? "الإفراغ" : "Transfer"],
+              ["operations", CalendarCheck, locale === "ar" ? "العمليات" : "Operations"],
+            ] as const).map(([id, Icon, label]) => (
+              <button key={id} type="button" onClick={() => window.dispatchEvent(new CustomEvent("r4c:commercial-tab", { detail: id }))}>
+                <Icon size={22} weight="duotone" aria-hidden="true" />
+                <span>{label}</span>
+              </button>
+            ))}
           </section>
         </nav>
-        <div className="sidebar-grid-key" aria-hidden="true">
-          <span>{t("common.brand")}</span>
-          <span>{t("header.workspace")}</span>
-        </div>
       </aside>
 
       <div className="app-stage">
         <header className="app-header">
-          <div>
-            <span className="header-kicker">{t("header.workspace")}</span>
+          <div className="workspace-context">
+            <span className="workspace-context-icon"><SquaresFour size={21} weight="duotone" /></span>
+            <div><span className="header-kicker">KYNOX · {t("header.workspace")}</span><strong>{locale === "ar" ? "مركز العمليات التجارية" : "Commercial operations center"}</strong></div>
+          </div>
+          <div className="modern-session-card">
+            <UserCircle size={34} weight="duotone" aria-hidden="true" />
+            <div>
             {sessionError ? (
               <strong>{t("shell.sessionError")}</strong>
             ) : user ? (
@@ -121,6 +143,8 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
             ) : (
               <strong>{t("shell.sessionLoading")}</strong>
             )}
+            </div>
+            {user ? <span className="role-chip"><ShieldCheck size={14} weight="fill" />{user.role}</span> : null}
           </div>
           <div className="header-actions">
             {user ? (
@@ -137,6 +161,7 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
               disabled={working}
               aria-label={t("header.language")}
             >
+              <GlobeHemisphereEast size={18} aria-hidden="true" />
               {locale === "ar" ? t("language.english") : t("language.arabic")}
             </button>
             <button
@@ -145,6 +170,7 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
               onClick={logout}
               disabled={working || preview}
             >
+              <SignOut size={18} aria-hidden="true" />
               {preview ? "Preview mode" : t("header.logout")}
             </button>
           </div>
