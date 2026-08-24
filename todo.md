@@ -9,3 +9,5 @@
 - [ ] Execute deployed authentication/session, rate-limit, positive, negative, responsive, and rollback checks.
 - [ ] Commission and complete an independent penetration test, then remediate and retest any P0/P1 findings.
 - [ ] Prepare the separate Founder production-authorization package after all deployed gates pass.
+- [ ] Create and push the complete committed R4C project to GitHub branch `manus/design-handoff`.
+- [ ] Verify the remote branch points to the intended complete handoff commit and report its URL and SHA.
