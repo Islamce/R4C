@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-08-23T20:35:46.239338+00:00",
+  "sourceDatabase": "r4c_rc_20260823",
+  "restoreDatabase": "r4c_rc_restore_20260823",
+  "backupFormat": "PostgreSQL custom format",
+  "schemaHashEqual": true,
+  "sourceCounts": {
+    "tenants": 9,
+    "users": 15,
+    "contacts": 2,
+    "opportunities": 5,
+    "leads": 11,
+    "reservations": 2,
+    "audit_events": 182
+  },
+  "restoreCounts": {
+    "tenants": 9,
+    "users": 15,
+    "contacts": 2,
+    "opportunities": 5,
+    "leads": 11,
+    "reservations": 2,
+    "audit_events": 182
+  },
+  "recordCountsEqual": true,
+  "pass": true
+}

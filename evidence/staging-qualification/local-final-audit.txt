@@ -1,0 +1,4 @@
+api_tests=PASS
+web_contract_tests=PASS
+typecheck=PASS
+secret_scan=PASS

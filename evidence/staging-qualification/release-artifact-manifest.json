@@ -1,0 +1,28 @@
+{
+  "product": "R4C",
+  "candidateSha": "cce16216e5b835959300de4d3537a10429320117",
+  "artifact": "r4c-release-artifact.tgz",
+  "artifactSha256": "1e13357598166740194eca84519d96082ca7e248f2684c1c21a4803475f62a82",
+  "artifactSize": "264K",
+  "buildCommand": "pnpm build",
+  "buildResult": "PASS",
+  "runtime": {
+    "node": ">=22",
+    "apiEntry": "apps/api/dist/main.js",
+    "webEntry": "apps/web/.next/standalone/apps/web/server.js",
+    "database": "PostgreSQL with Prisma migrations",
+    "redis": "Redis where hold-expiry/session/queue behavior is enabled",
+    "bim": "disabled for initial release"
+  },
+  "migrationSet": [
+    "0_init",
+    "20260812090000_commercial_domain_foundation",
+    "20260814000000_c02_pricing_media",
+    "20260814120000_c03_customer_leads",
+    "20260814150000_i18n_c04_holds_reservations",
+    "20260816123000_password_reset_email",
+    "20260823130000_canonical_crm"
+  ],
+  "sourceArtifactCorrespondence": "PASS for the local reviewed tree; deployed correspondence not verified because no authorized staging target is configured",
+  "productionDeployment": "NOT PERFORMED"
+}

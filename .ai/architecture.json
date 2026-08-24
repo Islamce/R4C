@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "51e55c176e199fb780587ba15ba9746f1ac28e9426958553e923d5a0660347e4",
+    "bodyDigest": "39dbf3a3a67dc8cb478c8cdf910f8bd16c9c82cc1361aaf34591fb6af8a22f06",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "c32f3819ec2d3b55434f02f53918f86032e8dd287887658cdcf42904c3b6da05",
+    "inputDigest": "1be8d299d16814a78eebdffdd7f0f9e4ea5efa3bfb98e3693bd76a6ae4ad89ad",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -84,13 +84,13 @@
   "modules": [
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 95 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 100 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
       "dependsOn": [],
       "discovery": {
-        "codeFileCount": 95,
+        "codeFileCount": 100,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -100,7 +100,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 99
+        "sourceFileCount": 104
       },
       "id": "r4c-api",
       "ownedEntities": [
@@ -280,7 +280,7 @@
     },
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 60 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 65 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
@@ -288,7 +288,7 @@
         "r4c-contracts"
       ],
       "discovery": {
-        "codeFileCount": 60,
+        "codeFileCount": 65,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -298,7 +298,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 63
+        "sourceFileCount": 68
       },
       "id": "r4c-web",
       "ownedEntities": [],

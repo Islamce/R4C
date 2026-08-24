@@ -1,0 +1,5 @@
+migration_rows=7
+latest_migrations=20260823130000_canonical_crm,20260816123000_password_reset_email,20260814150000_i18n_c04_holds_reservations,
+api_health={"service":"r4c-api","status":"ok","timestamp":"2026-08-23T20:43:42.634Z"}
+api_readiness={"service":"r4c-api","status":"ready","dependencies":{"database":{"status":"ok","latencyMs":11}},"uptimeSeconds":1223,"timestamp":"2026-08-23T20:43:42.654Z"}
+redis=PONG

@@ -1,0 +1,418 @@
+{
+  "base": "http://127.0.0.1:4000/api/v1",
+  "tenantCode": "ALOMRAN",
+  "runId": 1787516618739,
+  "checks": [
+    {
+      "name": "tenant resolution",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "id": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "code": "ALOMRAN",
+        "name": "Alomran Development",
+        "status": "ACTIVE"
+      }
+    },
+    {
+      "name": "administrator login",
+      "status": 201,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true,
+      "detail": {
+        "role": "ADMIN",
+        "userId": "2bc44617-4ed1-4a00-80eb-01772ca52fa6"
+      }
+    },
+    {
+      "name": "contacts read",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "count": 1
+      }
+    },
+    {
+      "name": "opportunities read",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "count": 4
+      }
+    },
+    {
+      "name": "tasks read",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "count": 2
+      }
+    },
+    {
+      "name": "activities read",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "count": 2
+      }
+    },
+    {
+      "name": "contact create persisted",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "6394dc81-2315-4c09-b6ef-7c717e323db4",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "customerId": null,
+        "leadId": null,
+        "ownerId": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+        "firstName": "Full Stack",
+        "lastName": "UAT Contact 1787516618739",
+        "email": "fullstack.contact.1787516618739@example.test",
+        "emailNormalized": "fullstack.contact.1787516618739@example.test",
+        "phone": "+966500618739",
+        "phoneNormalized": "+966500618739",
+        "communicationPreference": "PHONE",
+        "source": "R4C full-stack qualification",
+        "createdAt": "2026-08-23T20:23:39.784Z",
+        "updatedAt": "2026-08-23T20:23:39.784Z"
+      }
+    },
+    {
+      "name": "duplicate contact rejected",
+      "status": 409,
+      "expected": [
+        400,
+        409
+      ],
+      "pass": true,
+      "detail": {
+        "message": "A contact with the same normalized email or phone already exists in this tenant",
+        "error": "Conflict",
+        "statusCode": 409
+      }
+    },
+    {
+      "name": "opportunity create persisted",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "d8b36316-4720-49f5-b330-e5127c64748e",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "leadId": null,
+        "customerId": null,
+        "contactId": "6394dc81-2315-4c09-b6ef-7c717e323db4",
+        "projectId": null,
+        "unitId": null,
+        "ownerId": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+        "name": "Full Stack UAT Opportunity",
+        "stage": "QUALIFICATION",
+        "expectedValueMinor": "125000000",
+        "currency": "SAR",
+        "source": "R4C full-stack qualification",
+        "createdAt": "2026-08-23T20:23:39.806Z",
+        "updatedAt": "2026-08-23T20:23:39.806Z",
+        "closedAt": null
+      }
+    },
+    {
+      "name": "expected value exact minor units",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": "125000000"
+    },
+    {
+      "name": "valid opportunity stage transition",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": "DISCOVERY"
+    },
+    {
+      "name": "invalid backward opportunity transition rejected",
+      "status": 409,
+      "expected": [
+        400,
+        409
+      ],
+      "pass": true,
+      "detail": {
+        "message": "Invalid opportunity transition DISCOVERY -> QUALIFICATION",
+        "error": "Conflict",
+        "statusCode": 409
+      }
+    },
+    {
+      "name": "activity create persisted",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "e2a4e97b-63a1-42f9-b414-9a2459e45603",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "type": "NOTE",
+        "notes": "Actual API activity persisted during R4C release qualification.",
+        "actorId": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+        "contactId": "6394dc81-2315-4c09-b6ef-7c717e323db4",
+        "leadId": null,
+        "opportunityId": "d8b36316-4720-49f5-b330-e5127c64748e",
+        "quotationId": null,
+        "reservationId": null,
+        "projectId": null,
+        "unitId": null,
+        "createdAt": "2026-08-23T20:23:39.835Z"
+      }
+    },
+    {
+      "name": "task create persisted",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "0abeea27-b681-4fbc-a08d-4724670c1172",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "title": "Complete actual API qualification",
+        "description": "Synthetic release-candidate task.",
+        "status": "OPEN",
+        "priority": "HIGH",
+        "dueAt": "2026-08-24T12:00:00.000Z",
+        "assigneeId": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+        "createdById": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+        "contactId": "6394dc81-2315-4c09-b6ef-7c717e323db4",
+        "leadId": null,
+        "opportunityId": "d8b36316-4720-49f5-b330-e5127c64748e",
+        "quotationId": null,
+        "reservationId": null,
+        "projectId": null,
+        "unitId": null,
+        "completedAt": null,
+        "createdAt": "2026-08-23T20:23:39.848Z",
+        "updatedAt": "2026-08-23T20:23:39.848Z"
+      }
+    },
+    {
+      "name": "task completion persisted",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": "COMPLETED"
+    },
+    {
+      "name": "quotation revision 1 persisted",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "quotation": {
+          "id": "db96ed57-17d0-4966-abd6-9960ebdd97d5",
+          "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+          "opportunityId": "d8b36316-4720-49f5-b330-e5127c64748e",
+          "leadId": null,
+          "customerId": null,
+          "projectId": null,
+          "unitId": null,
+          "ownerId": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+          "status": "DRAFT",
+          "currentRevision": 1,
+          "createdAt": "2026-08-23T20:23:39.871Z",
+          "updatedAt": "2026-08-23T20:23:39.871Z"
+        },
+        "revision": {
+          "id": "5595cdc6-2c05-4a50-9798-5e85404161d8",
+          "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+          "quotationId": "db96ed57-17d0-4966-abd6-9960ebdd97d5",
+          "revision": 1,
+          "status": "DRAFT",
+          "snapshot": {
+            "source": "R4C full-stack qualification",
+            "currency": "SAR",
+            "totalMinor": "125000000"
+          },
+          "createdById": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+          "approvedAt": null,
+          "sentAt": null,
+          "supersededAt": null,
+          "createdAt": "2026-08-23T20:23:39.873Z"
+        }
+      }
+    },
+    {
+      "name": "quotation revision 1 approval persisted",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": "APPROVED"
+    },
+    {
+      "name": "quotation revision 1 send-state persisted",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": "SENT"
+    },
+    {
+      "name": "quotation revision 2 persisted",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "b3766ced-3e76-49ad-a89d-a17ecf42fc0d",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "quotationId": "db96ed57-17d0-4966-abd6-9960ebdd97d5",
+        "revision": 2,
+        "status": "DRAFT",
+        "snapshot": {
+          "currency": "SAR",
+          "totalMinor": "127500000",
+          "revisionReason": "Synthetic UAT revision"
+        },
+        "createdById": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+        "approvedAt": null,
+        "sentAt": null,
+        "supersededAt": null,
+        "createdAt": "2026-08-23T20:23:39.903Z"
+      }
+    },
+    {
+      "name": "customer decision persisted",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "996d1e7d-abd4-4bbf-b038-81885bed889f",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "quotationRevisionId": "b3766ced-3e76-49ad-a89d-a17ecf42fc0d",
+        "status": "REVISION_REQUESTED",
+        "decidedById": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+        "note": "Synthetic UAT customer decision",
+        "decidedAt": "2026-08-23T20:23:39.915Z"
+      }
+    },
+    {
+      "name": "duplicate customer decision rejected",
+      "status": 409,
+      "expected": [
+        400,
+        409
+      ],
+      "pass": true,
+      "detail": {
+        "message": "A customer decision already exists for this quotation revision",
+        "error": "Conflict",
+        "statusCode": 409
+      }
+    },
+    {
+      "name": "contacts final read",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "count": 2
+      }
+    },
+    {
+      "name": "opportunities final read",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "count": 5
+      }
+    },
+    {
+      "name": "tasks final read",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "count": 3
+      }
+    },
+    {
+      "name": "activities final read",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "count": 1
+      }
+    },
+    {
+      "name": "unauthenticated CRM read rejected",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "detail": {
+        "message": "Unauthorized",
+        "statusCode": 401
+      }
+    },
+    {
+      "name": "refresh token rotation",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "accessTokenPresent": true,
+        "refreshTokenPresent": true
+      }
+    },
+    {
+      "name": "logout revokes refresh token",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "revoked": true
+      }
+    },
+    {
+      "name": "revoked refresh token rejected",
+      "status": 401,
+      "expected": [
+        400,
+        401,
+        403
+      ],
+      "pass": true,
+      "detail": {
+        "message": "Refresh token reuse detected",
+        "error": "Unauthorized",
+        "statusCode": 401
+      }
+    }
+  ],
+  "ids": {
+    "admin": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+    "contact": "6394dc81-2315-4c09-b6ef-7c717e323db4",
+    "opportunity": "d8b36316-4720-49f5-b330-e5127c64748e",
+    "activity": "e2a4e97b-63a1-42f9-b414-9a2459e45603",
+    "task": "0abeea27-b681-4fbc-a08d-4724670c1172",
+    "quotation": "db96ed57-17d0-4966-abd6-9960ebdd97d5",
+    "revision1": "5595cdc6-2c05-4a50-9798-5e85404161d8",
+    "revision2": "b3766ced-3e76-49ad-a89d-a17ecf42fc0d"
+  },
+  "failures": [],
+  "auth": {
+    "accessTokenPresent": true,
+    "refreshTokenPresent": true,
+    "accessExpiresInSeconds": 900,
+    "refreshExpiresInSeconds": 1209599
+  },
+  "pass": true
+}

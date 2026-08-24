@@ -1,0 +1,653 @@
+{
+  "loginStatus": 201,
+  "captures": [
+    {
+      "label": "English 1440x900",
+      "width": 1440,
+      "height": 900,
+      "filename": "sales-en-1440x900.png",
+      "title": "R4C",
+      "lang": "en",
+      "dir": "ltr",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "R4C\nR4C\nReal-estate delivery control\n\nCOMMERCIAL WORKSPACE\n\n01\nDevelopments\n02\nCommercial sales\n03\nSales command center\nR4C\nGoverned workspace\nGOVERNED WORKSPACE\nR4C Administrator\nuat.admin@alomran.test\nTenant\nAlomran Development\nALOMRAN\nالعربية\nLog out\nThe server rejected this action. Review the fields and try again.\nRefresh",
+      "buttons": [
+        {
+          "text": "☰Menu",
+          "aria": "Control home",
+          "disabled": false
+        },
+        {
+          "text": "العربية",
+          "aria": "Language",
+          "disabled": false
+        },
+        {
+          "text": "Log out",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Refresh",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "reduced": "auto",
+      "geometry": {
+        "boxes": [
+          {
+            "selector": ".sales-work-panel",
+            "missing": true
+          },
+          {
+            "selector": ".sales-opportunity-panel",
+            "missing": true
+          },
+          {
+            "selector": ".sales-context-panel",
+            "missing": true
+          },
+          {
+            "selector": ".sales-timeline-panel",
+            "missing": true
+          },
+          {
+            "selector": ".sales-task-band",
+            "missing": true
+          }
+        ],
+        "intersections": [],
+        "narrow": [],
+        "outside": [],
+        "stageClipped": false
+      },
+      "noHorizontalOverflow": true,
+      "geometryPass": true
+    },
+    {
+      "label": "English 1024x768",
+      "width": 1024,
+      "height": 768,
+      "filename": "sales-en-1024x768.png",
+      "title": "R4C",
+      "lang": "en",
+      "dir": "ltr",
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "bodyText": "R4C\nR4C\nReal-estate delivery control\n\nCOMMERCIAL WORKSPACE\n\n01\nDevelopments\n02\nCommercial sales\n03\nSales command center\nR4C\nGoverned workspace\nGOVERNED WORKSPACE\nR4C Administrator\nuat.admin@alomran.test\nTenant\nAlomran Development\nALOMRAN\nالعربية\nLog out\nThe server rejected this action. Review the fields and try again.\nRefresh",
+      "buttons": [
+        {
+          "text": "☰Menu",
+          "aria": "Control home",
+          "disabled": false
+        },
+        {
+          "text": "العربية",
+          "aria": "Language",
+          "disabled": false
+        },
+        {
+          "text": "Log out",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Refresh",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "reduced": "auto",
+      "geometry": {
+        "boxes": [
+          {
+            "selector": ".sales-work-panel",
+            "missing": true
+          },
+          {
+            "selector": ".sales-opportunity-panel",
+            "missing": true
+          },
+          {
+            "selector": ".sales-context-panel",
+            "missing": true
+          },
+          {
+            "selector": ".sales-timeline-panel",
+            "missing": true
+          },
+          {
+            "selector": ".sales-task-band",
+            "missing": true
+          }
+        ],
+        "intersections": [],
+        "narrow": [],
+        "outside": [],
+        "stageClipped": false
+      },
+      "noHorizontalOverflow": true,
+      "geometryPass": true
+    },
+    {
+      "label": "English 390x844",
+      "width": 390,
+      "height": 844,
+      "filename": "sales-en-390x844.png",
+      "title": "R4C",
+      "lang": "en",
+      "dir": "ltr",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "bodyText": "R4C\nR4C\nReal-estate delivery control\n☰\nMenu\nGOVERNED WORKSPACE\nR4C Administrator\nTenant\nAlomran Development\nALOMRAN\nالعربية\nLog out\nThe server rejected this action. Review the fields and try again.\nRefresh",
+      "buttons": [
+        {
+          "text": "☰\nMenu",
+          "aria": "Control home",
+          "disabled": false
+        },
+        {
+          "text": "العربية",
+          "aria": "Language",
+          "disabled": false
+        },
+        {
+          "text": "Log out",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Refresh",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "reduced": "auto",
+      "geometry": {
+        "boxes": [
+          {
+            "selector": ".sales-work-panel",
+            "missing": true
+          },
+          {
+            "selector": ".sales-opportunity-panel",
+            "missing": true
+          },
+          {
+            "selector": ".sales-context-panel",
+            "missing": true
+          },
+          {
+            "selector": ".sales-timeline-panel",
+            "missing": true
+          },
+          {
+            "selector": ".sales-task-band",
+            "missing": true
+          }
+        ],
+        "intersections": [],
+        "narrow": [],
+        "outside": [],
+        "stageClipped": false
+      },
+      "noHorizontalOverflow": true,
+      "geometryPass": true
+    },
+    {
+      "label": "Arabic 1440x900",
+      "width": 1440,
+      "height": 900,
+      "filename": "sales-ar-1440x900.png",
+      "lang": "ar",
+      "dir": "rtl",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "text": "R4C\nR4C\nمنصة التحكم في تسليم المشاريع العقارية\n\nمساحة العمل التجارية\n\n01\nالمشروعات والتطوير\n02\nالمبيعات التجارية\n03\nمركز مبيعات\nR4C\nمساحة عمل محكومة\nمساحة عمل محكومة\nR4C Administrator\nuat.admin@alomran.test\nالمستأجر\nAlomran Development\nALOMRAN\nEnglish\nتسجيل الخروج\nرفض الخادم هذا الإجراء. راجع الحقول وحاول مرة أخرى.\nتحديث",
+      "noHorizontalOverflow": true
+    },
+    {
+      "label": "Arabic 1024x768",
+      "width": 1024,
+      "height": 768,
+      "filename": "sales-ar-1024x768.png",
+      "lang": "ar",
+      "dir": "rtl",
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "text": "R4C\nR4C\nمنصة التحكم في تسليم المشاريع العقارية\n\nمساحة العمل التجارية\n\n01\nالمشروعات والتطوير\n02\nالمبيعات التجارية\n03\nمركز مبيعات\nR4C\nمساحة عمل محكومة\nمساحة عمل محكومة\nR4C Administrator\nuat.admin@alomran.test\nالمستأجر\nAlomran Development\nALOMRAN\nEnglish\nتسجيل الخروج\nرفض الخادم هذا الإجراء. راجع الحقول وحاول مرة أخرى.\nتحديث",
+      "noHorizontalOverflow": true
+    },
+    {
+      "label": "Arabic 390x844",
+      "width": 390,
+      "height": 844,
+      "filename": "sales-ar-390x844.png",
+      "lang": "ar",
+      "dir": "rtl",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "text": "R4C\nR4C\nمنصة التحكم في تسليم المشاريع العقارية\n☰\nالقائمة\nمساحة عمل محكومة\nR4C Administrator\nالمستأجر\nAlomran Development\nALOMRAN\nEnglish\nتسجيل الخروج\nرفض الخادم هذا الإجراء. راجع الحقول وحاول مرة أخرى.\nتحديث",
+      "noHorizontalOverflow": true
+    }
+  ],
+  "checks": [
+    {
+      "name": "geometry",
+      "status": "PASS",
+      "detail": [
+        {
+          "label": "English 1440x900",
+          "geometry": {
+            "boxes": [
+              {
+                "selector": ".sales-work-panel",
+                "missing": true
+              },
+              {
+                "selector": ".sales-opportunity-panel",
+                "missing": true
+              },
+              {
+                "selector": ".sales-context-panel",
+                "missing": true
+              },
+              {
+                "selector": ".sales-timeline-panel",
+                "missing": true
+              },
+              {
+                "selector": ".sales-task-band",
+                "missing": true
+              }
+            ],
+            "intersections": [],
+            "narrow": [],
+            "outside": [],
+            "stageClipped": false
+          },
+          "geometryPass": true
+        },
+        {
+          "label": "English 1024x768",
+          "geometry": {
+            "boxes": [
+              {
+                "selector": ".sales-work-panel",
+                "missing": true
+              },
+              {
+                "selector": ".sales-opportunity-panel",
+                "missing": true
+              },
+              {
+                "selector": ".sales-context-panel",
+                "missing": true
+              },
+              {
+                "selector": ".sales-timeline-panel",
+                "missing": true
+              },
+              {
+                "selector": ".sales-task-band",
+                "missing": true
+              }
+            ],
+            "intersections": [],
+            "narrow": [],
+            "outside": [],
+            "stageClipped": false
+          },
+          "geometryPass": true
+        },
+        {
+          "label": "English 390x844",
+          "geometry": {
+            "boxes": [
+              {
+                "selector": ".sales-work-panel",
+                "missing": true
+              },
+              {
+                "selector": ".sales-opportunity-panel",
+                "missing": true
+              },
+              {
+                "selector": ".sales-context-panel",
+                "missing": true
+              },
+              {
+                "selector": ".sales-timeline-panel",
+                "missing": true
+              },
+              {
+                "selector": ".sales-task-band",
+                "missing": true
+              }
+            ],
+            "intersections": [],
+            "narrow": [],
+            "outside": [],
+            "stageClipped": false
+          },
+          "geometryPass": true
+        },
+        {
+          "label": "Arabic 1440x900"
+        },
+        {
+          "label": "Arabic 1024x768"
+        },
+        {
+          "label": "Arabic 390x844"
+        }
+      ]
+    },
+    {
+      "name": "accessibility-smoke",
+      "status": "PASS",
+      "detail": {
+        "controlCount": 7,
+        "unnamedCount": 0,
+        "smallTargetCount": 0
+      }
+    },
+    {
+      "name": "touch-targets",
+      "status": "PASS",
+      "detail": {
+        "controlCount": 7,
+        "unnamedCount": 0,
+        "smallTargetCount": 0
+      }
+    },
+    {
+      "name": "reduced-motion",
+      "status": "PASS",
+      "detail": "Chromium context created with reducedMotion=reduce; captures completed without workflow loss"
+    },
+    {
+      "name": "http-error-classification",
+      "status": "PARTIAL — NON-BLOCKING",
+      "detail": [
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/contacts"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/opportunities"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/tasks"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/activities"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/contacts"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/opportunities"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/tasks"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/activities"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/contacts"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/opportunities"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/tasks"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/activities"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/contacts"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/opportunities"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/tasks"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/activities"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/contacts"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/opportunities"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/tasks"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/activities"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/contacts"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/opportunities"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/tasks"
+        },
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:3001/api/backend/crm/activities"
+        }
+      ]
+    },
+    {
+      "name": "console-errors",
+      "status": "PARTIAL — NON-BLOCKING",
+      "detail": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    }
+  ],
+  "drawers": [
+    {
+      "name": "Contact",
+      "status": "UNAVAILABLE_TRIGGER"
+    },
+    {
+      "name": "Opportunity",
+      "status": "UNAVAILABLE_TRIGGER"
+    },
+    {
+      "name": "Activity",
+      "status": "UNAVAILABLE_TRIGGER"
+    },
+    {
+      "name": "Task",
+      "status": "UNAVAILABLE_TRIGGER"
+    },
+    {
+      "name": "Quotation",
+      "status": "UNAVAILABLE_TRIGGER"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "httpErrors": [
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/contacts"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/opportunities"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/tasks"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/activities"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/contacts"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/opportunities"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/tasks"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/activities"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/contacts"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/opportunities"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/tasks"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/activities"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/contacts"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/opportunities"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/tasks"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/activities"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/contacts"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/opportunities"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/tasks"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/activities"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/contacts"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/opportunities"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/tasks"
+    },
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:3001/api/backend/crm/activities"
+    }
+  ],
+  "localeStatus": 200
+}

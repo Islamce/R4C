@@ -1,0 +1,38 @@
+TAP version 13
+# Subtest: R4C Sales Command Center is registered and contract-backed
+ok 1 - R4C Sales Command Center is registered and contract-backed
+  ---
+  duration_ms: 7.202266
+  ...
+# Subtest: Sales UI does not claim government execution or use unverified global search
+ok 2 - Sales UI does not claim government execution or use unverified global search
+  ---
+  duration_ms: 1.7957
+  ...
+# Subtest: Sales UI is an action-oriented workspace rather than a permanent form wall
+ok 3 - Sales UI is an action-oriented workspace rather than a permanent form wall
+  ---
+  duration_ms: 3.144415
+  ...
+# Subtest: locale toggle route preserves the established bilingual cookie contract
+ok 4 - locale toggle route preserves the established bilingual cookie contract
+  ---
+  duration_ms: 1.135278
+  ...
+# Subtest: Sales drawers preserve keyboard focus and sparse context stays adaptive
+ok 5 - Sales drawers preserve keyboard focus and sparse context stays adaptive
+  ---
+  duration_ms: 1.920521
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 105.668122
+
+FRONTEND_CONTRACT_EXIT=0
+CANONICAL_SHA=cce16216e5b835959300de4d3537a10429320117

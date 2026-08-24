@@ -6,9 +6,12 @@ import { trustProxyHops } from "./common/rate-limit";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const express = app.getHttpAdapter().getInstance() as {
-    set(setting: string, value: number): void;
+    set(setting: string, value: unknown): void;
   };
   express.set("trust proxy", trustProxyHops());
+  express.set("json replacer", (_key: string, value: unknown) =>
+    typeof value === "bigint" ? value.toString() : value,
+  );
 
   app.setGlobalPrefix("api/v1");
   const corsOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:3000")

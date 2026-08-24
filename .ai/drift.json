@@ -1,19 +1,19 @@
 {
   "_meta": {
     "artifact": "drift.json",
-    "bodyDigest": "7aaaf7c5281039ab8ba9b35e431100f1b98cac2d4142608ff1ceb57218a86941",
+    "bodyDigest": "75217234a4599d781b6cb440989216c030848bf56be14cc4550a90345a0c4512",
     "confidence": "derived",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "c32f3819ec2d3b55434f02f53918f86032e8dd287887658cdcf42904c3b6da05",
+    "inputDigest": "1be8d299d16814a78eebdffdd7f0f9e4ea5efa3bfb98e3693bd76a6ae4ad89ad",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "confidenceByModule": {
     "r4c-api": {
       "level": "verified",
-      "reason": "Declared and corroborated by 95 discovered code file(s)."
+      "reason": "Declared and corroborated by 100 discovered code file(s)."
     },
     "r4c-bim-worker": {
       "level": "verified",
@@ -33,7 +33,7 @@
     },
     "r4c-web": {
       "level": "verified",
-      "reason": "Declared and corroborated by 60 discovered code file(s)."
+      "reason": "Declared and corroborated by 65 discovered code file(s)."
     },
     "root": {
       "level": "derived",

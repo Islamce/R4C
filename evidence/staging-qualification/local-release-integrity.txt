@@ -1,0 +1,5 @@
+prisma_validate=PASS
+api_build=PASS
+web_build=PASS
+artifact_size=264K
+artifact_sha256=1e13357598166740194eca84519d96082ca7e248f2684c1c21a4803475f62a82

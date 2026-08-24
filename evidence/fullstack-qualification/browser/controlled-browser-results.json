@@ -1,0 +1,757 @@
+{
+  "loginStatus": 201,
+  "captures": [
+    {
+      "label": "English 1440x900",
+      "width": 1440,
+      "height": 900,
+      "filename": "sales-en-1440x900.png",
+      "title": "R4C",
+      "lang": "en",
+      "dir": "ltr",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "R4C\nR4C\nReal-estate delivery control\n\nCOMMERCIAL WORKSPACE\n\n01\nDevelopments\n02\nCommercial sales\n03\nSales command center\nR4C\nGoverned workspace\nGOVERNED WORKSPACE\nR4C Administrator\nuat.admin@alomran.test\nTenant\nAlomran Development\nALOMRAN\nالعربية\nLog out\n\nSALES OPERATING WORKSPACE\n\nCommand Center\n\nA focused queue for buyer context, follow-up, opportunity movement and governed commercial actions.\n\nContract-backed surface\nRefresh\nOPERATING OVERVIEW\nYour queue is clear.\nOverdue\n0\nTasks\nOpen work\n0\nTasks\nContacts\n2\nOpen\nOpportunities\n5\nOpen\n\nQUICK ACTIONS\n\nActions open in context so the workspace stays focused.\n＋ Log activity\n＋ Create task\n＋ New opportunity\nNew contact\n\nMY WORK\n\nWhat requires attention\n0\nYour queue is clear.\nNothing requires attention in this view.\n\nOPPORTUNITIES\n\nFull Stack UAT Opportunity\nView context\n—\nFull Stack UAT Opportunity\nProbe Opportunity 20260823\nProbe Opportunity 20260823\nFull Stack UAT Opportunity\nFull Stack UAT Opportunity\nDiscovery\nSAR 1,250,000\nCustomer\nFull Stack UAT Contact 1787516618739\nOwner\nR4C Administrator\nProject / unit\n— / —\n1\nQualification\n2\nDiscovery\n3\nProposal\n4\nNegotiation\n5\nReserved\n6\nWon\nProposal\nLost\nDisqualified\nCreate quotation\n\nSELECTED CONTEXT\n\nFull Stack UAT Opportunity\nCustomer\nFull Stack UAT Contact 1787516618739\nProject / unit\n— · —\nStatus\nLatest activity\nNote\nAug 23, 2026\n\nACTIVITY TIMELINE\n\nHistory\n1\nNote\n\nActual API activity persisted during R4C release qualification.\n\nR4C Administrator · Aug 23, 2026\n\nTASK QUEUE\n\nWorkload\n＋ Create task\nComplete actual API qualification\nCompleted · Aug 24, 2026\nComplete actual API qualification\nCompleted · Aug 24, 2026\nComplete actual API qualification\nCompleted · Aug 24, 2026\n\nUnit availability remains authoritative in the reservation and inventory workflow.",
+      "buttons": [
+        {
+          "text": "☰Menu",
+          "aria": "Control home",
+          "disabled": false
+        },
+        {
+          "text": "العربية",
+          "aria": "Language",
+          "disabled": false
+        },
+        {
+          "text": "Log out",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Refresh",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Log activity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Create task",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ New opportunity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "New contact",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Proposal",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Lost",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Disqualified",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Create quotation",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Create task",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "reduced": "auto",
+      "geometry": {
+        "boxes": [
+          {
+            "selector": ".sales-work-panel",
+            "x": 265.59375,
+            "y": 534.921875,
+            "width": 755.890625,
+            "height": 208.28125,
+            "right": 1021.484375,
+            "bottom": 743.203125
+          },
+          {
+            "selector": ".sales-opportunity-panel",
+            "x": 265.59375,
+            "y": 759.203125,
+            "width": 755.890625,
+            "height": 444.5625,
+            "right": 1021.484375,
+            "bottom": 1203.765625
+          },
+          {
+            "selector": ".sales-context-panel",
+            "x": 1037.484375,
+            "y": 534.921875,
+            "width": 364.90625,
+            "height": 383.453125,
+            "right": 1402.390625,
+            "bottom": 918.375
+          },
+          {
+            "selector": ".sales-timeline-panel",
+            "x": 1037.484375,
+            "y": 934.375,
+            "width": 364.90625,
+            "height": 233.9375,
+            "right": 1402.390625,
+            "bottom": 1168.3125
+          },
+          {
+            "selector": ".sales-task-band",
+            "x": 265.59375,
+            "y": 1219.765625,
+            "width": 1136.8125,
+            "height": 200.015625,
+            "right": 1402.40625,
+            "bottom": 1419.78125
+          }
+        ],
+        "intersections": [],
+        "narrow": [
+          ".sales-context-panel",
+          ".sales-timeline-panel"
+        ],
+        "outside": [],
+        "stageClipped": false
+      },
+      "noHorizontalOverflow": true,
+      "geometryPass": false
+    },
+    {
+      "label": "English 1024x768",
+      "width": 1024,
+      "height": 768,
+      "filename": "sales-en-1024x768.png",
+      "title": "R4C",
+      "lang": "en",
+      "dir": "ltr",
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "bodyText": "R4C\nR4C\nReal-estate delivery control\n\nCOMMERCIAL WORKSPACE\n\n01\nDevelopments\n02\nCommercial sales\n03\nSales command center\nR4C\nGoverned workspace\nGOVERNED WORKSPACE\nR4C Administrator\nuat.admin@alomran.test\nTenant\nAlomran Development\nALOMRAN\nالعربية\nLog out\n\nSALES OPERATING WORKSPACE\n\nCommand Center\n\nA focused queue for buyer context, follow-up, opportunity movement and governed commercial actions.\n\nContract-backed surface\nRefresh\nOPERATING OVERVIEW\nYour queue is clear.\nOverdue\n0\nTasks\nOpen work\n0\nTasks\nContacts\n2\nOpen\nOpportunities\n5\nOpen\n\nQUICK ACTIONS\n\nActions open in context so the workspace stays focused.\n＋ Log activity\n＋ Create task\n＋ New opportunity\nNew contact\n\nMY WORK\n\nWhat requires attention\n0\nYour queue is clear.\nNothing requires attention in this view.\n\nOPPORTUNITIES\n\nFull Stack UAT Opportunity\nView context\n—\nFull Stack UAT Opportunity\nProbe Opportunity 20260823\nProbe Opportunity 20260823\nFull Stack UAT Opportunity\nFull Stack UAT Opportunity\nDiscovery\nSAR 1,250,000\nCustomer\nFull Stack UAT Contact 1787516618739\nOwner\nR4C Administrator\nProject / unit\n— / —\n1\nQualification\n2\nDiscovery\n3\nProposal\n4\nNegotiation\n5\nReserved\n6\nWon\nProposal\nLost\nDisqualified\nCreate quotation\n\nSELECTED CONTEXT\n\nFull Stack UAT Opportunity\nCustomer\nFull Stack UAT Contact 1787516618739\nProject / unit\n— · —\nStatus\nLatest activity\nNote\nAug 23, 2026\n\nACTIVITY TIMELINE\n\nHistory\n1\nNote\n\nActual API activity persisted during R4C release qualification.\n\nR4C Administrator · Aug 23, 2026\n\nTASK QUEUE\n\nWorkload\n＋ Create task\nComplete actual API qualification\nCompleted · Aug 24, 2026\nComplete actual API qualification\nCompleted · Aug 24, 2026\nComplete actual API qualification\nCompleted · Aug 24, 2026\n\nUnit availability remains authoritative in the reservation and inventory workflow.",
+      "buttons": [
+        {
+          "text": "☰Menu",
+          "aria": "Control home",
+          "disabled": false
+        },
+        {
+          "text": "العربية",
+          "aria": "Language",
+          "disabled": false
+        },
+        {
+          "text": "Log out",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Refresh",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Log activity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Create task",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ New opportunity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "New contact",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Proposal",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Lost",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Disqualified",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Create quotation",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Create task",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "reduced": "auto",
+      "geometry": {
+        "boxes": [
+          {
+            "selector": ".sales-work-panel",
+            "x": 258.71875,
+            "y": 605.203125,
+            "width": 418.5625,
+            "height": 208.28125,
+            "right": 677.28125,
+            "bottom": 813.484375
+          },
+          {
+            "selector": ".sales-opportunity-panel",
+            "x": 258.71875,
+            "y": 829.484375,
+            "width": 418.5625,
+            "height": 529.5,
+            "right": 677.28125,
+            "bottom": 1358.984375
+          },
+          {
+            "selector": ".sales-context-panel",
+            "x": 693.28125,
+            "y": 605.203125,
+            "width": 300,
+            "height": 411.453125,
+            "right": 993.28125,
+            "bottom": 1016.65625
+          },
+          {
+            "selector": ".sales-timeline-panel",
+            "x": 693.28125,
+            "y": 1032.65625,
+            "width": 300,
+            "height": 233.9375,
+            "right": 993.28125,
+            "bottom": 1266.59375
+          },
+          {
+            "selector": ".sales-task-band",
+            "x": 258.71875,
+            "y": 1374.984375,
+            "width": 734.5625,
+            "height": 200.015625,
+            "right": 993.28125,
+            "bottom": 1575
+          }
+        ],
+        "intersections": [],
+        "narrow": [
+          ".sales-work-panel",
+          ".sales-opportunity-panel",
+          ".sales-context-panel",
+          ".sales-timeline-panel"
+        ],
+        "outside": [],
+        "stageClipped": false
+      },
+      "noHorizontalOverflow": true,
+      "geometryPass": false
+    },
+    {
+      "label": "English 390x844",
+      "width": 390,
+      "height": 844,
+      "filename": "sales-en-390x844.png",
+      "title": "R4C",
+      "lang": "en",
+      "dir": "ltr",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "bodyText": "R4C\nR4C\nReal-estate delivery control\n☰\nMenu\nGOVERNED WORKSPACE\nR4C Administrator\nTenant\nAlomran Development\nALOMRAN\nالعربية\nLog out\n\nSALES OPERATING WORKSPACE\n\nCommand Center\n\nA focused queue for buyer context, follow-up, opportunity movement and governed commercial actions.\n\nContract-backed surface\nRefresh\nOPERATING OVERVIEW\nYour queue is clear.\nOverdue\n0\nTasks\nOpen work\n0\nTasks\nContacts\n2\nOpen\nOpportunities\n5\nOpen\n\nQUICK ACTIONS\n\nActions open in context so the workspace stays focused.\n＋ Log activity\n＋ Create task\n＋ New opportunity\nNew contact\n\nMY WORK\n\nWhat requires attention\n0\nYour queue is clear.\nNothing requires attention in this view.\n\nOPPORTUNITIES\n\nFull Stack UAT Opportunity\nView context\n—\nFull Stack UAT Opportunity\nProbe Opportunity 20260823\nProbe Opportunity 20260823\nFull Stack UAT Opportunity\nFull Stack UAT Opportunity\nDiscovery\nSAR 1,250,000\nCustomer\nFull Stack UAT Contact 1787516618739\nOwner\nR4C Administrator\nProject / unit\n— / —\n1\nQualification\n2\nDiscovery\n3\nProposal\n4\nNegotiation\n5\nReserved\n6\nWon\nProposal\nLost\nDisqualified\nCreate quotation\n\nSELECTED CONTEXT\n\nFull Stack UAT Opportunity\nCustomer\nFull Stack UAT Contact 1787516618739\nProject / unit\n— · —\nStatus\nLatest activity\nNote\nAug 23, 2026\n\nACTIVITY TIMELINE\n\nHistory\n1\nNote\n\nActual API activity persisted during R4C release qualification.\n\nR4C Administrator · Aug 23, 2026\n\nTASK QUEUE\n\nWorkload\n＋ Create task\nComplete actual API qualification\nCompleted · Aug 24, 2026\nComplete actual API qualification\nCompleted · Aug 24, 2026\nComplete actual API qualification\nCompleted · Aug 24, 2026\n\nUnit availability remains authoritative in the reservation and inventory workflow.",
+      "buttons": [
+        {
+          "text": "☰\nMenu",
+          "aria": "Control home",
+          "disabled": false
+        },
+        {
+          "text": "العربية",
+          "aria": "Language",
+          "disabled": false
+        },
+        {
+          "text": "Log out",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Refresh",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Log activity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Create task",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ New opportunity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "New contact",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Proposal",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Lost",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Disqualified",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Create quotation",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Create task",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "reduced": "auto",
+      "geometry": {
+        "boxes": [
+          {
+            "selector": ".sales-work-panel",
+            "x": 12,
+            "y": 928.046875,
+            "width": 366,
+            "height": 180.015625,
+            "right": 378,
+            "bottom": 1108.0625
+          },
+          {
+            "selector": ".sales-opportunity-panel",
+            "x": 12,
+            "y": 1124.0625,
+            "width": 366,
+            "height": 635.25,
+            "right": 378,
+            "bottom": 1759.3125
+          },
+          {
+            "selector": ".sales-context-panel",
+            "x": 12,
+            "y": 1775.3125,
+            "width": 366,
+            "height": 334.1875,
+            "right": 378,
+            "bottom": 2109.5
+          },
+          {
+            "selector": ".sales-timeline-panel",
+            "x": 12,
+            "y": 2125.5,
+            "width": 366,
+            "height": 205.671875,
+            "right": 378,
+            "bottom": 2331.171875
+          },
+          {
+            "selector": ".sales-task-band",
+            "x": 12,
+            "y": 2347.171875,
+            "width": 366,
+            "height": 355.734375,
+            "right": 378,
+            "bottom": 2702.90625
+          }
+        ],
+        "intersections": [],
+        "narrow": [],
+        "outside": [],
+        "stageClipped": false
+      },
+      "noHorizontalOverflow": true,
+      "geometryPass": true
+    },
+    {
+      "label": "Arabic 1440x900",
+      "width": 1440,
+      "height": 900,
+      "filename": "sales-ar-1440x900.png",
+      "lang": "ar",
+      "dir": "rtl",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "text": "R4C\nR4C\nمنصة التحكم في تسليم المشاريع العقارية\n\nمساحة العمل التجارية\n\n01\nالمشروعات والتطوير\n02\nالمبيعات التجارية\n03\nمركز مبيعات\nR4C\nمساحة عمل محكومة\nمساحة عمل محكومة\nR4C Administrator\nuat.admin@alomran.test\nالمستأجر\nAlomran Development\nALOMRAN\nEnglish\nتسجيل الخروج\n\nمساحة تشغيل المبيعات\n\nمركز القيادة\n\nقائمة مركزة لسياق المشتري والمتابعة وتحريك الفرص والإجراءات التجارية المحكومة.\n\nواجهة مرتبطة بالعقد\nتحديث\nنظرة تشغيلية\nقائمتك خالية.\nمتأخر\n0\nالمهام\nالعمل المفتوح\n0\nالمهام\nجهات الاتصال\n2\nمفتوح\nالفرص\n5\nمفتوح\n\nإجراءات سريعة\n\nتفتح الإجراءات في سياقها للحفاظ على تركيز مساحة العمل.\n＋ تسجيل النشاط\n＋ إنشاء مهمة\n＋ فرصة جديدة\nجهة اتصال جديدة\n\nمهامي\n\nما يحتاج إلى انتباه\n0\nقائمتك خالية.\nلا توجد إجراءات تتطلب الانتباه في هذا العرض.\n\nالفرص\n\nFull Stack UAT Opportunity\nعرض السياق\n—\nFull Stack UAT Opportunity\nProbe Opportunity 20260823\nProbe Opportunity 20260823\nFull Stack UAT Opportunity\nFull Stack UAT Opportunity\nاستكشاف\n‏١٬٢٥٠٬٠٠٠ ر.س.‏\nالعميل\nFull Stack UAT Contact 1787516618739\nالمالك\nR4C Administrator\nالمشروع / الوحدة\n— / —\n1\nتأهيل\n2\nاستكشاف\n3\nعرض\n4\nتفاوض\n5\nمحجوزة\n6\nناجحة\nعرض\nخاسرة\nمستبعدة\nإنشاء عرض سعر\n\nالسياق المحدد\n\nFull Stack UAT Opportunity\nالعميل\nFull Stack UAT Contact 1787516618739\nالمشروع / الوحدة\n— · —\nالحالة\nآخر نشاط\nملاحظة\n٢٣‏/٠٨‏/٢٠٢٦\n\nالخط الزمني للنشاط\n\nالسجل\n1\nملاحظة\n\nActual API activity persisted during R4C release qualification.\n\nR4C Administrator · ٢٣‏/٠٨‏/٢٠٢٦\n\nقائمة المهام\n\nعبء العمل\n＋ إنشاء مهمة\nComplete actual API qualification\nمكتملة · ٢٤‏/٠٨‏/٢٠٢٦\nComplete actual API qualification\nمكتملة · ٢٤‏/٠٨‏/٢٠٢٦\nComplete actual API qualification\nمكتملة · ٢٤‏/٠٨‏/٢٠٢٦\n\nتبقى إ",
+      "noHorizontalOverflow": true
+    },
+    {
+      "label": "Arabic 1024x768",
+      "width": 1024,
+      "height": 768,
+      "filename": "sales-ar-1024x768.png",
+      "lang": "ar",
+      "dir": "rtl",
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "text": "R4C\nR4C\nمنصة التحكم في تسليم المشاريع العقارية\n\nمساحة العمل التجارية\n\n01\nالمشروعات والتطوير\n02\nالمبيعات التجارية\n03\nمركز مبيعات\nR4C\nمساحة عمل محكومة\nمساحة عمل محكومة\nR4C Administrator\nuat.admin@alomran.test\nالمستأجر\nAlomran Development\nALOMRAN\nEnglish\nتسجيل الخروج\n\nمساحة تشغيل المبيعات\n\nمركز القيادة\n\nقائمة مركزة لسياق المشتري والمتابعة وتحريك الفرص والإجراءات التجارية المحكومة.\n\nواجهة مرتبطة بالعقد\nتحديث\nنظرة تشغيلية\nقائمتك خالية.\nمتأخر\n0\nالمهام\nالعمل المفتوح\n0\nالمهام\nجهات الاتصال\n2\nمفتوح\nالفرص\n5\nمفتوح\n\nإجراءات سريعة\n\nتفتح الإجراءات في سياقها للحفاظ على تركيز مساحة العمل.\n＋ تسجيل النشاط\n＋ إنشاء مهمة\n＋ فرصة جديدة\nجهة اتصال جديدة\n\nمهامي\n\nما يحتاج إلى انتباه\n0\nقائمتك خالية.\nلا توجد إجراءات تتطلب الانتباه في هذا العرض.\n\nالفرص\n\nFull Stack UAT Opportunity\nعرض السياق\n—\nFull Stack UAT Opportunity\nProbe Opportunity 20260823\nProbe Opportunity 20260823\nFull Stack UAT Opportunity\nFull Stack UAT Opportunity\nاستكشاف\n‏١٬٢٥٠٬٠٠٠ ر.س.‏\nالعميل\nFull Stack UAT Contact 1787516618739\nالمالك\nR4C Administrator\nالمشروع / الوحدة\n— / —\n1\nتأهيل\n2\nاستكشاف\n3\nعرض\n4\nتفاوض\n5\nمحجوزة\n6\nناجحة\nعرض\nخاسرة\nمستبعدة\nإنشاء عرض سعر\n\nالسياق المحدد\n\nFull Stack UAT Opportunity\nالعميل\nFull Stack UAT Contact 1787516618739\nالمشروع / الوحدة\n— · —\nالحالة\nآخر نشاط\nملاحظة\n٢٣‏/٠٨‏/٢٠٢٦\n\nالخط الزمني للنشاط\n\nالسجل\n1\nملاحظة\n\nActual API activity persisted during R4C release qualification.\n\nR4C Administrator · ٢٣‏/٠٨‏/٢٠٢٦\n\nقائمة المهام\n\nعبء العمل\n＋ إنشاء مهمة\nComplete actual API qualification\nمكتملة · ٢٤‏/٠٨‏/٢٠٢٦\nComplete actual API qualification\nمكتملة · ٢٤‏/٠٨‏/٢٠٢٦\nComplete actual API qualification\nمكتملة · ٢٤‏/٠٨‏/٢٠٢٦\n\nتبقى إ",
+      "noHorizontalOverflow": true
+    },
+    {
+      "label": "Arabic 390x844",
+      "width": 390,
+      "height": 844,
+      "filename": "sales-ar-390x844.png",
+      "lang": "ar",
+      "dir": "rtl",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "text": "R4C\nR4C\nمنصة التحكم في تسليم المشاريع العقارية\n☰\nالقائمة\nمساحة عمل محكومة\nR4C Administrator\nالمستأجر\nAlomran Development\nALOMRAN\nEnglish\nتسجيل الخروج\n\nمساحة تشغيل المبيعات\n\nمركز القيادة\n\nقائمة مركزة لسياق المشتري والمتابعة وتحريك الفرص والإجراءات التجارية المحكومة.\n\nواجهة مرتبطة بالعقد\nتحديث\nنظرة تشغيلية\nقائمتك خالية.\nمتأخر\n0\nالمهام\nالعمل المفتوح\n0\nالمهام\nجهات الاتصال\n2\nمفتوح\nالفرص\n5\nمفتوح\n\nإجراءات سريعة\n\nتفتح الإجراءات في سياقها للحفاظ على تركيز مساحة العمل.\n＋ تسجيل النشاط\n＋ إنشاء مهمة\n＋ فرصة جديدة\nجهة اتصال جديدة\n\nمهامي\n\nما يحتاج إلى انتباه\n0\nقائمتك خالية.\nلا توجد إجراءات تتطلب الانتباه في هذا العرض.\n\nالفرص\n\nFull Stack UAT Opportunity\nعرض السياق\n—\nFull Stack UAT Opportunity\nProbe Opportunity 20260823\nProbe Opportunity 20260823\nFull Stack UAT Opportunity\nFull Stack UAT Opportunity\nاستكشاف\n‏١٬٢٥٠٬٠٠٠ ر.س.‏\nالعميل\nFull Stack UAT Contact 1787516618739\nالمالك\nR4C Administrator\nالمشروع / الوحدة\n— / —\n1\nتأهيل\n2\nاستكشاف\n3\nعرض\n4\nتفاوض\n5\nمحجوزة\n6\nناجحة\nعرض\nخاسرة\nمستبعدة\nإنشاء عرض سعر\n\nالسياق المحدد\n\nFull Stack UAT Opportunity\nالعميل\nFull Stack UAT Contact 1787516618739\nالمشروع / الوحدة\n— · —\nالحالة\nآخر نشاط\nملاحظة\n٢٣‏/٠٨‏/٢٠٢٦\n\nالخط الزمني للنشاط\n\nالسجل\n1\nملاحظة\n\nActual API activity persisted during R4C release qualification.\n\nR4C Administrator · ٢٣‏/٠٨‏/٢٠٢٦\n\nقائمة المهام\n\nعبء العمل\n＋ إنشاء مهمة\nComplete actual API qualification\nمكتملة · ٢٤‏/٠٨‏/٢٠٢٦\nComplete actual API qualification\nمكتملة · ٢٤‏/٠٨‏/٢٠٢٦\nComplete actual API qualification\nمكتملة · ٢٤‏/٠٨‏/٢٠٢٦\n\nتبقى إتاحة الوحدة مرجعية في مسار الحجوزات والمخزون.",
+      "noHorizontalOverflow": true
+    }
+  ],
+  "checks": [
+    {
+      "name": "geometry",
+      "status": "FAIL",
+      "detail": [
+        {
+          "label": "English 1440x900",
+          "geometry": {
+            "boxes": [
+              {
+                "selector": ".sales-work-panel",
+                "x": 265.59375,
+                "y": 534.921875,
+                "width": 755.890625,
+                "height": 208.28125,
+                "right": 1021.484375,
+                "bottom": 743.203125
+              },
+              {
+                "selector": ".sales-opportunity-panel",
+                "x": 265.59375,
+                "y": 759.203125,
+                "width": 755.890625,
+                "height": 444.5625,
+                "right": 1021.484375,
+                "bottom": 1203.765625
+              },
+              {
+                "selector": ".sales-context-panel",
+                "x": 1037.484375,
+                "y": 534.921875,
+                "width": 364.90625,
+                "height": 383.453125,
+                "right": 1402.390625,
+                "bottom": 918.375
+              },
+              {
+                "selector": ".sales-timeline-panel",
+                "x": 1037.484375,
+                "y": 934.375,
+                "width": 364.90625,
+                "height": 233.9375,
+                "right": 1402.390625,
+                "bottom": 1168.3125
+              },
+              {
+                "selector": ".sales-task-band",
+                "x": 265.59375,
+                "y": 1219.765625,
+                "width": 1136.8125,
+                "height": 200.015625,
+                "right": 1402.40625,
+                "bottom": 1419.78125
+              }
+            ],
+            "intersections": [],
+            "narrow": [
+              ".sales-context-panel",
+              ".sales-timeline-panel"
+            ],
+            "outside": [],
+            "stageClipped": false
+          },
+          "geometryPass": false
+        },
+        {
+          "label": "English 1024x768",
+          "geometry": {
+            "boxes": [
+              {
+                "selector": ".sales-work-panel",
+                "x": 258.71875,
+                "y": 605.203125,
+                "width": 418.5625,
+                "height": 208.28125,
+                "right": 677.28125,
+                "bottom": 813.484375
+              },
+              {
+                "selector": ".sales-opportunity-panel",
+                "x": 258.71875,
+                "y": 829.484375,
+                "width": 418.5625,
+                "height": 529.5,
+                "right": 677.28125,
+                "bottom": 1358.984375
+              },
+              {
+                "selector": ".sales-context-panel",
+                "x": 693.28125,
+                "y": 605.203125,
+                "width": 300,
+                "height": 411.453125,
+                "right": 993.28125,
+                "bottom": 1016.65625
+              },
+              {
+                "selector": ".sales-timeline-panel",
+                "x": 693.28125,
+                "y": 1032.65625,
+                "width": 300,
+                "height": 233.9375,
+                "right": 993.28125,
+                "bottom": 1266.59375
+              },
+              {
+                "selector": ".sales-task-band",
+                "x": 258.71875,
+                "y": 1374.984375,
+                "width": 734.5625,
+                "height": 200.015625,
+                "right": 993.28125,
+                "bottom": 1575
+              }
+            ],
+            "intersections": [],
+            "narrow": [
+              ".sales-work-panel",
+              ".sales-opportunity-panel",
+              ".sales-context-panel",
+              ".sales-timeline-panel"
+            ],
+            "outside": [],
+            "stageClipped": false
+          },
+          "geometryPass": false
+        },
+        {
+          "label": "English 390x844",
+          "geometry": {
+            "boxes": [
+              {
+                "selector": ".sales-work-panel",
+                "x": 12,
+                "y": 928.046875,
+                "width": 366,
+                "height": 180.015625,
+                "right": 378,
+                "bottom": 1108.0625
+              },
+              {
+                "selector": ".sales-opportunity-panel",
+                "x": 12,
+                "y": 1124.0625,
+                "width": 366,
+                "height": 635.25,
+                "right": 378,
+                "bottom": 1759.3125
+              },
+              {
+                "selector": ".sales-context-panel",
+                "x": 12,
+                "y": 1775.3125,
+                "width": 366,
+                "height": 334.1875,
+                "right": 378,
+                "bottom": 2109.5
+              },
+              {
+                "selector": ".sales-timeline-panel",
+                "x": 12,
+                "y": 2125.5,
+                "width": 366,
+                "height": 205.671875,
+                "right": 378,
+                "bottom": 2331.171875
+              },
+              {
+                "selector": ".sales-task-band",
+                "x": 12,
+                "y": 2347.171875,
+                "width": 366,
+                "height": 355.734375,
+                "right": 378,
+                "bottom": 2702.90625
+              }
+            ],
+            "intersections": [],
+            "narrow": [],
+            "outside": [],
+            "stageClipped": false
+          },
+          "geometryPass": true
+        },
+        {
+          "label": "Arabic 1440x900"
+        },
+        {
+          "label": "Arabic 1024x768"
+        },
+        {
+          "label": "Arabic 390x844"
+        }
+      ]
+    },
+    {
+      "name": "accessibility-smoke",
+      "status": "PASS",
+      "detail": {
+        "controlCount": 17,
+        "unnamedCount": 0,
+        "smallTargetCount": 0
+      }
+    },
+    {
+      "name": "touch-targets",
+      "status": "PASS",
+      "detail": {
+        "controlCount": 17,
+        "unnamedCount": 0,
+        "smallTargetCount": 0
+      }
+    },
+    {
+      "name": "reduced-motion",
+      "status": "PASS",
+      "detail": "Chromium context created with reducedMotion=reduce; captures completed without workflow loss"
+    },
+    {
+      "name": "http-error-classification",
+      "status": "PASS — NON-BLOCKING",
+      "detail": []
+    },
+    {
+      "name": "console-errors",
+      "status": "PARTIAL — NON-BLOCKING",
+      "detail": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    }
+  ],
+  "drawers": [
+    {
+      "name": "Contact",
+      "status": "OPENED",
+      "focusEntry": {
+        "tag": "BUTTON",
+        "text": "×",
+        "aria": "Close"
+      },
+      "focusInside": true,
+      "tabStayedInside": true,
+      "escapeClosed": true,
+      "focusReturned": true
+    },
+    {
+      "name": "Opportunity",
+      "status": "OPENED",
+      "focusEntry": {
+        "tag": "BUTTON",
+        "text": "×",
+        "aria": "Close"
+      },
+      "focusInside": true,
+      "tabStayedInside": true,
+      "escapeClosed": true,
+      "focusReturned": true
+    },
+    {
+      "name": "Activity",
+      "status": "OPENED",
+      "focusEntry": {
+        "tag": "BUTTON",
+        "text": "×",
+        "aria": "Close"
+      },
+      "focusInside": true,
+      "tabStayedInside": true,
+      "escapeClosed": true,
+      "focusReturned": true
+    },
+    {
+      "name": "Task",
+      "status": "OPENED",
+      "focusEntry": {
+        "tag": "BUTTON",
+        "text": "×",
+        "aria": "Close"
+      },
+      "focusInside": true,
+      "tabStayedInside": true,
+      "escapeClosed": true,
+      "focusReturned": true
+    },
+    {
+      "name": "Quotation",
+      "status": "OPENED",
+      "focusEntry": {
+        "tag": "BUTTON",
+        "text": "×",
+        "aria": "Close"
+      },
+      "focusInside": true,
+      "tabStayedInside": true,
+      "escapeClosed": true,
+      "focusReturned": true
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "httpErrors": [],
+  "localeStatus": 200
+}

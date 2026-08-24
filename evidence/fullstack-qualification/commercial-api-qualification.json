@@ -1,0 +1,529 @@
+{
+  "runId": 1787516791822,
+  "checks": [
+    {
+      "name": "tenant resolution",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "id": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "code": "ALOMRAN",
+        "name": "Alomran Development",
+        "status": "ACTIVE"
+      }
+    },
+    {
+      "name": "admin login",
+      "status": 201,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true,
+      "detail": {
+        "role": "ADMIN"
+      }
+    },
+    {
+      "name": "projects initial read",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "count": 4
+      }
+    },
+    {
+      "name": "project create",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "d1c9ce14-3d25-4191-adc1-a38a5e446a71",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "code": "UAT7516791822",
+        "name": "Alomran UAT Project 1787516791822",
+        "description": "Synthetic release qualification project.",
+        "status": "DRAFT",
+        "startDate": "2026-08-23T00:00:00.000Z",
+        "targetDate": "2027-08-23T00:00:00.000Z",
+        "createdAt": "2026-08-23T20:26:32.669Z",
+        "updatedAt": "2026-08-23T20:26:32.669Z",
+        "activeScheduleId": null,
+        "activeBudgetId": null,
+        "activeMaterialTakeoffId": null,
+        "activeQualityPlanId": null,
+        "activeCommissioningPlanId": null
+      }
+    },
+    {
+      "name": "phase create",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "7abededf-59ef-476f-8aaf-06851ceec6e9",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "projectId": "d1c9ce14-3d25-4191-adc1-a38a5e446a71",
+        "code": "P1",
+        "name": "Launch Phase",
+        "description": null,
+        "status": "ACTIVE",
+        "sequence": 1,
+        "launchDate": "2026-08-23T00:00:00.000Z",
+        "expectedCompletionDate": "2027-08-23T00:00:00.000Z",
+        "salesOpenAt": null,
+        "salesCloseAt": null,
+        "createdAt": "2026-08-23T20:26:32.679Z",
+        "updatedAt": "2026-08-23T20:26:32.679Z"
+      }
+    },
+    {
+      "name": "building create",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "7701b235-65ca-44f9-be27-4f81ac78672e",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "projectId": "d1c9ce14-3d25-4191-adc1-a38a5e446a71",
+        "phaseId": "7abededf-59ef-476f-8aaf-06851ceec6e9",
+        "code": "B1",
+        "name": "Alomran Building 1",
+        "createdAt": "2026-08-23T20:26:32.689Z",
+        "updatedAt": "2026-08-23T20:26:32.689Z"
+      }
+    },
+    {
+      "name": "floor create",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "8fbf2475-bae7-44cc-8b0b-9c23f27a1cb5",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "buildingId": "7701b235-65ca-44f9-be27-4f81ac78672e",
+        "code": "F01",
+        "name": "Ground Floor",
+        "floorNumber": 0,
+        "sequence": 1,
+        "createdAt": "2026-08-23T20:26:32.699Z",
+        "updatedAt": "2026-08-23T20:26:32.699Z"
+      }
+    },
+    {
+      "name": "unit type create",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "c5a17efa-f435-465c-b8f6-83e3c12c12cd",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "projectId": "d1c9ce14-3d25-4191-adc1-a38a5e446a71",
+        "code": "2BR",
+        "name": "Two Bedroom",
+        "bedrooms": 2,
+        "bathrooms": 2,
+        "defaultArea": "140",
+        "description": "Synthetic two-bedroom type",
+        "createdAt": "2026-08-23T20:26:32.710Z",
+        "updatedAt": "2026-08-23T20:26:32.710Z"
+      }
+    },
+    {
+      "name": "unit create",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "fd915359-48f0-451f-b738-1d303f4d2c43",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "projectId": "d1c9ce14-3d25-4191-adc1-a38a5e446a71",
+        "phaseId": "7abededf-59ef-476f-8aaf-06851ceec6e9",
+        "buildingId": "7701b235-65ca-44f9-be27-4f81ac78672e",
+        "floorId": "8fbf2475-bae7-44cc-8b0b-9c23f27a1cb5",
+        "unitTypeId": "c5a17efa-f435-465c-b8f6-83e3c12c12cd",
+        "code": "B1-F01-U001",
+        "number": "U001",
+        "status": "DRAFT",
+        "grossArea": "140",
+        "netArea": "121.5",
+        "bedrooms": 2,
+        "bathrooms": 2,
+        "orientation": "South",
+        "view": "Courtyard",
+        "parkingCount": 1,
+        "createdAt": "2026-08-23T20:26:32.732Z",
+        "updatedAt": "2026-08-23T20:26:32.732Z",
+        "project": {
+          "id": "d1c9ce14-3d25-4191-adc1-a38a5e446a71",
+          "code": "UAT7516791822",
+          "name": "Alomran UAT Project 1787516791822",
+          "description": "Synthetic release qualification project."
+        },
+        "phase": {
+          "id": "7abededf-59ef-476f-8aaf-06851ceec6e9",
+          "code": "P1",
+          "name": "Launch Phase",
+          "description": null
+        },
+        "building": {
+          "id": "7701b235-65ca-44f9-be27-4f81ac78672e",
+          "code": "B1",
+          "name": "Alomran Building 1"
+        },
+        "floor": {
+          "id": "8fbf2475-bae7-44cc-8b0b-9c23f27a1cb5",
+          "code": "F01",
+          "name": "Ground Floor",
+          "floorNumber": 0
+        },
+        "unitType": {
+          "id": "c5a17efa-f435-465c-b8f6-83e3c12c12cd",
+          "code": "2BR",
+          "name": "Two Bedroom",
+          "description": "Synthetic two-bedroom type"
+        }
+      }
+    },
+    {
+      "name": "unit price draft create",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "57e4aaf8-88b3-41d1-91d0-dc53e34f89a4",
+        "unitId": "fd915359-48f0-451f-b738-1d303f4d2c43",
+        "revision": 1,
+        "basePriceMinor": "125000000",
+        "listPriceMinor": "130000000",
+        "currency": "SAR",
+        "validFrom": "2026-08-23T00:00:00.000Z",
+        "validTo": null,
+        "status": "DRAFT",
+        "publishedAt": null,
+        "createdAt": "2026-08-23T20:26:32.750Z",
+        "updatedAt": "2026-08-23T20:26:32.750Z"
+      }
+    },
+    {
+      "name": "unit price publish",
+      "status": 201,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true,
+      "detail": {
+        "id": "57e4aaf8-88b3-41d1-91d0-dc53e34f89a4",
+        "unitId": "fd915359-48f0-451f-b738-1d303f4d2c43",
+        "revision": 1,
+        "basePriceMinor": "125000000",
+        "listPriceMinor": "130000000",
+        "currency": "SAR",
+        "validFrom": "2026-08-23T00:00:00.000Z",
+        "validTo": null,
+        "status": "PUBLISHED",
+        "publishedAt": "2026-08-23T20:26:32.760Z",
+        "createdAt": "2026-08-23T20:26:32.750Z",
+        "updatedAt": "2026-08-23T20:26:32.763Z"
+      }
+    },
+    {
+      "name": "unit release to available",
+      "status": 201,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true,
+      "detail": {
+        "id": "fd915359-48f0-451f-b738-1d303f4d2c43",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "projectId": "d1c9ce14-3d25-4191-adc1-a38a5e446a71",
+        "phaseId": "7abededf-59ef-476f-8aaf-06851ceec6e9",
+        "buildingId": "7701b235-65ca-44f9-be27-4f81ac78672e",
+        "floorId": "8fbf2475-bae7-44cc-8b0b-9c23f27a1cb5",
+        "unitTypeId": "c5a17efa-f435-465c-b8f6-83e3c12c12cd",
+        "code": "B1-F01-U001",
+        "number": "U001",
+        "status": "AVAILABLE",
+        "grossArea": "140",
+        "netArea": "121.5",
+        "bedrooms": 2,
+        "bathrooms": 2,
+        "orientation": "South",
+        "view": "Courtyard",
+        "parkingCount": 1,
+        "createdAt": "2026-08-23T20:26:32.732Z",
+        "updatedAt": "2026-08-23T20:26:32.772Z",
+        "project": {
+          "id": "d1c9ce14-3d25-4191-adc1-a38a5e446a71",
+          "code": "UAT7516791822",
+          "name": "Alomran UAT Project 1787516791822",
+          "description": "Synthetic release qualification project."
+        },
+        "phase": {
+          "id": "7abededf-59ef-476f-8aaf-06851ceec6e9",
+          "code": "P1",
+          "name": "Launch Phase",
+          "description": null
+        },
+        "building": {
+          "id": "7701b235-65ca-44f9-be27-4f81ac78672e",
+          "code": "B1",
+          "name": "Alomran Building 1"
+        },
+        "floor": {
+          "id": "8fbf2475-bae7-44cc-8b0b-9c23f27a1cb5",
+          "code": "F01",
+          "name": "Ground Floor",
+          "floorNumber": 0
+        },
+        "unitType": {
+          "id": "c5a17efa-f435-465c-b8f6-83e3c12c12cd",
+          "code": "2BR",
+          "name": "Two Bedroom",
+          "description": "Synthetic two-bedroom type"
+        }
+      }
+    },
+    {
+      "name": "payment plan create",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "73de330b-0b41-4d4a-9808-98a053895eeb",
+        "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "projectId": "d1c9ce14-3d25-4191-adc1-a38a5e446a71",
+        "createdAt": "2026-08-23T20:26:32.786Z",
+        "updatedAt": "2026-08-23T20:26:32.786Z",
+        "installments": [
+          {
+            "id": "38dc5c0a-18d2-49e2-afb3-30eaa53b9a66",
+            "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+            "paymentPlanId": "73de330b-0b41-4d4a-9808-98a053895eeb",
+            "sequence": 1,
+            "shareBasisPoints": 2000,
+            "label": "Down payment",
+            "createdAt": "2026-08-23T20:26:32.786Z",
+            "updatedAt": "2026-08-23T20:26:32.786Z"
+          },
+          {
+            "id": "b55b7adf-04eb-4c53-9165-2bf136c872a3",
+            "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+            "paymentPlanId": "73de330b-0b41-4d4a-9808-98a053895eeb",
+            "sequence": 2,
+            "shareBasisPoints": 4000,
+            "label": "Construction milestone",
+            "createdAt": "2026-08-23T20:26:32.786Z",
+            "updatedAt": "2026-08-23T20:26:32.786Z"
+          },
+          {
+            "id": "764d8e15-a544-4451-ab7b-983319ffe059",
+            "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+            "paymentPlanId": "73de330b-0b41-4d4a-9808-98a053895eeb",
+            "sequence": 3,
+            "shareBasisPoints": 4000,
+            "label": "Handover",
+            "createdAt": "2026-08-23T20:26:32.786Z",
+            "updatedAt": "2026-08-23T20:26:32.786Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "commercial customer create",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "customer": {
+          "id": "f1791010-f425-466d-88a9-bca06e4f3887",
+          "firstName": "Alomran",
+          "lastName": "Synthetic Buyer",
+          "phone": "+966501234567",
+          "email": "buyer.1787516791822@example.test",
+          "dedupReviewRequired": true,
+          "createdAt": "2026-08-23T20:26:32.802Z",
+          "updatedAt": "2026-08-23T20:26:32.802Z"
+        },
+        "reused": false
+      }
+    },
+    {
+      "name": "commercial lead create",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "62d547a3-5347-4207-82a3-b0ccca6441cc",
+        "customerId": "f1791010-f425-466d-88a9-bca06e4f3887",
+        "projectId": "d1c9ce14-3d25-4191-adc1-a38a5e446a71",
+        "unitId": "fd915359-48f0-451f-b738-1d303f4d2c43",
+        "assignedToId": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+        "source": "R4C full-stack qualification",
+        "status": "NEW",
+        "isExternalEnquiry": false,
+        "enquiryConsent": {
+          "granted": false,
+          "at": null,
+          "channel": null,
+          "purpose": null
+        },
+        "marketingConsent": {
+          "granted": false,
+          "at": null,
+          "channel": null,
+          "purpose": null
+        },
+        "customer": {
+          "id": "f1791010-f425-466d-88a9-bca06e4f3887",
+          "firstName": "Alomran",
+          "lastName": "Synthetic Buyer",
+          "phone": "+966501234567",
+          "email": "buyer.1787516791822@example.test"
+        },
+        "project": {
+          "id": "d1c9ce14-3d25-4191-adc1-a38a5e446a71",
+          "code": "UAT7516791822",
+          "name": "Alomran UAT Project 1787516791822"
+        },
+        "unit": {
+          "id": "fd915359-48f0-451f-b738-1d303f4d2c43",
+          "code": "B1-F01-U001",
+          "number": "U001"
+        },
+        "assignedTo": {
+          "id": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+          "displayName": "R4C Administrator"
+        },
+        "createdAt": "2026-08-23T20:26:32.817Z",
+        "updatedAt": "2026-08-23T20:26:32.817Z"
+      }
+    },
+    {
+      "name": "lead advanced to contacted",
+      "status": 200,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true,
+      "detail": "CONTACTED"
+    },
+    {
+      "name": "lead advanced to qualified",
+      "status": 200,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true,
+      "detail": "QUALIFIED"
+    },
+    {
+      "name": "lead advanced to appointment",
+      "status": 200,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true,
+      "detail": "APPOINTMENT"
+    },
+    {
+      "name": "lead advanced to negotiation",
+      "status": 200,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true,
+      "detail": "NEGOTIATION"
+    },
+    {
+      "name": "unit hold create",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "0c5e49e8-c8d5-4edf-9017-5dc46ba042c7",
+        "unitId": "fd915359-48f0-451f-b738-1d303f4d2c43",
+        "leadId": "62d547a3-5347-4207-82a3-b0ccca6441cc",
+        "status": "ACTIVE",
+        "holdExpiresAt": "2026-08-23T22:00:00.000Z",
+        "createdById": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+        "releasedAt": null,
+        "cancelledAt": null,
+        "expiredAt": null,
+        "convertedAt": null,
+        "createdAt": "2026-08-23T20:26:32.892Z",
+        "updatedAt": "2026-08-23T20:26:32.892Z"
+      }
+    },
+    {
+      "name": "reservation confirm",
+      "status": 201,
+      "expected": 201,
+      "pass": true,
+      "detail": {
+        "id": "e95bf1dc-1805-40b3-ae98-3f49dbe1bb2b",
+        "holdId": "0c5e49e8-c8d5-4edf-9017-5dc46ba042c7",
+        "unitId": "fd915359-48f0-451f-b738-1d303f4d2c43",
+        "leadId": "62d547a3-5347-4207-82a3-b0ccca6441cc",
+        "customerId": "f1791010-f425-466d-88a9-bca06e4f3887",
+        "paymentPlanId": "73de330b-0b41-4d4a-9808-98a053895eeb",
+        "sourcePriceRevisionId": "57e4aaf8-88b3-41d1-91d0-dc53e34f89a4",
+        "basePriceSnapshotMinor": "125000000",
+        "listPriceSnapshotMinor": "130000000",
+        "reservationAmountMinor": "130000000",
+        "currency": "SAR",
+        "status": "CONFIRMED",
+        "createdById": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+        "approvedById": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+        "confirmedAt": "2026-08-23T20:26:32.906Z",
+        "createdAt": "2026-08-23T20:26:32.910Z",
+        "updatedAt": "2026-08-23T20:26:32.910Z"
+      }
+    },
+    {
+      "name": "unit final availability read",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "status": "RESERVED",
+        "id": "fd915359-48f0-451f-b738-1d303f4d2c43"
+      }
+    },
+    {
+      "name": "reserved unit list",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "detail": {
+        "count": 1
+      }
+    }
+  ],
+  "ids": {
+    "admin": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+    "project": "d1c9ce14-3d25-4191-adc1-a38a5e446a71",
+    "phase": "7abededf-59ef-476f-8aaf-06851ceec6e9",
+    "building": "7701b235-65ca-44f9-be27-4f81ac78672e",
+    "floor": "8fbf2475-bae7-44cc-8b0b-9c23f27a1cb5",
+    "unitType": "c5a17efa-f435-465c-b8f6-83e3c12c12cd",
+    "unit": "fd915359-48f0-451f-b738-1d303f4d2c43",
+    "price": "57e4aaf8-88b3-41d1-91d0-dc53e34f89a4",
+    "paymentPlan": "73de330b-0b41-4d4a-9808-98a053895eeb",
+    "customer": "f1791010-f425-466d-88a9-bca06e4f3887",
+    "lead": "62d547a3-5347-4207-82a3-b0ccca6441cc",
+    "hold": "0c5e49e8-c8d5-4edf-9017-5dc46ba042c7",
+    "reservation": "e95bf1dc-1805-40b3-ae98-3f49dbe1bb2b"
+  },
+  "failures": [],
+  "pass": true
+}

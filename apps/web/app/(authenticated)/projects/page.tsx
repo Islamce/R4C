@@ -1,5 +1,5 @@
-import { ProjectsJourney } from "../../../components/ProjectsJourney";
+import { redirect } from "next/navigation";
 
-export default function ProjectsPage() {
-  return <ProjectsJourney />;
+export default function ProjectsCompatibilityPage() {
+  redirect("/commercial");
 }

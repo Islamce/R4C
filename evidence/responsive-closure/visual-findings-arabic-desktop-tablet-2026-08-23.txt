@@ -1,0 +1,7 @@
+Arabic desktop/tablet visual findings, 2026-08-23
+
+Arabic 1440x900: PASS for RTL desktop regression. The sidebar remains on the right, the top controls remain reachable on the left, and the accepted signal strip, quick actions, opportunity, context, history, and workload hierarchy remains intact. RTL direction is evident in labels and the stage sequence. Mixed-direction synthetic names and project/unit values remain readable without visible collisions or horizontal overflow.
+
+Arabic 1024x768: PASS for RTL tablet composition. The right-hand sidebar stays stable, the operating area uses the separate tablet state, quick actions wrap intentionally, and context/history remain distinct from the main work and Opportunity panels. Controlled Arabic labels remain localized, while synthetic English entity names remain bounded. No visible overlap or clipped card was observed.
+
+Residual note: At the narrow tablet width, long mixed-direction opportunity/entity labels use existing truncation/ellipsis in a few compact facts and the dark Opportunity panel. This is non-blocking under the directive’s presentation-only scope because the primary title, stage controls, action controls, and context remain reachable.

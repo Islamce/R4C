@@ -21,6 +21,7 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
   } : null);
   const [sessionError, setSessionError] = useState(false);
   const [working, setWorking] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     if (preview) return;
@@ -69,18 +70,25 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
 
   const projectsActive = pathname.startsWith("/projects");
   const commercialActive = pathname.startsWith("/commercial");
+  const salesActive = pathname.startsWith("/sales");
 
   return (
     <div className="app-shell" dir={locale === "ar" ? "rtl" : "ltr"}>
-      <aside className="app-sidebar">
-        <div className="brand-lockup">
-          <span className="brand-mark" aria-hidden="true">{t("common.brand")}</span>
-          <div>
-            <strong>{t("common.brand")}</strong>
-            <span>{t("common.platform")}</span>
+      <aside className={mobileNavOpen ? "app-sidebar is-nav-open" : "app-sidebar"}>
+        <div className="mobile-shell-row">
+          <div className="brand-lockup">
+            <span className="brand-mark" aria-hidden="true">{t("common.brand")}</span>
+            <div>
+              <strong>{t("common.brand")}</strong>
+              <span>{t("common.platform")}</span>
+            </div>
           </div>
+          <button className="mobile-nav-toggle" type="button" aria-expanded={mobileNavOpen} aria-controls="app-navigation" aria-label={t("nav.controlHome")} onClick={() => setMobileNavOpen((open) => !open)}>
+            <span aria-hidden="true">{mobileNavOpen ? "×" : "☰"}</span>
+            <span>{locale === "ar" ? "القائمة" : "Menu"}</span>
+          </button>
         </div>
-        <nav className="app-nav" aria-label={t("nav.controlHome")}>
+        <nav id="app-navigation" className="app-nav" aria-label={t("nav.controlHome")}>
           <section className="nav-group" aria-label={t("commercial.navGroup")}>
             <p className="nav-group-label">{t("commercial.navGroup")}</p>
             <Link
@@ -98,6 +106,14 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
             >
               <span className="nav-index" aria-hidden="true">02</span>
               {t("commercial.nav")}
+            </Link>
+            <Link
+              className={salesActive ? "nav-link nav-link-active" : "nav-link"}
+              href={preview ? "/design-preview" : "/sales"}
+              aria-current={salesActive ? "page" : undefined}
+            >
+              <span className="nav-index" aria-hidden="true">03</span>
+              {locale === "ar" ? "مركز مبيعات" : "Sales command center"}
             </Link>
           </section>
         </nav>

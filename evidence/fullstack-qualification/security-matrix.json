@@ -1,0 +1,285 @@
+{
+  "checks": [
+    {
+      "name": "ADMIN tenant resolution",
+      "status": 200,
+      "expected": 200,
+      "ok": true,
+      "detail": {
+        "id": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "code": "ALOMRAN",
+        "name": "Alomran Development",
+        "status": "ACTIVE"
+      }
+    },
+    {
+      "name": "ADMIN login",
+      "status": 201,
+      "expected": [
+        200,
+        201
+      ],
+      "ok": true,
+      "detail": {
+        "role": "ADMIN",
+        "permissions": 89
+      }
+    },
+    {
+      "name": "ADMIN CRM contacts role boundary",
+      "status": 200,
+      "expected": 200,
+      "ok": true,
+      "detail": [
+        {
+          "id": "6394dc81-2315-4c09-b6ef-7c717e323db4",
+          "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+          "customerId": null,
+          "leadId": null,
+          "ownerId": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+          "firstName": "Full Stack",
+          "lastName": "UAT Contact 1787516618739",
+          "email": "fullstack.contact.1787516618739@example.test",
+          "emailNormalized": "fullstack.contact.1787516618739@example.test",
+          "phone": "+966500618739",
+          "phoneNormalized": "+966500618739",
+          "communicationPreference": "PHONE",
+          "source": "R4C full-stack qualification",
+          "createdAt": "2026-08-23T20:23:39.784Z",
+          "updatedAt": "2026-08-23T20:23:39.784Z",
+          "customer": null,
+          "lead": null,
+          "owner": {
+            "id": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+            "displayName": "R4C Administrator",
+            "email": "uat.admin@alomran.test"
+          }
+        },
+        {
+          "id": "eac56a3f-a0f8-49f7-b5c0-ed7f9559ce50",
+          "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+          "customerId": null,
+          "leadId": null,
+          "ownerId": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+          "firstName": "Full Stack",
+          "lastName": "UAT Contact",
+          "email": "fullstack.contact.20260823@example.test",
+          "emailNormalized": "fullstack.contact.20260823@example.test",
+          "phone": "+966500000123",
+          "phoneNormalized": "+966500000123",
+          "communicationPreference": "PHONE",
+          "source": "R4C full-stack qualification",
+          "createdAt": "2026-08-23T20:18:57.712Z",
+          "updatedAt": "2026-08-23T20:18:57.712Z",
+          "customer": null,
+          "lead": null,
+          "owner": {
+            "id": "2bc44617-4ed1-4a00-80eb-01772ca52fa6",
+            "displayName": "R4C Administrator",
+            "email": "uat.admin@alomran.test"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SALES_MANAGER tenant resolution",
+      "status": 200,
+      "expected": 200,
+      "ok": true,
+      "detail": {
+        "id": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "code": "ALOMRAN",
+        "name": "Alomran Development",
+        "status": "ACTIVE"
+      }
+    },
+    {
+      "name": "SALES_MANAGER login",
+      "status": 201,
+      "expected": [
+        200,
+        201
+      ],
+      "ok": true,
+      "detail": {
+        "role": "SALES_MANAGER",
+        "permissions": 17
+      }
+    },
+    {
+      "name": "SALES_MANAGER CRM contacts role boundary",
+      "status": 403,
+      "expected": 403,
+      "ok": true,
+      "detail": {
+        "message": "Insufficient permissions",
+        "error": "Forbidden",
+        "statusCode": 403
+      }
+    },
+    {
+      "name": "SALES_AGENT tenant resolution",
+      "status": 200,
+      "expected": 200,
+      "ok": true,
+      "detail": {
+        "id": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+        "code": "ALOMRAN",
+        "name": "Alomran Development",
+        "status": "ACTIVE"
+      }
+    },
+    {
+      "name": "SALES_AGENT login",
+      "status": 201,
+      "expected": [
+        200,
+        201
+      ],
+      "ok": true,
+      "detail": {
+        "role": "SALES_AGENT",
+        "permissions": 14
+      }
+    },
+    {
+      "name": "SALES_AGENT CRM contacts role boundary",
+      "status": 403,
+      "expected": 403,
+      "ok": true,
+      "detail": {
+        "message": "Insufficient permissions",
+        "error": "Forbidden",
+        "statusCode": 403
+      }
+    },
+    {
+      "name": "invalid tenant rejected",
+      "status": 404,
+      "expected": [
+        401,
+        404
+      ],
+      "ok": true,
+      "detail": {
+        "message": "Tenant not found",
+        "error": "Not Found",
+        "statusCode": 404
+      }
+    },
+    {
+      "name": "unauthenticated CRM rejected",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "ok": true,
+      "detail": {
+        "message": "Unauthorized",
+        "statusCode": 401
+      }
+    },
+    {
+      "name": "agent project-create denied",
+      "status": 403,
+      "expected": [
+        401,
+        403
+      ],
+      "ok": true,
+      "detail": {
+        "message": "Insufficient permissions",
+        "error": "Forbidden",
+        "statusCode": 403
+      }
+    },
+    {
+      "name": "agent malformed opportunity rejected safely",
+      "status": 403,
+      "expected": [
+        400,
+        401,
+        403
+      ],
+      "ok": true,
+      "detail": {
+        "message": "Insufficient permissions",
+        "error": "Forbidden",
+        "statusCode": 403
+      }
+    },
+    {
+      "name": "manager refresh rotation",
+      "status": 200,
+      "expected": 200,
+      "ok": true,
+      "detail": {
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkMDhmZjkwNi1mNGQzLTQyNzEtYjQ2MS00OTVjMjI1YTJhYTIiLCJ0ZW5hbnRJZCI6IjJmMTJjM2FlLThkNzgtNDJlZi1hMzRmLWQ0NWYzODRlOTgyOSIsImVtYWlsIjoidWF0LnNhbGVzLW1hbmFnZXJAYWxvbXJhbi50ZXN0IiwicGVybWlzc2lvbnMiOlsicHJvamVjdDpyZWFkIiwiY29tbWVyY2lhbDpyZWFkIiwiY29tbWVyY2lhbDpwcmljZTp2aWV3LXB1Ymxpc2hlZCIsImNvbW1lcmNpYWw6cGF5bWVudC1wbGFuOnZpZXciLCJjb21tZXJjaWFsOmN1c3RvbWVyOmNyZWF0ZSIsImNvbW1lcmNpYWw6Y3VzdG9tZXI6dmlldyIsImNvbW1lcmNpYWw6bGVhZDpjcmVhdGUiLCJjb21tZXJjaWFsOmxlYWQ6dmlldy1vd24iLCJjb21tZXJjaWFsOmxlYWQ6cXVhbGlmeSIsImNvbW1lcmNpYWw6bGVhZDpkaXNxdWFsaWZ5IiwiY29tbWVyY2lhbDphY3Rpdml0eTp2aWV3IiwiY29tbWVyY2lhbDphY3Rpdml0eTpsb2ciLCJjb21tZXJjaWFsOmhvbGQ6Y3JlYXRlIiwiY29tbWVyY2lhbDpob2xkOnJlbGVhc2UiLCJjb21tZXJjaWFsOmxlYWQ6dmlldy1hbGwiLCJjb21tZXJjaWFsOmxlYWQ6cmVhc3NpZ24iLCJjb21tZXJjaWFsOnJlc2VydmF0aW9uOmNvbmZpcm0iXSwiaWF0IjoxNzg3NTE3MTc0LCJleHAiOjE3ODc1MTgwNzR9.Jh0ZpO-KMXfBH4gjBpVmCQJSORq-Ao3y-wzoqjA26fg",
+        "tokenType": "Bearer",
+        "expiresInSeconds": 900,
+        "refreshToken": "18f5f684-fe3e-40e0-80a7-5ac710c08787.iZvyjmQ7MT02JqU_zOVv87DdlkodqVweBIWF0O85S-Xaj8yNR3mCcfw1AnegFzmW",
+        "refreshTokenExpiresInSeconds": 1209599,
+        "user": {
+          "id": "d08ff906-f4d3-4271-b461-495c225a2aa2",
+          "email": "uat.sales-manager@alomran.test",
+          "displayName": "Alomran UAT Sales Manager",
+          "tenantId": "2f12c3ae-8d78-42ef-a34f-d45f384e9829",
+          "role": "SALES_MANAGER",
+          "permissions": [
+            "project:read",
+            "commercial:read",
+            "commercial:price:view-published",
+            "commercial:payment-plan:view",
+            "commercial:customer:create",
+            "commercial:customer:view",
+            "commercial:lead:create",
+            "commercial:lead:view-own",
+            "commercial:lead:qualify",
+            "commercial:lead:disqualify",
+            "commercial:activity:view",
+            "commercial:activity:log",
+            "commercial:hold:create",
+            "commercial:hold:release",
+            "commercial:lead:view-all",
+            "commercial:lead:reassign",
+            "commercial:reservation:confirm"
+          ]
+        }
+      }
+    },
+    {
+      "name": "old refresh reuse rejected",
+      "status": 401,
+      "expected": 401,
+      "ok": true,
+      "detail": {
+        "message": "Refresh token reuse detected",
+        "error": "Unauthorized",
+        "statusCode": 401
+      }
+    },
+    {
+      "name": "manager logout",
+      "status": 200,
+      "expected": 200,
+      "ok": true,
+      "detail": {
+        "revoked": true
+      }
+    },
+    {
+      "name": "rotated refresh required after logout",
+      "status": 401,
+      "expected": 401,
+      "ok": true,
+      "detail": {
+        "message": "Refresh token reuse detected",
+        "error": "Unauthorized",
+        "statusCode": 401
+      }
+    }
+  ],
+  "failures": [],
+  "pass": true
+}

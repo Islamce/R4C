@@ -1,0 +1,1081 @@
+{
+  "loginStatus": 201,
+  "fixture": "synthetic-browser-only-Alomran",
+  "captures": [
+    {
+      "label": "English 1440x900",
+      "width": 1440,
+      "height": 900,
+      "filename": "sales-en-1440x900.png",
+      "title": "R4C",
+      "lang": "en",
+      "dir": "ltr",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "R4C\nR4C\nReal-estate delivery control\n\nCOMMERCIAL WORKSPACE\n\n01\nDevelopments\n02\nCommercial sales\n03\nSales command center\nR4C\nGoverned workspace\nGOVERNED WORKSPACE\nR4C Administrator\nuat.admin@alomran.test\nTenant\nAlomran Development\nALOMRAN\nالعربية\nLog out\n\nSALES OPERATING WORKSPACE\n\nCommand Center\n\nA focused queue for buyer context, follow-up, opportunity movement and governed commercial actions.\n\nContract-backed surface\nRefresh\nOPERATING OVERVIEW\nWhat requires attention\nOverdue\n0\nTasks\nOpen work\n1\nTasks\nContacts\n1\nOpen\nOpportunities\n1\nOpen\n\nQUICK ACTIONS\n\nActions open in context so the workspace stays focused.\n＋ Log activity\n＋ Create task\n＋ New opportunity\nNew contact\n\nMY WORK\n\nWhat requires attention\n1\nConfirm Riyadh Heights buyer follow-up\nNormal · Aug 24, 2026 · Maha Alharbi — Riyadh Heights UAT\nComplete\n\nOPPORTUNITIES\n\nMaha Alharbi — Riyadh Heights UAT\nView context\n—\nMaha Alharbi — Riyadh Heights UAT\nDiscovery\nSAR 1,250,000\nCustomer\nMaha Alharbi\nOwner\nR4C Administrator\nProject / unit\nRiyadh Heights / RH-204\n1\nQualification\n2\nDiscovery\n3\nProposal\n4\nNegotiation\n5\nReserved\n6\nWon\nProposal\nLost\nDisqualified\nCreate quotation\n\nSELECTED CONTEXT\n\nMaha Alharbi — Riyadh Heights UAT\nCustomer\nMaha Alharbi\nProject / unit\nRH · 204\nAVAILABLE\nLatest activity\nCall\nAug 23, 2026\n\nACTIVITY TIMELINE\n\nHistory\n1\nCall\n\nBuyer confirmed interest after the Riyadh Heights site visit.\n\nR4C Administrator · Aug 23, 2026\n\nTASK QUEUE\n\nWorkload\n＋ Create task\nConfirm Riyadh Heights buyer follow-up\nOpen · Aug 24, 2026\nComplete\n\nUnit availability remains authoritative in the reservation and inventory workflow.",
+      "buttons": [
+        {
+          "text": "☰Menu",
+          "aria": "Control home",
+          "disabled": false
+        },
+        {
+          "text": "العربية",
+          "aria": "Language",
+          "disabled": false
+        },
+        {
+          "text": "Log out",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Refresh",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Log activity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Create task",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ New opportunity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "New contact",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Complete",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Proposal",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Lost",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Disqualified",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Create quotation",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Create task",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Complete",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "navToggle": true,
+      "geometry": {
+        "boxes": [
+          {
+            "selector": ".sales-work-panel",
+            "x": 265.59375,
+            "y": 534.921875,
+            "width": 755.890625,
+            "height": 207.609375,
+            "right": 1021.484375,
+            "bottom": 742.53125
+          },
+          {
+            "selector": ".sales-opportunity-panel",
+            "x": 265.59375,
+            "y": 758.53125,
+            "width": 755.890625,
+            "height": 461.671875,
+            "right": 1021.484375,
+            "bottom": 1220.203125
+          },
+          {
+            "selector": ".sales-context-panel",
+            "x": 1037.484375,
+            "y": 534.921875,
+            "width": 364.90625,
+            "height": 411.453125,
+            "right": 1402.390625,
+            "bottom": 946.375
+          },
+          {
+            "selector": ".sales-timeline-panel",
+            "x": 1037.484375,
+            "y": 962.375,
+            "width": 364.90625,
+            "height": 233.9375,
+            "right": 1402.390625,
+            "bottom": 1196.3125
+          },
+          {
+            "selector": ".sales-task-band",
+            "x": 265.59375,
+            "y": 1236.203125,
+            "width": 1136.8125,
+            "height": 206.53125,
+            "right": 1402.40625,
+            "bottom": 1442.734375
+          }
+        ],
+        "intersections": [],
+        "narrow": [],
+        "outside": [],
+        "stageClipped": false,
+        "bodyWidth": 1440,
+        "viewportWidth": 1440
+      },
+      "noHorizontalOverflow": true,
+      "geometryPass": true,
+      "populated": true
+    },
+    {
+      "label": "English 1024x768",
+      "width": 1024,
+      "height": 768,
+      "filename": "sales-en-1024x768.png",
+      "title": "R4C",
+      "lang": "en",
+      "dir": "ltr",
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "bodyText": "R4C\nR4C\nReal-estate delivery control\n\nCOMMERCIAL WORKSPACE\n\n01\nDevelopments\n02\nCommercial sales\n03\nSales command center\nR4C\nGoverned workspace\nGOVERNED WORKSPACE\nR4C Administrator\nuat.admin@alomran.test\nTenant\nAlomran Development\nALOMRAN\nالعربية\nLog out\n\nSALES OPERATING WORKSPACE\n\nCommand Center\n\nA focused queue for buyer context, follow-up, opportunity movement and governed commercial actions.\n\nContract-backed surface\nRefresh\nOPERATING OVERVIEW\nWhat requires attention\nOverdue\n0\nTasks\nOpen work\n1\nTasks\nContacts\n1\nOpen\nOpportunities\n1\nOpen\n\nQUICK ACTIONS\n\nActions open in context so the workspace stays focused.\n＋ Log activity\n＋ Create task\n＋ New opportunity\nNew contact\n\nMY WORK\n\nWhat requires attention\n1\nConfirm Riyadh Heights buyer follow-up\nNormal · Aug 24, 2026 · Maha Alharbi — Riyadh Heights UAT\nComplete\n\nOPPORTUNITIES\n\nMaha Alharbi — Riyadh Heights UAT\nView context\n—\nMaha Alharbi — Riyadh Heights UAT\nDiscovery\nSAR 1,250,000\nCustomer\nMaha Alharbi\nOwner\nR4C Administrator\nProject / unit\nRiyadh Heights / RH-204\n1\nQualification\n2\nDiscovery\n3\nProposal\n4\nNegotiation\n5\nReserved\n6\nWon\nProposal\nLost\nDisqualified\nCreate quotation\n\nSELECTED CONTEXT\n\nMaha Alharbi — Riyadh Heights UAT\nCustomer\nMaha Alharbi\nProject / unit\nRH · 204\nAVAILABLE\nLatest activity\nCall\nAug 23, 2026\n\nACTIVITY TIMELINE\n\nHistory\n1\nCall\n\nBuyer confirmed interest after the Riyadh Heights site visit.\n\nR4C Administrator · Aug 23, 2026\n\nTASK QUEUE\n\nWorkload\n＋ Create task\nConfirm Riyadh Heights buyer follow-up\nOpen · Aug 24, 2026\nComplete\n\nUnit availability remains authoritative in the reservation and inventory workflow.",
+      "buttons": [
+        {
+          "text": "☰Menu",
+          "aria": "Control home",
+          "disabled": false
+        },
+        {
+          "text": "العربية",
+          "aria": "Language",
+          "disabled": false
+        },
+        {
+          "text": "Log out",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Refresh",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Log activity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Create task",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ New opportunity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "New contact",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Complete",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Proposal",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Lost",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Disqualified",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Create quotation",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Create task",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Complete",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "navToggle": true,
+      "geometry": {
+        "boxes": [
+          {
+            "selector": ".sales-work-panel",
+            "x": 258.71875,
+            "y": 605.203125,
+            "width": 418.5625,
+            "height": 207.609375,
+            "right": 677.28125,
+            "bottom": 812.8125
+          },
+          {
+            "selector": ".sales-opportunity-panel",
+            "x": 258.71875,
+            "y": 828.8125,
+            "width": 418.5625,
+            "height": 557.5,
+            "right": 677.28125,
+            "bottom": 1386.3125
+          },
+          {
+            "selector": ".sales-context-panel",
+            "x": 693.28125,
+            "y": 605.203125,
+            "width": 300,
+            "height": 411.453125,
+            "right": 993.28125,
+            "bottom": 1016.65625
+          },
+          {
+            "selector": ".sales-timeline-panel",
+            "x": 693.28125,
+            "y": 1032.65625,
+            "width": 300,
+            "height": 233.9375,
+            "right": 993.28125,
+            "bottom": 1266.59375
+          },
+          {
+            "selector": ".sales-task-band",
+            "x": 258.71875,
+            "y": 1402.3125,
+            "width": 734.5625,
+            "height": 206.53125,
+            "right": 993.28125,
+            "bottom": 1608.84375
+          }
+        ],
+        "intersections": [],
+        "narrow": [],
+        "outside": [],
+        "stageClipped": false,
+        "bodyWidth": 1024,
+        "viewportWidth": 1024
+      },
+      "noHorizontalOverflow": true,
+      "geometryPass": true,
+      "populated": true
+    },
+    {
+      "label": "English 390x844",
+      "width": 390,
+      "height": 844,
+      "filename": "sales-en-390x844.png",
+      "title": "R4C",
+      "lang": "en",
+      "dir": "ltr",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "bodyText": "R4C\nR4C\nReal-estate delivery control\n☰\nMenu\nGOVERNED WORKSPACE\nR4C Administrator\nTenant\nAlomran Development\nALOMRAN\nالعربية\nLog out\n\nSALES OPERATING WORKSPACE\n\nCommand Center\n\nA focused queue for buyer context, follow-up, opportunity movement and governed commercial actions.\n\nContract-backed surface\nRefresh\nOPERATING OVERVIEW\nWhat requires attention\nOverdue\n0\nTasks\nOpen work\n1\nTasks\nContacts\n1\nOpen\nOpportunities\n1\nOpen\n\nQUICK ACTIONS\n\nActions open in context so the workspace stays focused.\n＋ Log activity\n＋ Create task\n＋ New opportunity\nNew contact\n\nMY WORK\n\nWhat requires attention\n1\nConfirm Riyadh Heights buyer follow-up\nNormal · Aug 24, 2026 · Maha Alharbi — Riyadh Heights UAT\nComplete\n\nOPPORTUNITIES\n\nMaha Alharbi — Riyadh Heights UAT\nView context\n—\nMaha Alharbi — Riyadh Heights UAT\nDiscovery\nSAR 1,250,000\nCustomer\nMaha Alharbi\nOwner\nR4C Administrator\nProject / unit\nRiyadh Heights / RH-204\n1\nQualification\n2\nDiscovery\n3\nProposal\n4\nNegotiation\n5\nReserved\n6\nWon\nProposal\nLost\nDisqualified\nCreate quotation\n\nSELECTED CONTEXT\n\nMaha Alharbi — Riyadh Heights UAT\nCustomer\nMaha Alharbi\nProject / unit\nRH · 204\nAVAILABLE\nLatest activity\nCall\nAug 23, 2026\n\nACTIVITY TIMELINE\n\nHistory\n1\nCall\n\nBuyer confirmed interest after the Riyadh Heights site visit.\n\nR4C Administrator · Aug 23, 2026\n\nTASK QUEUE\n\nWorkload\n＋ Create task\nConfirm Riyadh Heights buyer follow-up\nOpen · Aug 24, 2026\nComplete\n\nUnit availability remains authoritative in the reservation and inventory workflow.",
+      "buttons": [
+        {
+          "text": "☰\nMenu",
+          "aria": "Control home",
+          "disabled": false
+        },
+        {
+          "text": "العربية",
+          "aria": "Language",
+          "disabled": false
+        },
+        {
+          "text": "Log out",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Refresh",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Log activity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Create task",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ New opportunity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "New contact",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Complete",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Proposal",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Lost",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Disqualified",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Create quotation",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "＋ Create task",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Complete",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "navToggle": true,
+      "geometry": {
+        "boxes": [
+          {
+            "selector": ".sales-work-panel",
+            "x": 12,
+            "y": 928.046875,
+            "width": 366,
+            "height": 179.34375,
+            "right": 378,
+            "bottom": 1107.390625
+          },
+          {
+            "selector": ".sales-opportunity-panel",
+            "x": 12,
+            "y": 1123.390625,
+            "width": 366,
+            "height": 610.25,
+            "right": 378,
+            "bottom": 1733.640625
+          },
+          {
+            "selector": ".sales-context-panel",
+            "x": 12,
+            "y": 1749.640625,
+            "width": 366,
+            "height": 334.1875,
+            "right": 378,
+            "bottom": 2083.828125
+          },
+          {
+            "selector": ".sales-timeline-panel",
+            "x": 12,
+            "y": 2099.828125,
+            "width": 366,
+            "height": 205.671875,
+            "right": 378,
+            "bottom": 2305.5
+          },
+          {
+            "selector": ".sales-task-band",
+            "x": 12,
+            "y": 2321.5,
+            "width": 366,
+            "height": 244.15625,
+            "right": 378,
+            "bottom": 2565.65625
+          }
+        ],
+        "intersections": [],
+        "narrow": [],
+        "outside": [],
+        "stageClipped": false,
+        "bodyWidth": 390,
+        "viewportWidth": 390
+      },
+      "noHorizontalOverflow": true,
+      "geometryPass": true,
+      "populated": true
+    },
+    {
+      "label": "Arabic 1440x900",
+      "width": 1440,
+      "height": 900,
+      "filename": "sales-ar-1440x900.png",
+      "lang": "ar",
+      "dir": "rtl",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyText": "R4C\nR4C\nمنصة التحكم في تسليم المشاريع العقارية\n\nمساحة العمل التجارية\n\n01\nالمشروعات والتطوير\n02\nالمبيعات التجارية\n03\nمركز مبيعات\nR4C\nمساحة عمل محكومة\nمساحة عمل محكومة\nR4C Administrator\nuat.admin@alomran.test\nالمستأجر\nAlomran Development\nALOMRAN\nEnglish\nتسجيل الخروج\n\nمساحة تشغيل المبيعات\n\nمركز القيادة\n\nقائمة مركزة لسياق المشتري والمتابعة وتحريك الفرص والإجراءات التجارية المحكومة.\n\nواجهة مرتبطة بالعقد\nتحديث\nنظرة تشغيلية\nما يحتاج إلى انتباه\nمتأخر\n0\nالمهام\nالعمل المفتوح\n1\nالمهام\nجهات الاتصال\n1\nمفتوح\nالفرص\n1\nمفتوح\n\nإجراءات سريعة\n\nتفتح الإجراءات في سياقها للحفاظ على تركيز مساحة العمل.\n＋ تسجيل النشاط\n＋ إنشاء مهمة\n＋ فرصة جديدة\nجهة اتصال جديدة\n\nمهامي\n\nما يحتاج إلى انتباه\n1\nConfirm Riyadh Heights buyer follow-up\nعادية · ٢٤‏/٠٨‏/٢٠٢٦ · Maha Alharbi — Riyadh Heights UAT\nإكمال\n\nالفرص\n\nMaha Alharbi — Riyadh Heights UAT\nعرض السياق\n—\nMaha Alharbi — Riyadh Heights UAT\nاستكشاف\n‏١٬٢٥٠٬٠٠٠ ر.س.‏\nالعميل\nMaha Alharbi\nالمالك\nR4C Administrator\nالمشروع / الوحدة\nRiyadh Heights / RH-204\n1\nتأهيل\n2\nاستكشاف\n3\nعرض\n4\nتفاوض\n5\nمحجوزة\n6\nناجحة\nعرض\nخاسرة\nمستبعدة\nإنشاء عرض سعر\n\nالسياق المحدد\n\nMaha Alharbi — Riyadh Heights UAT\nالعميل\nMaha Alharbi\nالمشروع / الوحدة\nRH · 204\nAVAILABLE\nآخر نشاط\nاتصال\n٢٣‏/٠٨‏/٢٠٢٦\n\nالخط الزمني للنشاط\n\nالسجل\n1\nاتصال\n\nBuyer confirmed interest after the Riyadh Heights site visit.\n\nR4C Administrator · ٢٣‏/٠٨‏/٢٠٢٦\n\nقائمة المهام\n\nعبء العمل\n＋ إنشاء مهمة\nConfirm Riyadh Heights buyer follow-up\nمفتوحة · ٢٤‏/٠٨‏/٢٠٢٦\nإكمال\n\nتبقى إتاحة الوحدة مرجعية في مسار الحجوزات والمخزون.",
+      "geometry": {
+        "boxes": [
+          {
+            "selector": ".sales-work-panel",
+            "x": 418.515625,
+            "y": 534.921875,
+            "width": 755.890625,
+            "height": 207.609375,
+            "right": 1174.40625,
+            "bottom": 742.53125
+          },
+          {
+            "selector": ".sales-opportunity-panel",
+            "x": 418.515625,
+            "y": 758.53125,
+            "width": 755.890625,
+            "height": 461.671875,
+            "right": 1174.40625,
+            "bottom": 1220.203125
+          },
+          {
+            "selector": ".sales-context-panel",
+            "x": 37.609375,
+            "y": 534.921875,
+            "width": 364.90625,
+            "height": 411.453125,
+            "right": 402.515625,
+            "bottom": 946.375
+          },
+          {
+            "selector": ".sales-timeline-panel",
+            "x": 37.609375,
+            "y": 962.375,
+            "width": 364.90625,
+            "height": 233.9375,
+            "right": 402.515625,
+            "bottom": 1196.3125
+          },
+          {
+            "selector": ".sales-task-band",
+            "x": 37.59375,
+            "y": 1236.203125,
+            "width": 1136.8125,
+            "height": 206.53125,
+            "right": 1174.40625,
+            "bottom": 1442.734375
+          }
+        ],
+        "intersections": [],
+        "narrow": [],
+        "outside": [],
+        "stageClipped": false,
+        "bodyWidth": 1440,
+        "viewportWidth": 1440
+      }
+    },
+    {
+      "label": "Arabic 1024x768",
+      "width": 1024,
+      "height": 768,
+      "filename": "sales-ar-1024x768.png",
+      "lang": "ar",
+      "dir": "rtl",
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "bodyText": "R4C\nR4C\nمنصة التحكم في تسليم المشاريع العقارية\n\nمساحة العمل التجارية\n\n01\nالمشروعات والتطوير\n02\nالمبيعات التجارية\n03\nمركز مبيعات\nR4C\nمساحة عمل محكومة\nمساحة عمل محكومة\nR4C Administrator\nuat.admin@alomran.test\nالمستأجر\nAlomran Development\nALOMRAN\nEnglish\nتسجيل الخروج\n\nمساحة تشغيل المبيعات\n\nمركز القيادة\n\nقائمة مركزة لسياق المشتري والمتابعة وتحريك الفرص والإجراءات التجارية المحكومة.\n\nواجهة مرتبطة بالعقد\nتحديث\nنظرة تشغيلية\nما يحتاج إلى انتباه\nمتأخر\n0\nالمهام\nالعمل المفتوح\n1\nالمهام\nجهات الاتصال\n1\nمفتوح\nالفرص\n1\nمفتوح\n\nإجراءات سريعة\n\nتفتح الإجراءات في سياقها للحفاظ على تركيز مساحة العمل.\n＋ تسجيل النشاط\n＋ إنشاء مهمة\n＋ فرصة جديدة\nجهة اتصال جديدة\n\nمهامي\n\nما يحتاج إلى انتباه\n1\nConfirm Riyadh Heights buyer follow-up\nعادية · ٢٤‏/٠٨‏/٢٠٢٦ · Maha Alharbi — Riyadh Heights UAT\nإكمال\n\nالفرص\n\nMaha Alharbi — Riyadh Heights UAT\nعرض السياق\n—\nMaha Alharbi — Riyadh Heights UAT\nاستكشاف\n‏١٬٢٥٠٬٠٠٠ ر.س.‏\nالعميل\nMaha Alharbi\nالمالك\nR4C Administrator\nالمشروع / الوحدة\nRiyadh Heights / RH-204\n1\nتأهيل\n2\nاستكشاف\n3\nعرض\n4\nتفاوض\n5\nمحجوزة\n6\nناجحة\nعرض\nخاسرة\nمستبعدة\nإنشاء عرض سعر\n\nالسياق المحدد\n\nMaha Alharbi — Riyadh Heights UAT\nالعميل\nMaha Alharbi\nالمشروع / الوحدة\nRH · 204\nAVAILABLE\nآخر نشاط\nاتصال\n٢٣‏/٠٨‏/٢٠٢٦\n\nالخط الزمني للنشاط\n\nالسجل\n1\nاتصال\n\nBuyer confirmed interest after the Riyadh Heights site visit.\n\nR4C Administrator · ٢٣‏/٠٨‏/٢٠٢٦\n\nقائمة المهام\n\nعبء العمل\n＋ إنشاء مهمة\nConfirm Riyadh Heights buyer follow-up\nمفتوحة · ٢٤‏/٠٨‏/٢٠٢٦\nإكمال\n\nتبقى إتاحة الوحدة مرجعية في مسار الحجوزات والمخزون.",
+      "geometry": {
+        "boxes": [
+          {
+            "selector": ".sales-work-panel",
+            "x": 346.71875,
+            "y": 605.203125,
+            "width": 418.5625,
+            "height": 207.609375,
+            "right": 765.28125,
+            "bottom": 812.8125
+          },
+          {
+            "selector": ".sales-opportunity-panel",
+            "x": 346.71875,
+            "y": 828.8125,
+            "width": 418.5625,
+            "height": 557.5,
+            "right": 765.28125,
+            "bottom": 1386.3125
+          },
+          {
+            "selector": ".sales-context-panel",
+            "x": 30.71875,
+            "y": 605.203125,
+            "width": 300,
+            "height": 411.453125,
+            "right": 330.71875,
+            "bottom": 1016.65625
+          },
+          {
+            "selector": ".sales-timeline-panel",
+            "x": 30.71875,
+            "y": 1032.65625,
+            "width": 300,
+            "height": 233.9375,
+            "right": 330.71875,
+            "bottom": 1266.59375
+          },
+          {
+            "selector": ".sales-task-band",
+            "x": 30.71875,
+            "y": 1402.3125,
+            "width": 734.5625,
+            "height": 206.53125,
+            "right": 765.28125,
+            "bottom": 1608.84375
+          }
+        ],
+        "intersections": [],
+        "narrow": [],
+        "outside": [],
+        "stageClipped": false,
+        "bodyWidth": 1024,
+        "viewportWidth": 1024
+      }
+    },
+    {
+      "label": "Arabic 390x844",
+      "width": 390,
+      "height": 844,
+      "filename": "sales-ar-390x844.png",
+      "lang": "ar",
+      "dir": "rtl",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "bodyText": "R4C\nR4C\nمنصة التحكم في تسليم المشاريع العقارية\n☰\nالقائمة\nمساحة عمل محكومة\nR4C Administrator\nالمستأجر\nAlomran Development\nALOMRAN\nEnglish\nتسجيل الخروج\n\nمساحة تشغيل المبيعات\n\nمركز القيادة\n\nقائمة مركزة لسياق المشتري والمتابعة وتحريك الفرص والإجراءات التجارية المحكومة.\n\nواجهة مرتبطة بالعقد\nتحديث\nنظرة تشغيلية\nما يحتاج إلى انتباه\nمتأخر\n0\nالمهام\nالعمل المفتوح\n1\nالمهام\nجهات الاتصال\n1\nمفتوح\nالفرص\n1\nمفتوح\n\nإجراءات سريعة\n\nتفتح الإجراءات في سياقها للحفاظ على تركيز مساحة العمل.\n＋ تسجيل النشاط\n＋ إنشاء مهمة\n＋ فرصة جديدة\nجهة اتصال جديدة\n\nمهامي\n\nما يحتاج إلى انتباه\n1\nConfirm Riyadh Heights buyer follow-up\nعادية · ٢٤‏/٠٨‏/٢٠٢٦ · Maha Alharbi — Riyadh Heights UAT\nإكمال\n\nالفرص\n\nMaha Alharbi — Riyadh Heights UAT\nعرض السياق\n—\nMaha Alharbi — Riyadh Heights UAT\nاستكشاف\n‏١٬٢٥٠٬٠٠٠ ر.س.‏\nالعميل\nMaha Alharbi\nالمالك\nR4C Administrator\nالمشروع / الوحدة\nRiyadh Heights / RH-204\n1\nتأهيل\n2\nاستكشاف\n3\nعرض\n4\nتفاوض\n5\nمحجوزة\n6\nناجحة\nعرض\nخاسرة\nمستبعدة\nإنشاء عرض سعر\n\nالسياق المحدد\n\nMaha Alharbi — Riyadh Heights UAT\nالعميل\nMaha Alharbi\nالمشروع / الوحدة\nRH · 204\nAVAILABLE\nآخر نشاط\nاتصال\n٢٣‏/٠٨‏/٢٠٢٦\n\nالخط الزمني للنشاط\n\nالسجل\n1\nاتصال\n\nBuyer confirmed interest after the Riyadh Heights site visit.\n\nR4C Administrator · ٢٣‏/٠٨‏/٢٠٢٦\n\nقائمة المهام\n\nعبء العمل\n＋ إنشاء مهمة\nConfirm Riyadh Heights buyer follow-up\nمفتوحة · ٢٤‏/٠٨‏/٢٠٢٦\nإكمال\n\nتبقى إتاحة الوحدة مرجعية في مسار الحجوزات والمخزون.",
+      "geometry": {
+        "boxes": [
+          {
+            "selector": ".sales-work-panel",
+            "x": 12,
+            "y": 928.046875,
+            "width": 366,
+            "height": 179.34375,
+            "right": 378,
+            "bottom": 1107.390625
+          },
+          {
+            "selector": ".sales-opportunity-panel",
+            "x": 12,
+            "y": 1123.390625,
+            "width": 366,
+            "height": 610.25,
+            "right": 378,
+            "bottom": 1733.640625
+          },
+          {
+            "selector": ".sales-context-panel",
+            "x": 12,
+            "y": 1749.640625,
+            "width": 366,
+            "height": 334.1875,
+            "right": 378,
+            "bottom": 2083.828125
+          },
+          {
+            "selector": ".sales-timeline-panel",
+            "x": 12,
+            "y": 2099.828125,
+            "width": 366,
+            "height": 205.671875,
+            "right": 378,
+            "bottom": 2305.5
+          },
+          {
+            "selector": ".sales-task-band",
+            "x": 12,
+            "y": 2321.5,
+            "width": 366,
+            "height": 244.15625,
+            "right": 378,
+            "bottom": 2565.65625
+          }
+        ],
+        "intersections": [],
+        "narrow": [],
+        "outside": [],
+        "stageClipped": false,
+        "bodyWidth": 390,
+        "viewportWidth": 390
+      }
+    }
+  ],
+  "checks": [
+    {
+      "name": "geometry",
+      "status": true,
+      "detail": [
+        {
+          "label": "English 1440x900",
+          "geometry": {
+            "boxes": [
+              {
+                "selector": ".sales-work-panel",
+                "x": 265.59375,
+                "y": 534.921875,
+                "width": 755.890625,
+                "height": 207.609375,
+                "right": 1021.484375,
+                "bottom": 742.53125
+              },
+              {
+                "selector": ".sales-opportunity-panel",
+                "x": 265.59375,
+                "y": 758.53125,
+                "width": 755.890625,
+                "height": 461.671875,
+                "right": 1021.484375,
+                "bottom": 1220.203125
+              },
+              {
+                "selector": ".sales-context-panel",
+                "x": 1037.484375,
+                "y": 534.921875,
+                "width": 364.90625,
+                "height": 411.453125,
+                "right": 1402.390625,
+                "bottom": 946.375
+              },
+              {
+                "selector": ".sales-timeline-panel",
+                "x": 1037.484375,
+                "y": 962.375,
+                "width": 364.90625,
+                "height": 233.9375,
+                "right": 1402.390625,
+                "bottom": 1196.3125
+              },
+              {
+                "selector": ".sales-task-band",
+                "x": 265.59375,
+                "y": 1236.203125,
+                "width": 1136.8125,
+                "height": 206.53125,
+                "right": 1402.40625,
+                "bottom": 1442.734375
+              }
+            ],
+            "intersections": [],
+            "narrow": [],
+            "outside": [],
+            "stageClipped": false,
+            "bodyWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "label": "English 1024x768",
+          "geometry": {
+            "boxes": [
+              {
+                "selector": ".sales-work-panel",
+                "x": 258.71875,
+                "y": 605.203125,
+                "width": 418.5625,
+                "height": 207.609375,
+                "right": 677.28125,
+                "bottom": 812.8125
+              },
+              {
+                "selector": ".sales-opportunity-panel",
+                "x": 258.71875,
+                "y": 828.8125,
+                "width": 418.5625,
+                "height": 557.5,
+                "right": 677.28125,
+                "bottom": 1386.3125
+              },
+              {
+                "selector": ".sales-context-panel",
+                "x": 693.28125,
+                "y": 605.203125,
+                "width": 300,
+                "height": 411.453125,
+                "right": 993.28125,
+                "bottom": 1016.65625
+              },
+              {
+                "selector": ".sales-timeline-panel",
+                "x": 693.28125,
+                "y": 1032.65625,
+                "width": 300,
+                "height": 233.9375,
+                "right": 993.28125,
+                "bottom": 1266.59375
+              },
+              {
+                "selector": ".sales-task-band",
+                "x": 258.71875,
+                "y": 1402.3125,
+                "width": 734.5625,
+                "height": 206.53125,
+                "right": 993.28125,
+                "bottom": 1608.84375
+              }
+            ],
+            "intersections": [],
+            "narrow": [],
+            "outside": [],
+            "stageClipped": false,
+            "bodyWidth": 1024,
+            "viewportWidth": 1024
+          }
+        },
+        {
+          "label": "English 390x844",
+          "geometry": {
+            "boxes": [
+              {
+                "selector": ".sales-work-panel",
+                "x": 12,
+                "y": 928.046875,
+                "width": 366,
+                "height": 179.34375,
+                "right": 378,
+                "bottom": 1107.390625
+              },
+              {
+                "selector": ".sales-opportunity-panel",
+                "x": 12,
+                "y": 1123.390625,
+                "width": 366,
+                "height": 610.25,
+                "right": 378,
+                "bottom": 1733.640625
+              },
+              {
+                "selector": ".sales-context-panel",
+                "x": 12,
+                "y": 1749.640625,
+                "width": 366,
+                "height": 334.1875,
+                "right": 378,
+                "bottom": 2083.828125
+              },
+              {
+                "selector": ".sales-timeline-panel",
+                "x": 12,
+                "y": 2099.828125,
+                "width": 366,
+                "height": 205.671875,
+                "right": 378,
+                "bottom": 2305.5
+              },
+              {
+                "selector": ".sales-task-band",
+                "x": 12,
+                "y": 2321.5,
+                "width": 366,
+                "height": 244.15625,
+                "right": 378,
+                "bottom": 2565.65625
+              }
+            ],
+            "intersections": [],
+            "narrow": [],
+            "outside": [],
+            "stageClipped": false,
+            "bodyWidth": 390,
+            "viewportWidth": 390
+          }
+        },
+        {
+          "label": "Arabic 1440x900",
+          "geometry": {
+            "boxes": [
+              {
+                "selector": ".sales-work-panel",
+                "x": 418.515625,
+                "y": 534.921875,
+                "width": 755.890625,
+                "height": 207.609375,
+                "right": 1174.40625,
+                "bottom": 742.53125
+              },
+              {
+                "selector": ".sales-opportunity-panel",
+                "x": 418.515625,
+                "y": 758.53125,
+                "width": 755.890625,
+                "height": 461.671875,
+                "right": 1174.40625,
+                "bottom": 1220.203125
+              },
+              {
+                "selector": ".sales-context-panel",
+                "x": 37.609375,
+                "y": 534.921875,
+                "width": 364.90625,
+                "height": 411.453125,
+                "right": 402.515625,
+                "bottom": 946.375
+              },
+              {
+                "selector": ".sales-timeline-panel",
+                "x": 37.609375,
+                "y": 962.375,
+                "width": 364.90625,
+                "height": 233.9375,
+                "right": 402.515625,
+                "bottom": 1196.3125
+              },
+              {
+                "selector": ".sales-task-band",
+                "x": 37.59375,
+                "y": 1236.203125,
+                "width": 1136.8125,
+                "height": 206.53125,
+                "right": 1174.40625,
+                "bottom": 1442.734375
+              }
+            ],
+            "intersections": [],
+            "narrow": [],
+            "outside": [],
+            "stageClipped": false,
+            "bodyWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "label": "Arabic 1024x768",
+          "geometry": {
+            "boxes": [
+              {
+                "selector": ".sales-work-panel",
+                "x": 346.71875,
+                "y": 605.203125,
+                "width": 418.5625,
+                "height": 207.609375,
+                "right": 765.28125,
+                "bottom": 812.8125
+              },
+              {
+                "selector": ".sales-opportunity-panel",
+                "x": 346.71875,
+                "y": 828.8125,
+                "width": 418.5625,
+                "height": 557.5,
+                "right": 765.28125,
+                "bottom": 1386.3125
+              },
+              {
+                "selector": ".sales-context-panel",
+                "x": 30.71875,
+                "y": 605.203125,
+                "width": 300,
+                "height": 411.453125,
+                "right": 330.71875,
+                "bottom": 1016.65625
+              },
+              {
+                "selector": ".sales-timeline-panel",
+                "x": 30.71875,
+                "y": 1032.65625,
+                "width": 300,
+                "height": 233.9375,
+                "right": 330.71875,
+                "bottom": 1266.59375
+              },
+              {
+                "selector": ".sales-task-band",
+                "x": 30.71875,
+                "y": 1402.3125,
+                "width": 734.5625,
+                "height": 206.53125,
+                "right": 765.28125,
+                "bottom": 1608.84375
+              }
+            ],
+            "intersections": [],
+            "narrow": [],
+            "outside": [],
+            "stageClipped": false,
+            "bodyWidth": 1024,
+            "viewportWidth": 1024
+          }
+        },
+        {
+          "label": "Arabic 390x844",
+          "geometry": {
+            "boxes": [
+              {
+                "selector": ".sales-work-panel",
+                "x": 12,
+                "y": 928.046875,
+                "width": 366,
+                "height": 179.34375,
+                "right": 378,
+                "bottom": 1107.390625
+              },
+              {
+                "selector": ".sales-opportunity-panel",
+                "x": 12,
+                "y": 1123.390625,
+                "width": 366,
+                "height": 610.25,
+                "right": 378,
+                "bottom": 1733.640625
+              },
+              {
+                "selector": ".sales-context-panel",
+                "x": 12,
+                "y": 1749.640625,
+                "width": 366,
+                "height": 334.1875,
+                "right": 378,
+                "bottom": 2083.828125
+              },
+              {
+                "selector": ".sales-timeline-panel",
+                "x": 12,
+                "y": 2099.828125,
+                "width": 366,
+                "height": 205.671875,
+                "right": 378,
+                "bottom": 2305.5
+              },
+              {
+                "selector": ".sales-task-band",
+                "x": 12,
+                "y": 2321.5,
+                "width": 366,
+                "height": 244.15625,
+                "right": 378,
+                "bottom": 2565.65625
+              }
+            ],
+            "intersections": [],
+            "narrow": [],
+            "outside": [],
+            "stageClipped": false,
+            "bodyWidth": 390,
+            "viewportWidth": 390
+          }
+        }
+      ]
+    },
+    {
+      "name": "populated",
+      "status": "PASS"
+    },
+    {
+      "name": "accessibility-smoke",
+      "status": "PASS",
+      "detail": {
+        "controlCount": 19,
+        "unnamedCount": 0,
+        "smallTargetCount": 0
+      }
+    },
+    {
+      "name": "touch-targets",
+      "status": "PASS",
+      "detail": {
+        "controlCount": 19,
+        "unnamedCount": 0,
+        "smallTargetCount": 0
+      }
+    },
+    {
+      "name": "reduced-motion",
+      "status": "PASS",
+      "detail": "Chromium context reducedMotion=reduce"
+    },
+    {
+      "name": "http-errors",
+      "status": "PASS",
+      "detail": []
+    },
+    {
+      "name": "console-errors",
+      "status": "PASS",
+      "detail": []
+    }
+  ],
+  "drawers": [
+    {
+      "name": "Contact",
+      "status": "OPENED",
+      "focusInside": true,
+      "tabStayedInside": true,
+      "escapeClosed": true
+    },
+    {
+      "name": "Opportunity",
+      "status": "OPENED",
+      "focusInside": true,
+      "tabStayedInside": true,
+      "escapeClosed": true
+    },
+    {
+      "name": "Activity",
+      "status": "OPENED",
+      "focusInside": true,
+      "tabStayedInside": true,
+      "escapeClosed": true
+    },
+    {
+      "name": "Task",
+      "status": "OPENED",
+      "focusInside": true,
+      "tabStayedInside": true,
+      "escapeClosed": true
+    },
+    {
+      "name": "Quotation",
+      "status": "OPENED",
+      "focusInside": true,
+      "tabStayedInside": true,
+      "escapeClosed": true
+    }
+  ],
+  "consoleErrors": [],
+  "httpErrors": [],
+  "localeStatus": 200
+}

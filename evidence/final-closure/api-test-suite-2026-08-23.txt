@@ -1,0 +1,79 @@
+[WARN] This project is configured to use 10.13.1 of pnpm. Your current pnpm is v11.21.0
+$ pnpm build && node --test test/*.test.mjs
+[WARN] This project is configured to use 10.13.1 of pnpm. Your current pnpm is v11.21.0
+$ nest build
+TAP version 13
+# Subtest: commercial read capabilities stay separate from administration
+ok 1 - commercial read capabilities stay separate from administration
+  ---
+  duration_ms: 1.334198
+  ...
+# Subtest: assignee lookup and touched operations retain tenant and Lead access guards
+ok 2 - assignee lookup and touched operations retain tenant and Lead access guards
+  ---
+  duration_ms: 1.863823
+  ...
+# Subtest: commercial role fixtures are least privilege and credential-free
+ok 3 - commercial role fixtures are least privilege and credential-free
+  ---
+  duration_ms: 0.398382
+  ...
+# Subtest: password reset tokens are hashed, expiring, single-use, and revoke sessions
+ok 4 - password reset tokens are hashed, expiring, single-use, and revoke sessions
+  ---
+  duration_ms: 0.953486
+  ...
+# Subtest: public endpoints are rate limited and request responses do not disclose accounts
+ok 5 - public endpoints are rate limited and request responses do not disclose accounts
+  ---
+  duration_ms: 0.244375
+  ...
+# Subtest: SMTP uses authenticated TLS and never embeds mailbox credentials in source
+ok 6 - SMTP uses authenticated TLS and never embeds mailbox credentials in source
+  ---
+  duration_ms: 0.224384
+  ...
+# Subtest: Prisma uses the PostgreSQL adapter path without a Rust-engine panic
+ok 7 - Prisma uses the PostgreSQL adapter path without a Rust-engine panic
+  ---
+  duration_ms: 98.145448
+  ...
+# Subtest: authorization is deny-by-default for missing permissions
+ok 8 - authorization is deny-by-default for missing permissions
+  ---
+  duration_ms: 0.982293
+  ...
+# Subtest: separation and commissioning acceptance policies are explicit
+ok 9 - separation and commissioning acceptance policies are explicit
+  ---
+  duration_ms: 0.197863
+  ...
+# Subtest: serious HSE events always require investigation
+ok 10 - serious HSE events always require investigation
+  ---
+  duration_ms: 0.238938
+  ...
+# Subtest: turnover readiness cannot bypass commissioning
+ok 11 - turnover readiness cannot bypass commissioning
+  ---
+  duration_ms: 0.206075
+  ...
+# Subtest: tenant-owned Prisma models declare tenantId
+ok 12 - tenant-owned Prisma models declare tenantId
+  ---
+  duration_ms: 7.646311
+  ...
+# Subtest: sensitive controllers protect every route with permissions
+ok 13 - sensitive controllers protect every route with permissions
+  ---
+  duration_ms: 2.285243
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 536.32405

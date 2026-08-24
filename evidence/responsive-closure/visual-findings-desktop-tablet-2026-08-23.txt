@@ -1,0 +1,7 @@
+Responsive desktop/tablet visual findings, 2026-08-23
+
+English 1440x900: PASS for desktop regression. The accepted mineral-signal composition remains intact: persistent desktop sidebar, governed top bar, signal strip, quick-action dock, two-column operating workspace, dark Opportunity panel, context/history rail, and workload band. Text and actions remain visible, with no overlap or horizontal overflow. The new mobile-only shell rules do not affect this state.
+
+English 1024x768: PASS for tablet composition. The sidebar remains a stable vertical rail at this breakpoint, while the Sales operating grid collapses to a main-flow stack with a compact two-column side rail. Quick actions wrap into a deliberate two-row arrangement, and all key Opportunity actions remain visible. The context rail is narrower but not clipped; the result is an intentional tablet state rather than an unchanged desktop canvas.
+
+Residual note: Some long synthetic labels truncate in the tablet Opportunity/context presentation as existing ellipsis behavior, but the controls remain reachable and the composition does not overlap or overflow. This is non-blocking presentation behavior under the directive’s “correct presentation only” scope.
