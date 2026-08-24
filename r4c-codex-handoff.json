@@ -1,0 +1,92 @@
+{
+  "product": "R4C",
+  "repository": {
+    "name": "Islamce/R4C",
+    "url": "https://github.com/Islamce/R4C",
+    "localPath": "/home/ubuntu/R4C-authoritative",
+    "branch": "main",
+    "currentHead": "1ab27d8a79d9fa6243d796f0b2fa86aa595a39af",
+    "gitStatusAtClone": "clean",
+    "remote": "https://github.com/Islamce/R4C.git"
+  },
+  "canonicalSha": {
+    "reportedPriorCandidate": "709ec928d4b9fe9cf38109c7535c73ce5215ae94",
+    "reportedCandidateAvailableInRecoveredClone": false,
+    "currentVerifiableSource": "1ab27d8a79d9fa6243d796f0b2fa86aa595a39af",
+    "selectionStatus": "BLOCKED_PENDING_PROVENANCE_RESOLUTION"
+  },
+  "frontendFreeze": "FROZEN_BY_TRANSFERRED_DIRECTIVE; VERIFY AGAINST SELECTED SHA",
+  "backendFreeze": "FROZEN_BY_TRANSFERRED_DIRECTIVE; VERIFY AGAINST SELECTED SHA",
+  "localRcStatus": "PASS_REPORTED_TRANSFERRED_EVIDENCE; NOT_REVERIFIED_AGAINST_RECOVERED_MAIN",
+  "productionStatus": "NO-GO",
+  "migrations": {
+    "reportedSet": [
+      "0_init",
+      "20260812090000_commercial_domain_foundation",
+      "20260814000000_c02_pricing_media",
+      "20260814120000_c03_customer_leads",
+      "20260814150000_i18n_c04_holds_reservations",
+      "20260816123000_password_reset_email",
+      "20260823130000_canonical_crm"
+    ],
+    "latestReported": "20260823130000_canonical_crm",
+    "intent": "ADDITIVE_NON_DESTRUCTIVE_REPORTED",
+    "stagingStatus": "PENDING"
+  },
+  "testResults": {
+    "crmJourney": "29/29 PASS reported",
+    "commercialJourney": "23/23 PASS reported",
+    "internalSecurityMatrix": "17/17 PASS reported",
+    "backupRestore": "PASS reported; schema and record-count parity",
+    "apiHealthReadiness": "PASS reported",
+    "redis": "PASS reported",
+    "apiBuild": "PASS reported",
+    "webBuild": "PASS reported",
+    "typechecks": "PASS reported",
+    "frontendTests": "PASS reported",
+    "responsiveEvidence": "PASS reported for desktop/tablet/English mobile/Arabic desktop/Arabic mobile",
+    "rtlEvidence": "PASS reported",
+    "accessibilitySmoke": "PASS reported",
+    "portfolioIsolation": "PASS reported",
+    "evidenceQualification": "TRANSFERRED_NOT_REVERIFIED_AGAINST_RECOVERED_MAIN"
+  },
+  "releaseArtifact": {
+    "name": "r4c-709ec928.tgz",
+    "sourceSha": "709ec928d4b9fe9cf38109c7535c73ce5215ae94",
+    "sizeBytes": 5088179,
+    "sha256": "883954a9de40d9c65a69c80cd1ad6662803832f717805d5feef6f0583e796f83",
+    "buildCommand": "pnpm build",
+    "correspondenceToRecoveredMain": "NOT_VERIFIED"
+  },
+  "runtimeRequirements": {
+    "node": ">=22",
+    "web": "Next.js standalone production runtime",
+    "api": "NestJS production runtime",
+    "database": "PostgreSQL via Prisma",
+    "redis": "Required where holds, sessions, or queues are enabled",
+    "proxyTls": "HTTPS and reverse-proxy routing required for deployed qualification",
+    "storage": "S3-compatible object storage only where accepted upload/media workflows are enabled",
+    "bim": "Disabled unless explicitly enabled; not required for Commercial operation"
+  },
+  "providerClassification": {
+    "authentication": "CORE REQUIRED",
+    "postgresql": "CORE REQUIRED",
+    "redis": "CORE REQUIRED WHERE ENABLED",
+    "storage": "CORE REQUIRED ONLY FOR ACCEPTED UPLOAD/MEDIA WORKFLOWS; OTHERWISE DEFERRED",
+    "email": "DISABLED FOR INITIAL RELEASE",
+    "social": "FUTURE INTEGRATION",
+    "government": "FUTURE INTEGRATION / EXTERNAL PROCESS",
+    "bankingPayment": "FUTURE INTEGRATION / EXTERNAL PROCESS",
+    "ai": "OPTIONAL / FUTURE",
+    "maps": "OPTIONAL"
+  },
+  "stagingStatus": {
+    "target": "NOT CONFIGURED",
+    "classification": "ENVIRONMENT / AUTHORIZATION BLOCKER",
+    "requiredInputs": ["approved existing non-production target", "staging web/API endpoints", "deployment identifier/access route", "isolated PostgreSQL", "isolated Redis where required", "storage if core", "source/branch mapping", "secure secret injection", "TLS/reverse proxy"],
+    "productionTouched": false
+  },
+  "remainingGates": ["resolve source provenance and select one reviewed SHA", "re-run qualification against selected SHA", "authorized staging deployment", "staging migration", "pre-UAT staging backup/restore", "synthetic persona UAT", "two-tenant tenant isolation and IDOR", "deployed auth/session and rate-limit checks", "deployed positive and negative journeys", "responsive regression", "rollback rehearsal", "independent penetration test", "Founder production authorization"],
+  "hardProhibitions": ["no frontend redesign", "no CRM scope expansion", "no backend reopening without proven P0/P1 defect", "no RCRM standalone product", "no WMS coupling", "no LOGIX coupling", "no shared operational persistence", "no optional provider activation merely for completeness", "no speculative government integration", "no production PII", "no production deployment without explicit authorization"],
+  "nextAction": "Recover the reported 709 candidate or explicitly select recovered GitHub main 1ab27d8 as a new candidate, re-run complete qualification, then use only an authorized staging target; do not resume product development."
+}
