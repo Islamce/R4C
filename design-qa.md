@@ -1,41 +1,35 @@
-# Design QA — merged commercial dashboards
+# Design QA — Manus Sales Command Center
 
-final result: passed
+## Visual source of truth
 
-## Evidence
+- Desktop: `evidence/fullstack-qualification/browser/sales-en-1440x900.png` (1440×900)
+- Mobile: `evidence/fullstack-qualification/browser/sales-en-390x844.png` (390×2781 full page)
+- State: English, populated synthetic UAT data, selected `Full Stack UAT Opportunity`
 
-- Source targets: the three selected R4C dashboard concepts generated in this task, with the Project & Unit Control screen used as the detailed-state fidelity reference.
-- Implementation captures: `.codex-audit/07-merged-unit-dashboard.png` and `.codex-audit/08-revised-floor-dashboard.png`, captured in the in-app browser.
-- Verified states: Portfolio Dashboard, Project & Unit Control, Record Interest modal, Executive Closing & Transfer, and the preserved Sales Operations tab.
+## Implementation evidence
 
-## Fidelity review
+- Desktop viewport: `C:/Users/Islam/AppData/Local/Temp/r4c-design-audit-20260824/07-manus-sales-desktop-implementation.png` (1280×720, in-app browser maximum)
+- Mobile viewport: `C:/Users/Islam/AppData/Local/Temp/r4c-design-audit-20260824/08-manus-sales-mobile-implementation.png` (375×811 capture for a reported 390×844 CSS viewport)
+- Mobile full page: `C:/Users/Islam/AppData/Local/Temp/r4c-design-audit-20260824/10-manus-sales-mobile-full.png` (375×2282)
+- Side-by-side comparison: `C:/Users/Islam/AppData/Local/Temp/r4c-design-audit-20260824/11-mobile-reference-vs-implementation-full.png`
+- Focused opportunity viewport: `C:/Users/Islam/AppData/Local/Temp/r4c-design-audit-20260824/12-mobile-opportunity-viewport.png`
 
-- Fonts and typography: the existing R4C system font stack, compact weights, numeric hierarchy, and table text remain legible at the tested desktop viewport. The Arabic shell intentionally mirrors navigation while the commercial data terminology remains English pending the product's existing dictionary expansion.
-- Spacing and layout rhythm: KPI cards, filters, tables, drawer, and dashboard panels follow the selected dense enterprise rhythm. Narrow widths switch to stacked grids without hiding core actions.
-- Colors and visual tokens: existing R4C navy, survey blue/teal, steel, line, success, warning, and danger tokens are reused consistently.
-- Image quality and assets: no raster content is required in the merged operational views; charts and inventory blocks are data UI rather than illustrative assets.
-- Copy and content: project, unit, construction, buyer-evidence, financial, and transfer-readiness labels match the selected concepts. Government handoff copy explicitly avoids claiming that R4C issues title deeds.
+## Comparison
 
-## Interaction checks
+The source and implementation use the same R4C shell, pale mint workspace, dark operating-overview and opportunity surfaces, typography hierarchy, control treatment, responsive stacking, and populated content. The implementation reproduces the source counts (2 contacts, 5 opportunities), selected SAR 1,250,000 discovery opportunity, one note activity, and three completed tasks.
 
-- All four dashboard tabs switch successfully.
-- Executive Overview is the default landing tab and contains only portfolio-level transfer metrics.
-- Project selection updates the project/unit KPI context.
-- Unit selection updates the visible selected state.
-- Building A/B and all 18 floors are independently selectable; the chosen building and floor update the layout context.
-- Record Interest opens a complete evidence form and its success state.
-- The detailed Title Transfer File is isolated in its own tab and no longer shares the executive landing dashboard.
-- Dashboard/tab transitions, staggered KPI entrances, modal motion, card depth, project-image tilt, and floor-plan zoom were verified with a reduced-motion fallback.
-- Project selection now drives the executive detail drawer, unit dashboard, and transfer queue.
-- Building/floor selection regenerates matching unit identifiers, floor values, availability counts, prices, layout labels, and table rows.
-- Unit-table and layout selections drive the same detail drawer; interest and reservation actions update both status surfaces.
-- Transfer-queue selection drives the title file, buyer/value summary, checklist, readiness score, and controlled-action states through approved handoff.
-- Executive Overview now includes a real-time WebGL/Three.js project model with pointer-driven camera depth and construction-progress lighting.
-- Every visible apartment on the architectural floor plan has a dynamic unit-number hotspot linked bidirectionally to the inventory table and detail drawer.
-- Development-preview navigation remains inside the preview and no longer redirects unauthenticated reviewers to `/login`.
-- Frozen Development Intelligence is absent from navigation.
+The side-by-side full-page capture shows a duplicated opportunity interior on the implementation side. DOM inspection found exactly one `section.sales-opportunity-panel`; the focused non-stitched viewport confirms the rendered panel is not duplicated. This is a full-page screenshot stitching artifact caused by transformed/animated content and is not an application defect.
 
-## Remaining P3 iteration notes
+The desktop comparison is proportional rather than pixel-identical because the in-app browser caps captures at 1280×720. Mobile source density was normalized from 390 px to 375 px for the side-by-side comparison. No actionable P0, P1, or P2 visual mismatch remains.
 
-- Connect the new portfolio and transfer summary cards to production aggregation endpoints when those contracts are added.
-- Add the new dashboard copy to the Arabic translation dictionary in the localization pass.
+## Interaction and implementation checks
+
+- `Log activity` opens its accessible dialog with activity type, notes field, close control, and submit action.
+- Opportunity DOM count: 1 panel; duplicated heading count of 2 is expected because the selected-context card repeats the opportunity name.
+- TypeScript: passed.
+- CRM UI contract tests: 6/6 passed.
+- Production web build: passed.
+
+## Final result
+
+passed

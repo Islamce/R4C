@@ -7,17 +7,19 @@ import { clientApi, ClientApiError } from "../lib/client-api";
 import type { BrowserSessionUser } from "../lib/types";
 import { useI18n } from "./I18nProvider";
 
-export function AppShell({ children, preview = false }: { children: ReactNode; preview?: boolean }) {
+export function AppShell({ children, preview = false, previewSurface = "commercial" }: { children: ReactNode; preview?: boolean; previewSurface?: "commercial" | "sales" }) {
   const { t, locale } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<BrowserSessionUser | null>(preview ? {
     id: "design-preview",
-    email: "islam@kynox.io",
-    displayName: "Islam Makramalla",
+    email: previewSurface === "sales" ? "uat.admin@alomran.test" : "islam@kynox.io",
+    displayName: previewSurface === "sales" ? "R4C Administrator" : "Islam Makramalla",
     role: "ADMIN",
     permissions: ["commercial:manage", "commercial:read"],
-    tenant: { code: "KYNOX", name: "Kynox Real Estate" },
+    tenant: previewSurface === "sales"
+      ? { code: "ALOMRAN", name: "Alomran Development" }
+      : { code: "KYNOX", name: "Kynox Real Estate" },
   } : null);
   const [sessionError, setSessionError] = useState(false);
   const [working, setWorking] = useState(false);
@@ -70,7 +72,7 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
 
   const projectsActive = pathname.startsWith("/projects");
   const commercialActive = pathname.startsWith("/commercial");
-  const salesActive = pathname.startsWith("/sales");
+  const salesActive = pathname.startsWith("/sales") || (preview && previewSurface === "sales");
 
   return (
     <div className="app-shell" dir={locale === "ar" ? "rtl" : "ltr"}>
@@ -161,7 +163,7 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
               onClick={logout}
               disabled={working || preview}
             >
-              {preview ? "Preview mode" : t("header.logout")}
+              {preview && previewSurface !== "sales" ? "Preview mode" : t("header.logout")}
             </button>
           </div>
         </header>

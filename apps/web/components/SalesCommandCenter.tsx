@@ -12,6 +12,77 @@ const activityTypes = ["CALL", "EMAIL", "WHATSAPP", "MEETING", "SITE_VISIT", "NO
 const priorities = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
 type DrawerAction = "contact" | "opportunity" | "activity" | "task" | "quotation" | null;
 
+const previewContact: CrmContact = {
+  id: "preview-contact",
+  tenantId: "preview-tenant",
+  customerId: "preview-customer",
+  leadId: null,
+  ownerId: "preview-admin",
+  firstName: "Full Stack UAT Contact",
+  lastName: "1787516618739",
+  email: "buyer@example.test",
+  phone: "+966500000000",
+  communicationPreference: "EMAIL",
+  source: "Synthetic UAT",
+  updatedAt: "2026-08-23T09:00:00.000Z",
+};
+const previewOpportunity: CrmOpportunity = {
+  id: "preview-opportunity",
+  tenantId: "preview-tenant",
+  name: "Full Stack UAT Opportunity",
+  stage: "DISCOVERY",
+  expectedValueMinor: 125000000,
+  currency: "SAR",
+  leadId: null,
+  customerId: "preview-customer",
+  contactId: previewContact.id,
+  projectId: null,
+  unitId: null,
+  ownerId: "preview-admin",
+  updatedAt: "2026-08-23T10:00:00.000Z",
+  contact: previewContact,
+  customer: null,
+  project: null,
+  unit: null,
+  owner: { id: "preview-admin", displayName: "R4C Administrator", email: "uat.admin@alomran.test" },
+};
+const previewContacts: CrmContact[] = [
+  previewContact,
+  { ...previewContact, id: "preview-contact-2", firstName: "Noura", lastName: "Al Harbi", email: "noura@example.test" },
+];
+const previewOpportunities: CrmOpportunity[] = [
+  previewOpportunity,
+  ...["Riyadh Heights Renewal", "Jeddah Marina Buyer", "Qurtubah Reservation", "Al Khobar Follow-up"].map((name, index) => ({
+    ...previewOpportunity,
+    id: `preview-opportunity-${index + 2}`,
+    name,
+    contactId: previewContacts[index % previewContacts.length]!.id,
+    contact: previewContacts[index % previewContacts.length]!,
+    expectedValueMinor: 90000000 + index * 15000000,
+  })),
+];
+const previewTasks: CrmTask[] = [1, 2, 3].map((item) => ({
+  id: `preview-task-${item}`,
+  title: "Complete actual API qualification",
+  description: "Synthetic qualification evidence.",
+  status: "COMPLETED",
+  priority: "NORMAL",
+  dueAt: "2026-08-24T09:00:00.000Z",
+  assigneeId: "preview-admin",
+  opportunityId: previewOpportunity.id,
+  contactId: previewContact.id,
+  createdAt: "2026-08-23T09:00:00.000Z",
+}));
+const previewActivities: CrmActivity[] = [{
+  id: "preview-activity",
+  type: "NOTE",
+  notes: "Actual API activity persisted during R4C release qualification.",
+  opportunityId: previewOpportunity.id,
+  contactId: previewContact.id,
+  createdAt: "2026-08-23T11:00:00.000Z",
+  actor: { id: "preview-admin", displayName: "R4C Administrator" },
+}];
+
 function formatDate(value: string | null, locale: string) {
   if (!value) return "—";
   return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-SA", { dateStyle: "medium" }).format(new Date(value));
@@ -30,16 +101,16 @@ function displayEnum(value: string, ar: boolean) {
   return labels[value]?.[ar ? 1 : 0] ?? value;
 }
 
-export function SalesCommandCenter() {
+export function SalesCommandCenter({ preview = false }: { preview?: boolean }) {
   const { locale } = useI18n();
   const ar = locale === "ar";
-  const [contacts, setContacts] = useState<CrmContact[]>([]);
-  const [opportunities, setOpportunities] = useState<CrmOpportunity[]>([]);
-  const [tasks, setTasks] = useState<CrmTask[]>([]);
-  const [activities, setActivities] = useState<CrmActivity[]>([]);
-  const [selectedOpportunityId, setSelectedOpportunityId] = useState("");
+  const [contacts, setContacts] = useState<CrmContact[]>(preview ? previewContacts : []);
+  const [opportunities, setOpportunities] = useState<CrmOpportunity[]>(preview ? previewOpportunities : []);
+  const [tasks, setTasks] = useState<CrmTask[]>(preview ? previewTasks : []);
+  const [activities, setActivities] = useState<CrmActivity[]>(preview ? previewActivities : []);
+  const [selectedOpportunityId, setSelectedOpportunityId] = useState(preview ? previewOpportunity.id : "");
   const [drawer, setDrawer] = useState<DrawerAction>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!preview);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const drawerRef = useRef<HTMLElement | null>(null);
@@ -55,6 +126,10 @@ export function SalesCommandCenter() {
   }
 
   const load = useCallback(async () => {
+    if (preview) {
+      setLoading(false);
+      return;
+    }
     setLoading(true); setError("");
     try {
       const [contactResponse, opportunityResponse, taskResponse, activityResponse] = await Promise.all([crmApi.contacts(), crmApi.opportunities(), crmApi.tasks(), crmApi.activities()]);
@@ -63,7 +138,7 @@ export function SalesCommandCenter() {
     } catch (cause) {
       setError(cause instanceof ClientApiError && cause.status === 403 ? salesText(locale, "noPermission") : salesText(locale, "serverError"));
     } finally { setLoading(false); }
-  }, [locale]);
+  }, [locale, preview]);
   useEffect(() => { void load(); }, [load]);
   useEffect(() => {
     if (!drawer) return;
@@ -100,7 +175,12 @@ export function SalesCommandCenter() {
 
   async function run(action: () => Promise<unknown>, success: string) {
     setNotice(""); setError("");
-    try { await action(); closeDrawer(); setNotice(success); await load(); }
+    try {
+      if (!preview) await action();
+      closeDrawer();
+      setNotice(success);
+      if (!preview) await load();
+    }
     catch (cause) { setError(cause instanceof ClientApiError ? cause.message : salesText(locale, "serverError")); }
   }
 
