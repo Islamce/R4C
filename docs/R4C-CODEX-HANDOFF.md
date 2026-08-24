@@ -8,7 +8,7 @@
 
 Product development is complete for the transferred candidate and must remain frozen. The local synthetic release candidate was reported as conditionally qualified, with CRM 29/29, Commercial 23/23, internal security 17/17, backup/restore parity, health/readiness, Redis, build, responsive, RTL, and portfolio-isolation evidence. Staging qualification remains blocked by environment authorization, and production remains **NO-GO**.
 
-A source-provenance exception must be resolved before any release qualification is treated as current. The supplied prior handoff names candidate `709ec928d4b9fe9cf38109c7535c73ce5215ae94`, but that object is absent from the recovered GitHub clone and absent from `origin/main`. The recovered authoritative GitHub repository is `https://github.com/Islamce/R4C`, branch `main`, at `1ab27d8a79d9fa6243d796f0b2fa86aa595a39af`. The incomplete `/home/ubuntu/R4C` directory is not a Git repository and is not an authoritative source. Do not silently merge or relabel these states. First recover the 709 candidate or explicitly select and requalify `main` as the new candidate.
+A source-provenance exception must be resolved before any release qualification is treated as current. The supplied prior handoff names candidate `709ec928d4b9fe9cf38109c7535c73ce5215ae94`, but that object is absent from the recovered GitHub clone and absent from `origin/main`. The recovered authoritative GitHub repository is `https://github.com/Islamce/R4C`, branch `main`, at `1ab27d8a79d9fa6243d796f0b2fa86aa595a39af`. The incomplete `/home/ubuntu/R4C` directory is not a Git repository and is not an authoritative source. The current `manus/design-handoff` branch now carries the approved Sales frontend and additive canonical CRM integration transferred from that workspace; this branch is a new implementation candidate and requires its own release qualification. Do not silently merge or relabel these states. First recover the 709 candidate or explicitly select and requalify the design-handoff branch as the new candidate.
 
 ## Exact repository state
 
@@ -25,7 +25,7 @@ A source-provenance exception must be resolved before any release qualification 
 | Backend freeze | Frozen by transferred directive; verify against selected candidate before release |
 | Frontend freeze | Frozen by transferred directive; verify against selected candidate before release |
 | Latest migration | `20260823130000_canonical_crm` in the transferred candidate; recovered `main` must be checked before using that claim |
-| Evidence commit | No single transferred evidence commit is present in recovered GitHub `main`; create a new handoff commit after provenance resolution |
+| Evidence commit | Handoff evidence is present in the design-handoff branch; the final implementation commit is recorded by Git after this update |
 
 Older SHA references from the prior local handoff are historical until the 709 object and its tree are recovered. The only current GitHub source truth presently verifiable is `main` at `1ab27d8...`.
 
@@ -41,7 +41,7 @@ Older SHA references from the prior local handoff are historical until the 709 o
 | `a24549598d4ee34609184e77ace7775293eb91b5` | Production entry routed to Commercial workspace. |
 | `1ab27d8a79d9fa6243d796f0b2fa86aa595a39af` | Current recovered bilingual Commercial Command Center. |
 
-The reported frontend visual/reset and full-stack qualification commits are not present in this recovered clone and must not be invented.
+The reported frontend visual/reset and full-stack qualification commits are not present in the original recovered `main` clone. The approved Sales implementation is now present on `manus/design-handoff` and is covered by `evidence/design-handoff/frontend-implementation-manifest.json`; its implementation commit must be treated as a new candidate until full release qualification is repeated.
 
 ## Architecture and product boundary
 

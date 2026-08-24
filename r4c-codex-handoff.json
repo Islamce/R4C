@@ -4,8 +4,10 @@
     "name": "Islamce/R4C",
     "url": "https://github.com/Islamce/R4C",
     "localPath": "/home/ubuntu/R4C-authoritative",
-    "branch": "main",
+    "branch": "manus/design-handoff",
+    "sourceBaselineBranch": "main",
     "currentHead": "1ab27d8a79d9fa6243d796f0b2fa86aa595a39af",
+    "handoffBranchHeadPendingCommit": true,
     "gitStatusAtClone": "clean",
     "remote": "https://github.com/Islamce/R4C.git"
   },
@@ -13,12 +15,22 @@
     "reportedPriorCandidate": "709ec928d4b9fe9cf38109c7535c73ce5215ae94",
     "reportedCandidateAvailableInRecoveredClone": false,
     "currentVerifiableSource": "1ab27d8a79d9fa6243d796f0b2fa86aa595a39af",
-    "selectionStatus": "BLOCKED_PENDING_PROVENANCE_RESOLUTION"
+    "selectionStatus": "DESIGN_HANDOFF_AUGMENTED_PENDING_FULL_RELEASE_REQUALIFICATION"
   },
   "frontendFreeze": "FROZEN_BY_TRANSFERRED_DIRECTIVE; VERIFY AGAINST SELECTED SHA",
   "backendFreeze": "FROZEN_BY_TRANSFERRED_DIRECTIVE; VERIFY AGAINST SELECTED SHA",
-  "localRcStatus": "PASS_REPORTED_TRANSFERRED_EVIDENCE; NOT_REVERIFIED_AGAINST_RECOVERED_MAIN",
+  "localRcStatus": "PASS_REPORTED_TRANSFERRED_EVIDENCE; DESIGN_HANDOFF_FRONTEND_AND_CRM_INTEGRATION_VALIDATED_LOCALLY; FULL_RELEASE_REQUALIFICATION_PENDING",
   "productionStatus": "NO-GO",
+  "frontendImplementation": {
+    "status": "TRANSFERRED_TO_DESIGN_HANDOFF",
+    "manifest": "evidence/design-handoff/frontend-implementation-manifest.json",
+    "salesRoute": "apps/web/app/(authenticated)/sales/page.tsx",
+    "responsiveStyles": "apps/web/app/sales.css",
+    "crmApiClient": "apps/web/lib/crm-api.ts",
+    "crmBackendCompanion": "ADDITIVE_CANONICAL_CRM_MODULE_AND_MIGRATION",
+    "preservedCommercialFunctionality": true,
+    "bundledCustomFonts": false
+  },
   "migrations": {
     "reportedSet": [
       "0_init",

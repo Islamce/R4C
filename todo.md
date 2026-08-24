@@ -11,3 +11,9 @@
 - [ ] Prepare the separate Founder production-authorization package after all deployed gates pass.
 - [x] Create and push the complete committed R4C project to GitHub branch `manus/design-handoff`.
 - [x] Verify the remote branch points to the intended complete handoff commit and report its URL and SHA.
+- [x] Audit `manus/design-handoff` against the approved R4C frontend implementation and identify missing UI source, styles, assets, fonts, and responsive files.
+- [x] Add the approved frontend implementation and required runtime assets without removing CRM functionality or continuity documents.
+- [x] Validate frontend build/typecheck/tests, responsive file coverage, and preservation of CRM routes before pushing.
+- [x] Push the complete frontend implementation to `manus/design-handoff` and verify the remote branch contents.
+- [x] Add the approved `R4C-FINAL-UI-SCOPE.md` contract document required by the transferred CRM UI test, without changing the test assertions.
+- [x] Extend the existing frontend backend proxy with the approved CRM read/write and quotation paths without removing existing Commercial, BIM, project, or progress paths.

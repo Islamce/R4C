@@ -1,0 +1,58 @@
+{
+  "product": "R4C",
+  "branch": "manus/design-handoff",
+  "implementationSource": "/home/ubuntu/R4C",
+  "implementationStatus": "TRANSFERRED_AND_LOCALLY_VALIDATED",
+  "frontendFiles": [
+    "apps/web/app/(authenticated)/sales/page.tsx",
+    "apps/web/app/sales.css",
+    "apps/web/components/SalesCommandCenter.tsx",
+    "apps/web/lib/crm-api.ts",
+    "apps/web/lib/sales-i18n.ts",
+    "apps/web/app/styles.css",
+    "apps/web/components/AppShell.tsx",
+    "apps/web/package.json",
+    "apps/web/test/crm-ui-contract.test.mjs",
+    "docs/R4C-FINAL-UI-SCOPE.md"
+  ],
+  "integrationFiles": [
+    "apps/web/app/api/backend/[...path]/route.ts",
+    "apps/api/src/app.module.ts",
+    "apps/api/src/crm/crm.controller.ts",
+    "apps/api/src/crm/crm.dto.ts",
+    "apps/api/src/crm/crm.module.ts",
+    "apps/api/src/crm/crm.service.ts",
+    "apps/api/prisma/schema.prisma",
+    "apps/api/prisma/migrations/20260823130000_canonical_crm/migration.sql"
+  ],
+  "responsiveImplementation": {
+    "stylesheet": "apps/web/app/sales.css",
+    "mobileBreakpoint": "<=680px intentional one-column normal-flow composition",
+    "rtl": "sales-i18n and logical CSS paths retained"
+  },
+  "assets": [
+    "apps/web/public/assets/commercial/floor-12-layout.png",
+    "apps/web/public/assets/commercial/riyadh-heights.png"
+  ],
+  "fonts": {
+    "bundledFiles": [],
+    "status": "No custom font files were present in the approved implementation; existing CSS/font stack is preserved."
+  },
+  "preservedCrmSurfaces": [
+    "apps/web/app/(authenticated)/commercial/page.tsx",
+    "apps/web/app/(authenticated)/projects/page.tsx",
+    "apps/web/components/CommercialWorkspaceSuite.tsx",
+    "apps/api/src/commercial/commercial.module.ts"
+  ],
+  "validation": {
+    "prismaValidate": "PASS",
+    "apiBuild": "PASS",
+    "apiTests": "PASS",
+    "webCommercialContract": "PASS",
+    "crmUiContract": "PASS",
+    "webTypecheck": "PASS",
+    "webBuild": "PASS",
+    "existingCrmAndCommercialRoutesPreserved": "PASS"
+  },
+  "production": "NOT_DEPLOYED"
+}
