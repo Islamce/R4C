@@ -20,7 +20,7 @@ This inventory is the evidence boundary for the release-hardening pass. A classi
 
 | Area | Evidence | Classification | Required action |
 | --- | --- | --- | --- |
-| KAAF generated context | Six declared modules are verified; current drift has one warning for root `hostinger-web-entry.cjs` | REFACTOR | Put the Hostinger entry point under an owned module or declare its real architectural owner, then regenerate; never hand-edit `.ai/`. |
+| KAAF generated context | Seven declared modules are generated; `r4c-runtime-entry` now owns `hostinger-web-entry.cjs`; exact-head KAAF is green | KEEP | Preserve truthful manifest ownership and regenerate after architectural changes; never hand-edit `.ai/`. |
 | Vendored KAAF tooling | `scripts/architecture/` is vendored; PR #74 modifies `scanners/resolve.py` | KEEP / EXTERNAL-GATE | Do not import the PR #74 tooling edit into R4C. Any defect belongs upstream in KAAF. |
 | Root build/runtime scripts | Root package scripts mix general monorepo tasks with Hostinger-specific migration/build behavior | REFACTOR | Separate source build from deploy-time migration execution and document ownership. |
 | Untracked Codex/audit and presentation artifacts | Local untracked files predate hardening | KEEP (user-owned) | Do not stage, modify or delete. |
@@ -31,8 +31,8 @@ This inventory is the evidence boundary for the release-hardening pass. A classi
 | --- | --- | --- | --- |
 | Project/WBS/document/progress/cost/material/quality/HSE/turnover domains | Declared API module and existing CI coverage | KEEP | Preserve public contracts and tenant boundaries. |
 | Commercial inventory, prices, plans, holds, reservations and leads | One large `commercial.service.ts` owns multiple workflows | REFACTOR | Trace state ownership; remove contradictory transitions and add lifecycle/integration tests. |
-| Lead WON/LOST to Unit resolution | Present only in PR #75 | CONSOLIDATE | Deliberately adopt the transactional, optimistic-concurrency behavior and harden tests. |
-| Consent withdrawal | Present only in PR #75 | CONSOLIDATE | Adopt purpose-specific withdrawal with authorization, tenant and audit negative tests. |
+| Lead WON/LOST to Unit resolution | Adopted from PR #75 with transactional and optimistic-concurrency tests | KEEP | Preserve rollback, tenant and stale/concurrent Unit protections. |
+| Consent withdrawal | Adopted from PR #75 with purpose, authorization, tenant, audit and repeat-withdrawal tests | KEEP | Preserve deterministic purpose-specific behavior. |
 | User/RBAC administration | PR #76 adds administrator-only API and UI | KEEP / REFACTOR | Preserve protected admin and role matrix; extend negative tests for escalation and tenant escape. |
 | Quotation lifecycle and buyer tokens | PR #74 only; schema migration `20260817100000_buyer_sales_quotation_mvp` | DEFER-WITH-REASON | Maintain on a Quotation Extension based on Core RC until sanctioned non-production PostgreSQL rehearsal. |
 | Commercial aggregation | PR #74 adds aggregation service/config | DEFER-WITH-REASON | Assess independently of quotation; adopt only if it replaces, rather than duplicates, an accepted aggregate path. |
@@ -44,9 +44,9 @@ This inventory is the evidence boundary for the release-hardening pass. A classi
 | Area | Evidence | Classification | Required action |
 | --- | --- | --- | --- |
 | Authenticated projects, progress, cost and BIM views | Existing accepted surfaces and phase tests | KEEP | Preserve routes and server-owned authorization. |
-| Kynox commercial workspace and user directory | PR #76, fully green exact-head gates | KEEP / REFACTOR | Preserve UX; fix the API-backed available-unit selector defect and maintain Arabic/RTL. |
-| `design-preview` route and static Sales Pipeline data | Preview path renders synthetic/demo records while Sales Operations is API-backed | CONSOLIDATE | Make preview unmistakably non-authoritative or remove it after accepted UI is represented by the governed path. |
-| `SalesPipelineWorkspace` and `CommercialOperatorWorkspace` | Parallel static and API-backed commercial experiences | CONSOLIDATE | Establish one persisted operational workflow; retain preview only as a bounded design artifact if still required. |
+| Kynox commercial workspace and user directory | PR #76 preserved; stale project-inventory response ordering fixed and tested | KEEP | Preserve API-backed `/commercial`, administrator directory and Arabic/RTL contracts. |
+| `design-preview` route and static Sales Pipeline data | Synthetic suite is now reachable only through the development-only preview route | KEEP (bounded development artifact) | Never expose it as production evidence or persisted data. |
+| `SalesPipelineWorkspace` and `CommercialOperatorWorkspace` | Production `/commercial` renders the API-backed operator workspace; preview is isolated | KEEP | Keep runtime ownership explicit and regression-tested. |
 | Bulk contact/campaign import | Sequential API calls, no import transaction/idempotency/progress contract | REFACTOR | Add bounded input limits, row-level results and explicit consent provenance before operational qualification. |
 | Quotation staff/buyer UI | PR #74 only | DEFER-WITH-REASON | Isolate with quotation API/schema in the extension branch. |
 | Flutter companion preview | PR #74 experimental design preview | REMOVE candidate | Do not carry into Core RC; prove no accepted web capability depends on it before excluding from Quotation Extension. |
@@ -74,11 +74,11 @@ This inventory is the evidence boundary for the release-hardening pass. A classi
 
 | Area | Evidence | Classification | Required action |
 | --- | --- | --- | --- |
-| `.env.production.example` | Says VPS, Caddy, Docker service DNS, MinIO and local container topology are production truth | REMOVE / REIMPLEMENT-CLEANLY | Replace with a shared-hosting contract; keep a separately named Docker self-hosting example only if still supported and truthful. |
-| `docs/deploy-hostinger-vps.md` | Detailed Ubuntu/systemd/VPS procedure | REMOVE from authoritative path | Mark historical/unsupported or remove after replacement documentation exists. VPS must not be a required target. |
+| `.env.production.example` | Shared-hosting variables are explicit and production code fails closed when API/domain/CORS/bootstrap identity values are absent | KEEP | Maintain no-secret, no-localhost production examples. |
+| `docs/deploy-hostinger-vps.md` | Removed and replaced by `docs/shared-hosting-deployment-contract.md` | REMOVE (completed) | Do not restore VPS as an authoritative requirement. |
 | Compose/Caddy package | Useful for local/CI/self-host rehearsal, not current production | KEEP / REFACTOR | Label scope accurately; remove claims that it is the current deployment contract. |
-| Hostinger Web Apps entry points | Real current shared-hosting path, with root KAAF drift | REFACTOR | Document build/start/migration separation and move under an owned deployable module. |
-| `.local` tenant defaults | Server session and tenant resolution contain local-development fallbacks | KEEP locally / REMOVE in production defaults | Require explicit production environment values; retain safe localhost behavior only for local development. |
+| Hostinger Web Apps entry points | Shared-hosting entry is owned by `r4c-runtime-entry`; build and migration commands are separate | KEEP | Preserve explicit migration approval boundary. |
+| `.local` tenant defaults | Retained for local/test only; production paths fail closed and have contract coverage | KEEP locally | Do not reinterpret workflow/local values as production defaults. |
 | Deployment/UAT documents | Mix implemented, CI-rehearsed, deployed and verified claims | REFACTOR | Apply explicit evidence-state vocabulary and current SHAs. |
 
 ## Tests and workflows
@@ -93,11 +93,8 @@ This inventory is the evidence boundary for the release-hardening pass. A classi
 
 ## Immediate known defects and gates
 
-1. API returns an `AVAILABLE` unit while the authoritative UI selector renders none.
-2. Reservation UAT is blocked until the selector is fixed and a price/payment plan is published in an approved environment.
-3. Current production example and deployment documentation contradict the actual shared-hosting strategy.
-4. KAAF reports the Hostinger entry point as an undeclared root module.
-5. PR #75 capabilities are absent from PR #76 and must be adopted deliberately.
-6. PR #74 quotation is valid independent work but its migration remains behind a sanctioned non-production PostgreSQL gate.
-7. Campaign import consent provenance requires business/legal validation; code must not imply legal approval.
-
+1. The stale-response inventory defect is corrected in source; live operational reservation UAT still requires approved inventory, price and payment-plan data.
+2. Shared-hosting source/configuration is corrected; external provider compatibility remains an environment qualification, not a source claim.
+3. PR #75 capabilities are incorporated and covered by automated negative/concurrency tests.
+4. PR #74 quotation remains valid independent work but is not yet rebuilt on Core RC; its tenant-FK correction and sanctioned non-production PostgreSQL rehearsal remain required.
+5. Campaign import consent provenance requires business/legal validation; code must not imply legal approval.
