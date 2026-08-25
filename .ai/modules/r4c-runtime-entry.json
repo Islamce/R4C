@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-runtime-entry.json",
-    "bodyDigest": "a2d40c537c9c76b56476c36f07ec32879ef3a6dd92631ae180bdf306914bce99",
+    "bodyDigest": "f5dc57223acf8cd5e93b02b9e44d24d415bb282335628f0b0f141e136ba3736a",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "7460b37d03f06ba906d277998ff6104892f35231683485664d45da302b3c2fc1",
+    "inputDigest": "8b082a68b94b0049260b0100e2eb146fc6fa115b52704129ac423265c58caf6d",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -46,6 +46,7 @@
       ".github/workflows/seed-verification.yml",
       "AGENTS.md",
       "COMMERCIAL_SALES_UAT.md",
+      "R4C_FINAL_CLEANLINESS_REPORT.md",
       "README.md",
       "RECON_CRM_RESCOPE.md",
       "UAT_FULL_TEST_RUN_2026-08-24.md",
