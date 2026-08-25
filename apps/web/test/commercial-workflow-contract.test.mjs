@@ -45,4 +45,15 @@ test("the browser proxy exposes only the bounded journey contracts", () => {
   assert.match(proxy, /commercial\\\/leads/);
   assert.match(proxy, /commercial\\\/holds/);
   assert.match(proxy, /commercial\\\/assignees/);
+  assert.match(proxy, /admin\\\/users/);
+});
+
+test("mass import validates contacts and campaign results before governed creation", () => {
+  assert.match(workspace, /parseBulkCsv\(contents/);
+  assert.match(workspace, /bulkMode === "campaign"/);
+  assert.match(workspace, /commercialApi\.createCustomer/);
+  assert.match(workspace, /commercialApi\.createLead/);
+  assert.match(workspace, /commercialApi\.logActivity\(lead\.id/);
+  assert.match(messages, /"commercial\.bulkCampaign"/);
+  assert.match(messages, /"commercial\.bulkReady"/);
 });

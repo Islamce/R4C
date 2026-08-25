@@ -13,6 +13,7 @@ const readPaths = [
   /^commercial\/leads(?:\/all)?(?:\/[^/]+)?$/,
   /^commercial\/leads\/[^/]+\/activities$/,
   /^commercial\/assignees$/,
+  /^admin\/users(?:\/roles)?$/,
   /^bim-models\/[^/]+\/(?:viewer-manifest|visual-state|4d-state|5d-state|material-state|quality-state|safety-state|turnover-state)$/,
   /^bim-models\/[^/]+\/elements\/global\/[^/]+$/,
   /^projects\/[^/]+\/wbs$/,
@@ -23,6 +24,7 @@ const writePaths = [
   /^commercial\/(?:customers|leads|holds)$/,
   /^commercial\/leads\/[^/]+\/(?:status|disqualify|assignee|activities)$/,
   /^commercial\/holds\/[^/]+\/(?:cancel|confirm)$/,
+  /^admin\/users(?:\/[^/]+)?$/,
   /^bim-models\/[^/]+\/wbs-links$/,
   /^wbs\/[^/]+\/progress$/,
 ];

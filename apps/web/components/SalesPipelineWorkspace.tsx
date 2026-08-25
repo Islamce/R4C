@@ -57,6 +57,16 @@ type Customer = {
 };
 
 const text = (ar: boolean, en: string, arabic: string) => ar ? arabic : en;
+const englishValues: Record<string, string> = {
+  "جميع المشروعات": "All projects", "مرتفعات الرياض": "Riyadh Heights", "مارينا جدة": "Jeddah Marina", "حدائق قرطبة": "Qurtubah Gardens", "واجهة الدمام": "Dammam Waterfront",
+  "سعد محمد آل سعود": "Saad Mohammed Al Saud", "عبدالله العتيبي": "Abdullah Al Otaibi", "نورة القحطاني": "Noura Al Qahtani", "فيصل الغامدي": "Faisal Al Ghamdi", "لطيفة بنت خالد": "Latifa bint Khalid", "خالد الشهري": "Khalid Al Shehri", "مها العتيبي": "Maha Al Otaibi", "سارة بنت فيصل": "Sarah bint Faisal",
+  "أحمد العتيبي": "Ahmed Al Otaibi", "ريم الحربي": "Reem Al Harbi", "ناصر المطيري": "Nasser Al Mutairi", "فريق المبيعات": "Sales team", "غير مسند": "Unassigned",
+  "الموقع الإلكتروني": "Website", "إحالة عميل": "Customer referral", "معرض عقاري": "Property exhibition", "حملة رقمية": "Digital campaign", "وسيط عقاري": "Property broker", "إعلان جوجل": "Google Ads", "زيارة المكتب": "Office visit", "إدخال يدوي": "Manual entry", "حجز من مخطط الوحدات": "Unit-layout reservation",
+  "اليوم، 10:12 ص": "Today, 10:12 AM", "اليوم، 09:40 ص": "Today, 9:40 AM", "أمس، 04:20 م": "Yesterday, 4:20 PM", "منذ يومين": "2 days ago", "منذ 3 أيام": "3 days ago", "منذ 4 أيام": "4 days ago", "منذ 5 أيام": "5 days ago", "منذ 6 أيام": "6 days ago", "الآن": "Now",
+  "اتصال تأهيلي": "Qualification call", "إرسال عرض السعر": "Send quotation", "استكمال العربون": "Complete deposit", "زيارة الموقع": "Site visit", "إعداد العقد": "Prepare contract", "تأكيد الميزانية": "Confirm budget", "اعتماد مدير المبيعات": "Sales manager approval", "متابعة التمويل": "Financing follow-up", "متابعة الإجراء": "Follow up action", "اعتماد الحجز": "Approve reservation", "استكمال بيانات العميل": "Complete customer details",
+  "غير محددة": "Not specified", "عميل جديد": "New customer",
+};
+const displayValue = (ar: boolean, value: string) => ar ? value : (englishValues[value] ?? value.replace("ر.س", "SAR"));
 const stageMeta = (ar: boolean): Record<Stage, { label: string; shortLabel: string }> => ({
   lead: { label: text(ar, "Leads", "العملاء المحتملون"), shortLabel: text(ar, "Lead", "عميل محتمل") },
   interest: { label: text(ar, "Interests", "الاهتمامات"), shortLabel: text(ar, "Interest", "اهتمام") },
@@ -189,7 +199,7 @@ export function SalesPipelineWorkspace({ externalReservation, ar }: { externalRe
       <section className="project-context-bar">
         <div className="project-filter-block">
           <label htmlFor="pipeline-project">{text(ar, "View scope", "نطاق العرض")}</label>
-          <select id="pipeline-project" value={project} onChange={(event) => setProject(event.target.value)}>{projects.map((item) => <option key={item}>{item}</option>)}</select>
+          <select id="pipeline-project" value={project} onChange={(event) => setProject(event.target.value)}>{projects.map((item) => <option key={item} value={item}>{displayValue(ar, item)}</option>)}</select>
         </div>
         <div className="project-stage-links" aria-label={text(ar, "Project lists", "قوائم المشروع")}>
           <button className={stage === "all" ? "active" : ""} type="button" onClick={() => setStage("all")}><AddressBook size={18} />{text(ar, "All customers", "كل العملاء")}<b>{customers.length}</b></button>
@@ -209,7 +219,7 @@ export function SalesPipelineWorkspace({ externalReservation, ar }: { externalRe
             <article className={`pipeline-stage stage-${item}`} key={item}>
               <header><Icon size={24} weight="duotone" /><div><h2>{stageMeta(ar)[item].label}</h2><span>{records.length} {text(ar, "records in view", "سجلات في العرض")}</span></div><strong>{customers.filter((customer) => customer.stage === item).length}</strong></header>
               <div className="stage-records">
-                {records.map((customer) => <button type="button" key={customer.id} className={selected.id === customer.id ? "selected" : ""} onClick={() => setSelectedId(customer.id)}><span className="customer-initial">{customer.name.charAt(0)}</span><span><b>{customer.name}</b><small>{customer.unit} · {customer.owner}</small></span><time>{customer.lastContact}</time></button>)}
+                {records.map((customer) => <button type="button" key={customer.id} className={selected.id === customer.id ? "selected" : ""} onClick={() => setSelectedId(customer.id)}><span className="customer-initial">{displayValue(ar, customer.name).charAt(0)}</span><span><b>{displayValue(ar, customer.name)}</b><small>{customer.unit} · {displayValue(ar, customer.owner)}</small></span><time>{displayValue(ar, customer.lastContact)}</time></button>)}
                 {!records.length ? <p className="stage-empty">{text(ar, "No records in this scope.", "لا توجد سجلات ضمن هذا النطاق.")}</p> : null}
               </div>
               <button className="stage-view-all" type="button" onClick={() => setStage(item)}>{text(ar, "View full list", "عرض القائمة كاملة")}</button>
@@ -223,17 +233,17 @@ export function SalesPipelineWorkspace({ externalReservation, ar }: { externalRe
           <header className="ledger-heading"><div><p>{text(ar, "All projects", "جميع المشروعات")}</p><h2>{text(ar, "Consolidated customer register", "السجل التراكمي للعملاء")}</h2></div><span><Funnel size={18} />{filtered.length} {text(ar, "results", "نتيجة")}</span></header>
           <div className="ledger-table" role="table" aria-label={text(ar, "Consolidated customer register", "السجل التراكمي للعملاء")}>
             <div className="ledger-row ledger-head" role="row"><span>{text(ar, "Customer", "العميل")}</span><span>{text(ar, "Mobile", "الجوال")}</span><span>{text(ar, "Project / unit", "المشروع / الوحدة")}</span><span>{text(ar, "Sales owner", "مسؤول المبيعات")}</span><span>{text(ar, "Latest status", "آخر حالة")}</span><span>{text(ar, "Last contact", "آخر تواصل")}</span><span>{text(ar, "Next action", "الإجراء التالي")}</span><span>{text(ar, "Expected value", "القيمة المتوقعة")}</span></div>
-            {filtered.map((customer) => <button type="button" role="row" key={customer.id} className={`ledger-row ${selected.id === customer.id ? "selected" : ""}`} onClick={() => setSelectedId(customer.id)}><span><b>{customer.name}</b><small>{customer.id} · {customer.source}</small></span><span dir="ltr">{customer.phone}</span><span><b>{customer.project}</b><small>{customer.unit}</small></span><span>{customer.owner}</span><span><i className={`stage-pill stage-pill-${customer.stage}`}>{stageMeta(ar)[customer.stage].shortLabel}</i></span><span>{customer.lastContact}</span><span>{customer.nextAction}</span><span><b>{customer.value}</b></span></button>)}
+            {filtered.map((customer) => <button type="button" role="row" key={customer.id} className={`ledger-row ${selected.id === customer.id ? "selected" : ""}`} onClick={() => setSelectedId(customer.id)}><span><b>{displayValue(ar, customer.name)}</b><small>{customer.id} · {displayValue(ar, customer.source)}</small></span><span dir="ltr">{customer.phone}</span><span><b>{displayValue(ar, customer.project)}</b><small>{customer.unit}</small></span><span>{displayValue(ar, customer.owner)}</span><span><i className={`stage-pill stage-pill-${customer.stage}`}>{stageMeta(ar)[customer.stage].shortLabel}</i></span><span>{displayValue(ar, customer.lastContact)}</span><span>{displayValue(ar, customer.nextAction)}</span><span><b>{displayValue(ar, customer.value)}</b></span></button>)}
           </div>
         </div>
 
         <aside className="customer-intelligence" aria-label={text(ar, "Selected customer details", "تفاصيل العميل المحدد")}>
-          <header><span className="customer-avatar">{selected.name.charAt(0)}</span><div><small>{selected.id}</small><h2>{selected.name}</h2><p dir="ltr">{selected.phone}</p></div></header>
+          <header><span className="customer-avatar">{displayValue(ar, selected.name).charAt(0)}</span><div><small>{selected.id}</small><h2>{displayValue(ar, selected.name)}</h2><p dir="ltr">{selected.phone}</p></div></header>
           <div className="customer-status"><span>{text(ar, "Latest status", "آخر حالة")}</span><strong className={`stage-pill stage-pill-${selected.stage}`}>{stageMeta(ar)[selected.stage].shortLabel}</strong></div>
           <dl>
-            <div><dt>{text(ar, "Project", "المشروع")}</dt><dd>{selected.project}</dd></div><div><dt>{text(ar, "Unit", "الوحدة")}</dt><dd>{selected.unit}</dd></div><div><dt>{text(ar, "Source", "المصدر")}</dt><dd>{selected.source}</dd></div><div><dt>{text(ar, "Sales owner", "مسؤول المبيعات")}</dt><dd>{selected.owner}</dd></div><div><dt>{text(ar, "Next action", "الإجراء التالي")}</dt><dd>{selected.nextAction}</dd></div><div><dt>{text(ar, "Expected value", "القيمة المتوقعة")}</dt><dd>{selected.value}</dd></div>
+            <div><dt>{text(ar, "Project", "المشروع")}</dt><dd>{displayValue(ar, selected.project)}</dd></div><div><dt>{text(ar, "Unit", "الوحدة")}</dt><dd>{selected.unit}</dd></div><div><dt>{text(ar, "Source", "المصدر")}</dt><dd>{displayValue(ar, selected.source)}</dd></div><div><dt>{text(ar, "Sales owner", "مسؤول المبيعات")}</dt><dd>{displayValue(ar, selected.owner)}</dd></div><div><dt>{text(ar, "Next action", "الإجراء التالي")}</dt><dd>{displayValue(ar, selected.nextAction)}</dd></div><div><dt>{text(ar, "Expected value", "القيمة المتوقعة")}</dt><dd>{displayValue(ar, selected.value)}</dd></div>
           </dl>
-          <section className="customer-timeline"><h3>آخر التفاعلات</h3><ol><li><Phone size={16} /><span><b>مكالمة متابعة</b><small>{selected.lastContact}</small></span></li><li><HandHeart size={16} /><span><b>تسجيل اهتمام بالوحدة</b><small>{selected.unit}</small></span></li><li><Buildings size={16} /><span><b>إضافة إلى قائمة المشروع</b><small>{selected.project}</small></span></li></ol></section>
+          <section className="customer-timeline"><h3>{text(ar, "Recent interactions", "آخر التفاعلات")}</h3><ol><li><Phone size={16} /><span><b>{text(ar, "Follow-up call", "مكالمة متابعة")}</b><small>{displayValue(ar, selected.lastContact)}</small></span></li><li><HandHeart size={16} /><span><b>{text(ar, "Unit interest recorded", "تسجيل اهتمام بالوحدة")}</b><small>{selected.unit}</small></span></li><li><Buildings size={16} /><span><b>{text(ar, "Added to project list", "إضافة إلى قائمة المشروع")}</b><small>{displayValue(ar, selected.project)}</small></span></li></ol></section>
           <div className="customer-actions"><button className="button button-primary" type="button" onClick={advanceSelected}>{text(ar, "Move to next stage", "نقل إلى المرحلة التالية")}</button><button className="button button-secondary" type="button" onClick={() => setFullRecordOpen(true)}>{text(ar, "Open full record", "فتح الملف الكامل")}</button></div>
         </aside>
       </section>
