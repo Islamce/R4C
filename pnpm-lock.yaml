@@ -7,7 +7,7 @@ settings:
 overrides:
   deepmerge-ts: 8.0.0
   sharp: '>=0.35.0'
-  postcss: '>=8.5.18'
+  postcss: '>=8.5.23'
   nanoid: 5.1.16
 
 importers:
@@ -2060,8 +2060,8 @@ packages:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
     engines: {node: '>=4'}
 
-  postcss@8.5.18:
-    resolution: {integrity: sha512-xdB1oSLHbz1vRWgCDalrCqEFTWzFlhqFC5tIHLMOSUIjhm3XXQ1qrFy8S/ESr1JYRRXqM3c1QFiMZUJdUTqyMQ==}
+  postcss@8.5.26:
+    resolution: {integrity: sha512-u82N74LFzG8ca+dD8puPnplTXoGH4fTPpVGuIbt36G3qvNlkvfD0lEAZSxaly3KX8TS/L1A1gsCEmvKmBcVbkQ==}
     engines: {node: ^10 || ^12 || >=14}
 
   postgres-array@2.0.0:
@@ -4303,7 +4303,7 @@ snapshots:
       '@next/env': 15.5.22
       '@swc/helpers': 0.5.15
       caniuse-lite: 1.0.30001806
-      postcss: 8.5.18
+      postcss: 8.5.26
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       styled-jsx: 5.1.6(react@19.2.7)
@@ -4462,7 +4462,7 @@ snapshots:
 
   pluralize@8.0.0: {}
 
-  postcss@8.5.18:
+  postcss@8.5.26:
     dependencies:
       nanoid: 5.1.16
       picocolors: 1.1.1
