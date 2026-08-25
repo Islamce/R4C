@@ -14,7 +14,8 @@
   },
   "scripts": {
     "build": "cd apps/api && node_modules/.bin/prisma generate && node_modules/.bin/nest build && cd ../web && node_modules/.bin/next build && cp -r .next/static .next/standalone/apps/web/.next/static",
-    "build:api:hostinger": "cd apps/api && node_modules/.bin/prisma generate && node_modules/.bin/prisma migrate deploy && node_modules/.bin/nest build",
+    "build:api:hostinger": "pnpm --filter @r4c/api prisma:generate && pnpm --filter @r4c/api build",
+    "migrate:api:hostinger": "pnpm --filter @r4c/api prisma:migrate:deploy",
     "dev": "pnpm -r --parallel dev",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",

@@ -7,10 +7,10 @@ R4C — a BIM-centered platform for governed real-estate development delivery, c
 - Repository: `Islamce/R4C`
 - Default branch: `main`
 - KAAF phase: 7
-- Modules: 6 declared, 1 discovered only
-- Drift: 0 error, 1 warning, 0 info
+- Modules: 7 declared, 0 discovered only
+- Drift: 0 error, 0 warning, 1 info
 - Generator: `kaaf` v0.7.0
-- Input digest: `4a8a1bbd02ab1e39…`
+- Input digest: `7888d1c50b782f02…`
 
 ## Modules
 
@@ -24,9 +24,9 @@ check against, `derived` = discovered with no declaration.
 | `r4c-bim-worker` | `apps/bim-worker` | Data | Extract geometry and metadata from IFC models so the platform can reason about them. | `verified` |
 | `r4c-contracts` | `packages/contracts` | Backend | Define the typed contracts shared between the API and the web client. | `verified` |
 | `r4c-kaaf-tooling` | `scripts/architecture` | DevOps | Generate and validate this repository's KAAF architecture context. | `verified` |
+| `r4c-runtime-entry` | `.` | DevOps | Orchestrate the monorepo and provide the managed-hosting web process entry point. | `verified` |
 | `r4c-scripts` | `scripts` | DevOps | Provision local development environments and generate production configuration. | `verified` |
 | `r4c-web` | `apps/web` | Frontend | Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards. | `verified` |
-| `root` | `.` | unknown | Not declared — discovered from source. | `derived` |
 
 ## Dependencies
 
@@ -36,9 +36,10 @@ graph LR
   r4c_bim_worker["r4c-bim-worker"]
   r4c_contracts["r4c-contracts"]
   r4c_kaaf_tooling["r4c-kaaf-tooling"]
+  r4c_runtime_entry["r4c-runtime-entry"]
   r4c_scripts["r4c-scripts"]
   r4c_web["r4c-web"]
-  root["root (undeclared)"]
+  r4c_runtime_entry --> r4c_web
   r4c_web --> r4c_contracts
 ```
 
@@ -87,11 +88,11 @@ No declared public contracts.
 
 ## Drift — declared versus discovered
 
-0 error, 1 warning, 0 info. Errors block CI; warnings and information do not.
+0 error, 0 warning, 1 info. Errors block CI; warnings and information do not.
 
 | Severity | Type | Module | Finding |
 |---|---|---|---|
-| `warning` | `undeclared-module` | `root` | 1 code file(s) under '.' belong to no declared module. |
+| `info` | `unsupported-dependency` | `r4c-runtime-entry` | 'r4c-runtime-entry' declares a dependency on 'r4c-web' that no discovered import corroborates. |
 
 Full detail, with evidence and recommendations, in `.ai/drift.json`.
 
@@ -106,4 +107,4 @@ Full detail, with evidence and recommendations, in `.ai/drift.json`.
 Declarations come from `kaaf.repo.json` and `kaaf.module.json`. Discovery is a static
 read of the source: dynamic imports and runtime wiring are invisible to it, so the
 absence of a drift finding is not proof that none exists.
-<!-- kaaf:bodyDigest=2834cab4b91c86ac14af79d8243e7291f3dc14768bfa2a5b12f57077e3dd91fd -->
+<!-- kaaf:bodyDigest=d4aed85de2deb821e71857e6ef0b83fd73313f9ec841ca36090121341f1c610e -->

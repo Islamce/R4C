@@ -1,18 +1,22 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "5ea895d71560ba9ccd74cd551a4241c9fe25917fa8e37dac6dc15e890257cadd",
+    "bodyDigest": "71528662345510c1cb45cb92efb8806bf309fcfe35c4d7e7d54e1aa195db77ad",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "4a8a1bbd02ab1e391d81cf57e75e2238afb78d87ac151ec701c45aad1fcec705",
+    "inputDigest": "7888d1c50b782f02763b7e34a7d5ea21c202f9fcfa3343c0dfd1302ae790bebb",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "dependencies": {
     "declaredEdges": [
+      {
+        "from": "r4c-runtime-entry",
+        "to": "r4c-web"
+      },
       {
         "from": "r4c-web",
         "to": "r4c-contracts"
@@ -30,6 +34,10 @@
     ],
     "edges": [
       {
+        "from": "r4c-runtime-entry",
+        "to": "r4c-web"
+      },
+      {
         "from": "r4c-web",
         "to": "r4c-contracts"
       }
@@ -41,13 +49,13 @@
     "environments": [
       "production"
     ],
-    "note": "Caddy reverse proxy configuration lives in deploy/caddy. Deployment is described in the phase7-production-deployment workflow."
+    "note": "Caddy reverse proxy configuration is retained for the isolated Compose rehearsal. The authoritative hosted contract is docs/shared-hosting-deployment-contract.md."
   },
   "drift": {
     "counts": {
       "error": 0,
-      "info": 0,
-      "warning": 1
+      "info": 1,
+      "warning": 0
     },
     "detail": ".ai/drift.json",
     "hasErrors": false
@@ -248,6 +256,40 @@
     },
     {
       "confidence": "verified",
+      "confidenceReason": "Declared and corroborated by 1 discovered code file(s).",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependedOnBy": [],
+      "dependsOn": [
+        "r4c-web"
+      ],
+      "discovery": {
+        "codeFileCount": 1,
+        "discovered": true,
+        "entryPoints": [],
+        "languages": [
+          "javascript",
+          "json",
+          "markdown",
+          "yaml"
+        ],
+        "parseErrors": [],
+        "publicSymbols": [],
+        "sourceFileCount": 78
+      },
+      "id": "r4c-runtime-entry",
+      "ownedEntities": [],
+      "owner": "DevOps",
+      "path": ".",
+      "publicEntryPoints": [
+        "hostinger-web-entry.cjs",
+        "package.json"
+      ],
+      "purpose": "Orchestrate the monorepo and provide the managed-hosting web process entry point.",
+      "sourceManifest": "kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
       "confidenceReason": "Declared and corroborated by 2 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
@@ -283,7 +325,9 @@
       "confidenceReason": "Declared and corroborated by 62 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
-      "dependedOnBy": [],
+      "dependedOnBy": [
+        "r4c-runtime-entry"
+      ],
       "dependsOn": [
         "r4c-contracts"
       ],
@@ -309,31 +353,6 @@
       ],
       "purpose": "Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards.",
       "sourceManifest": "apps/web/kaaf.module.json"
-    },
-    {
-      "confidence": "derived",
-      "confidenceReason": "Discovered from source; no manifest declares this module.",
-      "declared": false,
-      "dependedOnBy": [],
-      "dependsOn": [],
-      "discovery": {
-        "codeFileCount": 1,
-        "discovered": true,
-        "entryPoints": [],
-        "languages": [
-          "javascript"
-        ],
-        "parseErrors": [],
-        "publicSymbols": [],
-        "sourceFileCount": 1
-      },
-      "id": "root",
-      "ownedEntities": [],
-      "owner": "unknown",
-      "path": ".",
-      "publicEntryPoints": [],
-      "purpose": "Not declared — discovered from source. Add a kaaf.module.json to describe it.",
-      "sourceManifest": null
     }
   ],
   "permissions": [

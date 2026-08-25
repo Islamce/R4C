@@ -23,7 +23,7 @@ Required status checks for the launch baseline:
 5. `Phase 5 cost dashboard verification / cost-dashboard`
 6. `Phase 6 progress workspace verification / progress-workspace`
 7. `Phase 6.5 UX loop closers verification / ux-loop-closers`
-8. `Phase 7 production deployment verification / production-deployment`
+8. `Phase 7 isolated deployment rehearsal / isolated-deployment-rehearsal`
 9. `KAAF Architecture / Validate repository structure`
 10. `KAAF Architecture / Verify generated AI context`
 11. `KAAF Architecture / Report declared-versus-discovered drift`

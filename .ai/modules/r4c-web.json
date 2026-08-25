@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-web.json",
-    "bodyDigest": "d4fc1f70f74e6a75b9670952120904b703f458079a064b8005699e445ee0bd09",
+    "bodyDigest": "182d589c7bfbb2b2369dd4f1b8b27a5777e92bf3c81e5c82a0da07f60bdb7eca",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "4a8a1bbd02ab1e391d81cf57e75e2238afb78d87ac151ec701c45aad1fcec705",
+    "inputDigest": "7888d1c50b782f02763b7e34a7d5ea21c202f9fcfa3343c0dfd1302ae790bebb",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -15,7 +15,9 @@
   "confidenceReason": "Declared and corroborated by 62 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
-  "dependedOnBy": [],
+  "dependedOnBy": [
+    "r4c-runtime-entry"
+  ],
   "dependsOn": [
     "r4c-contracts"
   ],

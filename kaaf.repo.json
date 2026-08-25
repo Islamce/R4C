@@ -14,7 +14,7 @@
     "environments": [
       "production"
     ],
-    "note": "Caddy reverse proxy configuration lives in deploy/caddy. Deployment is described in the phase7-production-deployment workflow."
+    "note": "Caddy reverse proxy configuration is retained for the isolated Compose rehearsal. The authoritative hosted contract is docs/shared-hosting-deployment-contract.md."
   },
   "description": "R4C \u2014 a BIM-centered platform for governed real-estate development delivery, connecting projects, WBS, design documents, IFC models, approvals, progress and executive visibility.",
   "kaafPhase": 7,

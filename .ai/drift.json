@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "drift.json",
-    "bodyDigest": "45696d9e91b456c18dcab8b8e28a6ef57dc6ff90aafeecd2e64e6a19d218c453",
+    "bodyDigest": "4b516045c0994c326068a135a9819cde9dd30fa415272d5f2dbde40f47775827",
     "confidence": "derived",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "4a8a1bbd02ab1e391d81cf57e75e2238afb78d87ac151ec701c45aad1fcec705",
+    "inputDigest": "7888d1c50b782f02763b7e34a7d5ea21c202f9fcfa3343c0dfd1302ae790bebb",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -27,6 +27,10 @@
       "level": "verified",
       "reason": "Declared and corroborated by 32 discovered code file(s)."
     },
+    "r4c-runtime-entry": {
+      "level": "verified",
+      "reason": "Declared and corroborated by 1 discovered code file(s)."
+    },
     "r4c-scripts": {
       "level": "verified",
       "reason": "Declared and corroborated by 2 discovered code file(s)."
@@ -34,22 +38,19 @@
     "r4c-web": {
       "level": "verified",
       "reason": "Declared and corroborated by 62 discovered code file(s)."
-    },
-    "root": {
-      "level": "derived",
-      "reason": "Discovered from source; no manifest declares this module."
     }
   },
   "counts": {
     "error": 0,
-    "info": 0,
-    "warning": 1
+    "info": 1,
+    "warning": 0
   },
   "declaredModules": [
     "r4c-api",
     "r4c-bim-worker",
     "r4c-contracts",
     "r4c-kaaf-tooling",
+    "r4c-runtime-entry",
     "r4c-scripts",
     "r4c-web"
   ],
@@ -67,20 +68,20 @@
     "r4c-bim-worker",
     "r4c-contracts",
     "r4c-kaaf-tooling",
+    "r4c-runtime-entry",
     "r4c-scripts",
-    "r4c-web",
-    "root"
+    "r4c-web"
   ],
   "findings": [
     {
       "evidence": [
-        "hostinger-web-entry.cjs"
+        "kaaf.module.json"
       ],
-      "module": "root",
-      "recommendation": "Add ./kaaf.module.json declaring this module, or move the code into an existing module.",
-      "severity": "warning",
-      "summary": "1 code file(s) under '.' belong to no declared module.",
-      "type": "undeclared-module"
+      "module": "r4c-runtime-entry",
+      "recommendation": "Expected for documentation or process dependencies. If it was meant to be a code dependency, the import is missing.",
+      "severity": "info",
+      "summary": "'r4c-runtime-entry' declares a dependency on 'r4c-web' that no discovered import corroborates.",
+      "type": "unsupported-dependency"
     }
   ],
   "hasErrors": false,
@@ -90,7 +91,5 @@
     "info: expected divergence, such as a documentation-only dependency.",
     "Everything here is derived from a static read of the source: dynamic imports and runtime wiring are invisible to it, so absence of a finding is not proof of absence."
   ],
-  "undeclaredCode": [
-    "hostinger-web-entry.cjs"
-  ]
+  "undeclaredCode": []
 }
