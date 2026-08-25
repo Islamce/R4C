@@ -148,10 +148,21 @@ export function CommercialOperatorWorkspace() {
   }, [selectedLead?.id]);
 
   useEffect(() => {
-    if (!projectId || !canOperate) { setUnits([]); return; }
+    let active = true;
+    setUnits([]);
+    setPlans([]);
+    setSelectedUnit(null);
+    if (!projectId || !canOperate) return () => { active = false; };
     const params = new URLSearchParams({ projectId, status: "AVAILABLE", page: "1", pageSize: "100", locale });
-    void clientApi<UnitPage>(`/api/backend/commercial/units?${params}`).then(({ items }) => setUnits(items)).catch(() => setNotice("error"));
-    if (canConfirm) void commercialApi.paymentPlans(projectId).then(setPlans).catch(() => setNotice("error"));
+    void clientApi<UnitPage>(`/api/backend/commercial/units?${params}`)
+      .then(({ items }) => { if (active) setUnits(items); })
+      .catch(() => { if (active) setNotice("error"); });
+    if (canConfirm) {
+      void commercialApi.paymentPlans(projectId)
+        .then((items) => { if (active) setPlans(items); })
+        .catch(() => { if (active) setNotice("error"); });
+    }
+    return () => { active = false; };
   }, [projectId, locale, canOperate, canConfirm]);
 
   const groupedLeads = useMemo(() => {

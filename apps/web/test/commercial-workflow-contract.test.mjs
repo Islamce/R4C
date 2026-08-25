@@ -57,3 +57,10 @@ test("mass import validates contacts and campaign results before governed creati
   assert.match(messages, /"commercial\.bulkCampaign"/);
   assert.match(messages, /"commercial\.bulkReady"/);
 });
+
+test("project inventory requests cannot overwrite a newer unit selection context", () => {
+  assert.match(workspace, /let active = true;/);
+  assert.match(workspace, /if \(active\) setUnits\(items\)/);
+  assert.match(workspace, /return \(\) => \{ active = false; \};/);
+  assert.match(workspace, /status: "AVAILABLE"/);
+});
