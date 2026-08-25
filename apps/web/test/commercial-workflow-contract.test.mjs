@@ -9,10 +9,16 @@ const home = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8")
 const login = await readFile(new URL("../components/LoginForm.tsx", import.meta.url), "utf8");
 const suite = await readFile(new URL("../components/CommercialWorkspaceSuite.tsx", import.meta.url), "utf8");
 const pipeline = await readFile(new URL("../components/SalesPipelineWorkspace.tsx", import.meta.url), "utf8");
+const commercialPage = await readFile(new URL("../app/(authenticated)/commercial/page.tsx", import.meta.url), "utf8");
+const designPreviewPage = await readFile(new URL("../app/design-preview/page.tsx", import.meta.url), "utf8");
 
 test("production entry routes users into the commercial journey", () => {
   assert.match(home, /redirect\("\/login"\)/);
   assert.match(login, /router\.replace\("\/commercial"\)/);
+  assert.match(commercialPage, /CommercialOperatorWorkspace/);
+  assert.doesNotMatch(commercialPage, /CommercialWorkspaceSuite/);
+  assert.match(designPreviewPage, /process\.env\.NODE_ENV !== "development"/);
+  assert.match(designPreviewPage, /CommercialWorkspaceSuite preview/);
 });
 
 test("commercial journey authorizes exclusively through session permissions", () => {
