@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "b2a0575abb76fe8588a8cb372770df77734ca41a100344bf74f42d648bbe48f7",
+    "bodyDigest": "09a8a6b3599d8d969c7f343dac948d6b534e1d98b94d908a9925d1356a6fd402",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "60804feed079cd88aa3f2dfc12df26dacf9bef897f110b1f0bdd4c22ee07f0fb",
+    "inputDigest": "800e0ebf88394dadb5a70df68b7151538205d14318b8396ced6721b86333b2d5",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -275,7 +275,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 79
+        "sourceFileCount": 78
       },
       "id": "r4c-runtime-entry",
       "ownedEntities": [],

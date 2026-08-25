@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-runtime-entry.json",
-    "bodyDigest": "3bd7244339392c58fd7d03a76741e53fcd567a757cb1625bef3e99bb7b62cbd7",
+    "bodyDigest": "a2d40c537c9c76b56476c36f07ec32879ef3a6dd92631ae180bdf306914bce99",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "60804feed079cd88aa3f2dfc12df26dacf9bef897f110b1f0bdd4c22ee07f0fb",
+    "inputDigest": "800e0ebf88394dadb5a70df68b7151538205d14318b8396ced6721b86333b2d5",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -34,7 +34,6 @@
     "parseErrors": [],
     "publicSymbols": [],
     "sourceFiles": [
-      ".codex-audit/commercial-command-center-pr.md",
       ".github/dependabot.yml",
       ".github/workflows/architecture.yml",
       ".github/workflows/auth-session-verification.yml",
