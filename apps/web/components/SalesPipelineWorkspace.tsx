@@ -56,12 +56,13 @@ type Customer = {
   value: string;
 };
 
-const stageMeta: Record<Stage, { label: string; shortLabel: string }> = {
-  lead: { label: "العملاء المحتملون", shortLabel: "عميل محتمل" },
-  interest: { label: "الاهتمامات", shortLabel: "اهتمام" },
-  hold: { label: "الحجوزات المؤقتة", shortLabel: "حجز مؤقت" },
-  booking: { label: "الحجوزات المؤكدة", shortLabel: "حجز مؤكد" },
-};
+const text = (ar: boolean, en: string, arabic: string) => ar ? arabic : en;
+const stageMeta = (ar: boolean): Record<Stage, { label: string; shortLabel: string }> => ({
+  lead: { label: text(ar, "Leads", "العملاء المحتملون"), shortLabel: text(ar, "Lead", "عميل محتمل") },
+  interest: { label: text(ar, "Interests", "الاهتمامات"), shortLabel: text(ar, "Interest", "اهتمام") },
+  hold: { label: text(ar, "Temporary reservations", "الحجوزات المؤقتة"), shortLabel: text(ar, "Temporary reservation", "حجز مؤقت") },
+  booking: { label: text(ar, "Confirmed bookings", "الحجوزات المؤكدة"), shortLabel: text(ar, "Confirmed booking", "حجز مؤكد") },
+});
 
 const seedCustomers: Customer[] = [
   { id: "C-1032", name: "سعد محمد آل سعود", phone: "+966 55 123 4567", project: "مرتفعات الرياض", unit: "A-1101", owner: "أحمد العتيبي", source: "الموقع الإلكتروني", stage: "lead", lastContact: "اليوم، 10:12 ص", nextAction: "اتصال تأهيلي", value: "1,620,000 ر.س" },
@@ -79,7 +80,7 @@ const projects = ["جميع المشروعات", "مرتفعات الرياض", 
 const stageOrder: Stage[] = ["lead", "interest", "hold", "booking"];
 const stageIcons = { lead: UserPlus, interest: HandHeart, hold: CalendarCheck, booking: CheckCircle };
 
-export function SalesPipelineWorkspace({ externalReservation }: { externalReservation?: UnitReservationHandoff | null }) {
+export function SalesPipelineWorkspace({ externalReservation, ar }: { externalReservation?: UnitReservationHandoff | null; ar: boolean }) {
   const [customers, setCustomers] = useState(seedCustomers);
   const [project, setProject] = useState("جميع المشروعات");
   const [stage, setStage] = useState<Stage | "all">("all");
@@ -145,73 +146,73 @@ export function SalesPipelineWorkspace({ externalReservation }: { externalReserv
     }
     const nextStage = stageOrder[currentIndex + 1]!;
     setCustomers((current) => current.map((customer) => customer.id === selected.id ? { ...customer, stage: nextStage, lastContact: "الآن", nextAction: nextStage === "booking" ? "إعداد العقد" : "متابعة الإجراء" } : customer));
-    setNotice(`تم نقل ${selected.name} إلى مرحلة «${stageMeta[nextStage].label}» وتحديث آخر حالة.`);
+      setNotice(text(ar, `${selected.name} moved to “${stageMeta(ar)[nextStage].label}” and the latest status was updated.`, `تم نقل ${selected.name} إلى مرحلة «${stageMeta(ar)[nextStage].label}» وتحديث آخر حالة.`));
   }
 
   return (
-    <main className="kynox-pipeline" aria-label="مساحة تشغيل المبيعات">
+    <main className="kynox-pipeline" aria-label={text(ar, "Sales operations workspace", "مساحة تشغيل المبيعات")} dir={ar ? "rtl" : "ltr"}>
       <section className="pipeline-commandbar">
         <div className="pipeline-title">
           <span className="kynox-section-mark"><Buildings size={22} weight="duotone" /></span>
-          <div><p>KYNOX PORTFOLIO · COMMERCIAL</p><h1>مسار المبيعات</h1></div>
+          <div><p>{text(ar, "KYNOX PORTFOLIO · COMMERCIAL", "محفظة KYNOX · القطاع التجاري")}</p><h1>{text(ar, "Sales pipeline", "مسار المبيعات")}</h1></div>
         </div>
         <label className="pipeline-search">
           <MagnifyingGlass size={20} />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ابحث باسم العميل أو الجوال أو الوحدة" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={text(ar, "Search by customer, mobile, or unit", "ابحث باسم العميل أو الجوال أو الوحدة")} />
         </label>
         <div className="pipeline-actions">
-          <button className="button button-secondary" type="button" onClick={() => setNotice("تم تسجيل تواصل جديد في سجل العميل الزمني.")}><Phone size={19} /> تسجيل تواصل</button>
-          <button className="button button-primary" type="button" onClick={addLead}><Plus size={19} weight="bold" /> إضافة عميل محتمل</button>
+          <button className="button button-secondary" type="button" onClick={() => setNotice(text(ar, "A new contact was added to the customer timeline.", "تم تسجيل تواصل جديد في سجل العميل الزمني."))}><Phone size={19} />{text(ar, "Log contact", "تسجيل تواصل")}</button>
+          <button className="button button-primary" type="button" onClick={addLead}><Plus size={19} weight="bold" />{text(ar, "Add lead", "إضافة عميل محتمل")}</button>
         </div>
       </section>
 
-      <nav className="sales-workspace-switcher" aria-label="مساحات تشغيل المبيعات">
+      <nav className="sales-workspace-switcher" aria-label={text(ar, "Sales workspaces", "مساحات تشغيل المبيعات")}>
         {([
-          ["pipeline", UsersThree, "مسار العملاء"],
-          ["media", FolderOpen, "مكتبة المشروع"],
-          ["tasks", UserSwitch, "المهام والفريق"],
-          ["performance", PresentationChart, "الأداء والتنبيهات"],
+          ["pipeline", UsersThree, text(ar, "Customer pipeline", "مسار العملاء")],
+          ["media", FolderOpen, text(ar, "Project library", "مكتبة المشروع")],
+          ["tasks", UserSwitch, text(ar, "Tasks & team", "المهام والفريق")],
+          ["performance", PresentationChart, text(ar, "Performance & alerts", "الأداء والتنبيهات")],
         ] as const).map(([id, Icon, label]) => <button key={id} type="button" aria-selected={workspaceView === id} onClick={() => setWorkspaceView(id)}><Icon size={19} weight="duotone" />{label}</button>)}
       </nav>
 
       {workspaceView === "pipeline" ? <>
-      {notice ? <div className="pipeline-notice" role="status"><CheckCircle size={20} weight="fill" />{notice}<button type="button" onClick={() => setNotice("")}>إغلاق</button></div> : null}
+      {notice ? <div className="pipeline-notice" role="status"><CheckCircle size={20} weight="fill" />{notice}<button type="button" onClick={() => setNotice("")}>{text(ar, "Close", "إغلاق")}</button></div> : null}
 
-      <section className="portfolio-strip" aria-label="مؤشرات المحفظة">
-        <div><UsersThree size={22} /><span>عملاء في المسار</span><strong>320</strong></div>
-        <div><HandHeart size={22} /><span>اهتمامات نشطة</span><strong>182</strong></div>
-        <div><CalendarCheck size={22} /><span>حجوزات مؤقتة</span><strong>46</strong></div>
-        <div><CheckCircle size={22} /><span>حجوزات مؤكدة</span><strong>78</strong></div>
-        <div><ClockCountdown size={22} /><span>إجراءات متأخرة</span><strong className="warn">12</strong></div>
+      <section className="portfolio-strip" aria-label={text(ar, "Portfolio metrics", "مؤشرات المحفظة")}>
+        <div><UsersThree size={22} /><span>{text(ar, "Customers in pipeline", "عملاء في المسار")}</span><strong>320</strong></div>
+        <div><HandHeart size={22} /><span>{text(ar, "Active interests", "اهتمامات نشطة")}</span><strong>182</strong></div>
+        <div><CalendarCheck size={22} /><span>{text(ar, "Temporary reservations", "حجوزات مؤقتة")}</span><strong>46</strong></div>
+        <div><CheckCircle size={22} /><span>{text(ar, "Confirmed bookings", "حجوزات مؤكدة")}</span><strong>78</strong></div>
+        <div><ClockCountdown size={22} /><span>{text(ar, "Overdue actions", "إجراءات متأخرة")}</span><strong className="warn">12</strong></div>
       </section>
 
       <section className="project-context-bar">
         <div className="project-filter-block">
-          <label htmlFor="pipeline-project">نطاق العرض</label>
+          <label htmlFor="pipeline-project">{text(ar, "View scope", "نطاق العرض")}</label>
           <select id="pipeline-project" value={project} onChange={(event) => setProject(event.target.value)}>{projects.map((item) => <option key={item}>{item}</option>)}</select>
         </div>
-        <div className="project-stage-links" aria-label="قوائم المشروع">
-          <button className={stage === "all" ? "active" : ""} type="button" onClick={() => setStage("all")}><AddressBook size={18} />كل العملاء <b>{customers.length}</b></button>
+        <div className="project-stage-links" aria-label={text(ar, "Project lists", "قوائم المشروع")}>
+          <button className={stage === "all" ? "active" : ""} type="button" onClick={() => setStage("all")}><AddressBook size={18} />{text(ar, "All customers", "كل العملاء")}<b>{customers.length}</b></button>
           {stageOrder.map((item) => {
             const Icon = stageIcons[item];
             const count = customers.filter((customer) => (project === "جميع المشروعات" || customer.project === project) && customer.stage === item).length;
-            return <button className={stage === item ? "active" : ""} type="button" key={item} onClick={() => setStage(item)}><Icon size={18} />{stageMeta[item].label}<b>{count}</b></button>;
+            return <button className={stage === item ? "active" : ""} type="button" key={item} onClick={() => setStage(item)}><Icon size={18} />{stageMeta(ar)[item].label}<b>{count}</b></button>;
           })}
         </div>
       </section>
 
-      <section className="pipeline-stage-grid" aria-label="مراحل مسار المبيعات">
+      <section className="pipeline-stage-grid" aria-label={text(ar, "Sales pipeline stages", "مراحل مسار المبيعات")}>
         {stageOrder.map((item) => {
           const Icon = stageIcons[item];
           const records = customers.filter((customer) => (project === "جميع المشروعات" || customer.project === project) && customer.stage === item).slice(0, 3);
           return (
             <article className={`pipeline-stage stage-${item}`} key={item}>
-              <header><Icon size={24} weight="duotone" /><div><h2>{stageMeta[item].label}</h2><span>{records.length} سجلات في العرض</span></div><strong>{customers.filter((customer) => customer.stage === item).length}</strong></header>
+              <header><Icon size={24} weight="duotone" /><div><h2>{stageMeta(ar)[item].label}</h2><span>{records.length} {text(ar, "records in view", "سجلات في العرض")}</span></div><strong>{customers.filter((customer) => customer.stage === item).length}</strong></header>
               <div className="stage-records">
                 {records.map((customer) => <button type="button" key={customer.id} className={selected.id === customer.id ? "selected" : ""} onClick={() => setSelectedId(customer.id)}><span className="customer-initial">{customer.name.charAt(0)}</span><span><b>{customer.name}</b><small>{customer.unit} · {customer.owner}</small></span><time>{customer.lastContact}</time></button>)}
-                {!records.length ? <p className="stage-empty">لا توجد سجلات ضمن هذا النطاق.</p> : null}
+                {!records.length ? <p className="stage-empty">{text(ar, "No records in this scope.", "لا توجد سجلات ضمن هذا النطاق.")}</p> : null}
               </div>
-              <button className="stage-view-all" type="button" onClick={() => setStage(item)}>عرض القائمة كاملة</button>
+              <button className="stage-view-all" type="button" onClick={() => setStage(item)}>{text(ar, "View full list", "عرض القائمة كاملة")}</button>
             </article>
           );
         })}
@@ -219,21 +220,21 @@ export function SalesPipelineWorkspace({ externalReservation }: { externalReserv
 
       <section className="customer-ledger-layout">
         <div className="customer-ledger">
-          <header className="ledger-heading"><div><p>جميع المشروعات</p><h2>السجل التراكمي للعملاء</h2></div><span><Funnel size={18} />{filtered.length} نتيجة</span></header>
-          <div className="ledger-table" role="table" aria-label="السجل التراكمي للعملاء">
-            <div className="ledger-row ledger-head" role="row"><span>العميل</span><span>الجوال</span><span>المشروع / الوحدة</span><span>مسؤول المبيعات</span><span>آخر حالة</span><span>آخر تواصل</span><span>الإجراء التالي</span><span>القيمة المتوقعة</span></div>
-            {filtered.map((customer) => <button type="button" role="row" key={customer.id} className={`ledger-row ${selected.id === customer.id ? "selected" : ""}`} onClick={() => setSelectedId(customer.id)}><span><b>{customer.name}</b><small>{customer.id} · {customer.source}</small></span><span dir="ltr">{customer.phone}</span><span><b>{customer.project}</b><small>{customer.unit}</small></span><span>{customer.owner}</span><span><i className={`stage-pill stage-pill-${customer.stage}`}>{stageMeta[customer.stage].shortLabel}</i></span><span>{customer.lastContact}</span><span>{customer.nextAction}</span><span><b>{customer.value}</b></span></button>)}
+          <header className="ledger-heading"><div><p>{text(ar, "All projects", "جميع المشروعات")}</p><h2>{text(ar, "Consolidated customer register", "السجل التراكمي للعملاء")}</h2></div><span><Funnel size={18} />{filtered.length} {text(ar, "results", "نتيجة")}</span></header>
+          <div className="ledger-table" role="table" aria-label={text(ar, "Consolidated customer register", "السجل التراكمي للعملاء")}>
+            <div className="ledger-row ledger-head" role="row"><span>{text(ar, "Customer", "العميل")}</span><span>{text(ar, "Mobile", "الجوال")}</span><span>{text(ar, "Project / unit", "المشروع / الوحدة")}</span><span>{text(ar, "Sales owner", "مسؤول المبيعات")}</span><span>{text(ar, "Latest status", "آخر حالة")}</span><span>{text(ar, "Last contact", "آخر تواصل")}</span><span>{text(ar, "Next action", "الإجراء التالي")}</span><span>{text(ar, "Expected value", "القيمة المتوقعة")}</span></div>
+            {filtered.map((customer) => <button type="button" role="row" key={customer.id} className={`ledger-row ${selected.id === customer.id ? "selected" : ""}`} onClick={() => setSelectedId(customer.id)}><span><b>{customer.name}</b><small>{customer.id} · {customer.source}</small></span><span dir="ltr">{customer.phone}</span><span><b>{customer.project}</b><small>{customer.unit}</small></span><span>{customer.owner}</span><span><i className={`stage-pill stage-pill-${customer.stage}`}>{stageMeta(ar)[customer.stage].shortLabel}</i></span><span>{customer.lastContact}</span><span>{customer.nextAction}</span><span><b>{customer.value}</b></span></button>)}
           </div>
         </div>
 
-        <aside className="customer-intelligence" aria-label="تفاصيل العميل المحدد">
+        <aside className="customer-intelligence" aria-label={text(ar, "Selected customer details", "تفاصيل العميل المحدد")}>
           <header><span className="customer-avatar">{selected.name.charAt(0)}</span><div><small>{selected.id}</small><h2>{selected.name}</h2><p dir="ltr">{selected.phone}</p></div></header>
-          <div className="customer-status"><span>آخر حالة</span><strong className={`stage-pill stage-pill-${selected.stage}`}>{stageMeta[selected.stage].shortLabel}</strong></div>
+          <div className="customer-status"><span>{text(ar, "Latest status", "آخر حالة")}</span><strong className={`stage-pill stage-pill-${selected.stage}`}>{stageMeta(ar)[selected.stage].shortLabel}</strong></div>
           <dl>
-            <div><dt>المشروع</dt><dd>{selected.project}</dd></div><div><dt>الوحدة</dt><dd>{selected.unit}</dd></div><div><dt>المصدر</dt><dd>{selected.source}</dd></div><div><dt>مسؤول المبيعات</dt><dd>{selected.owner}</dd></div><div><dt>الإجراء التالي</dt><dd>{selected.nextAction}</dd></div><div><dt>القيمة المتوقعة</dt><dd>{selected.value}</dd></div>
+            <div><dt>{text(ar, "Project", "المشروع")}</dt><dd>{selected.project}</dd></div><div><dt>{text(ar, "Unit", "الوحدة")}</dt><dd>{selected.unit}</dd></div><div><dt>{text(ar, "Source", "المصدر")}</dt><dd>{selected.source}</dd></div><div><dt>{text(ar, "Sales owner", "مسؤول المبيعات")}</dt><dd>{selected.owner}</dd></div><div><dt>{text(ar, "Next action", "الإجراء التالي")}</dt><dd>{selected.nextAction}</dd></div><div><dt>{text(ar, "Expected value", "القيمة المتوقعة")}</dt><dd>{selected.value}</dd></div>
           </dl>
           <section className="customer-timeline"><h3>آخر التفاعلات</h3><ol><li><Phone size={16} /><span><b>مكالمة متابعة</b><small>{selected.lastContact}</small></span></li><li><HandHeart size={16} /><span><b>تسجيل اهتمام بالوحدة</b><small>{selected.unit}</small></span></li><li><Buildings size={16} /><span><b>إضافة إلى قائمة المشروع</b><small>{selected.project}</small></span></li></ol></section>
-          <div className="customer-actions"><button className="button button-primary" type="button" onClick={advanceSelected}>نقل إلى المرحلة التالية</button><button className="button button-secondary" type="button" onClick={() => setFullRecordOpen(true)}>فتح الملف الكامل</button></div>
+          <div className="customer-actions"><button className="button button-primary" type="button" onClick={advanceSelected}>{text(ar, "Move to next stage", "نقل إلى المرحلة التالية")}</button><button className="button button-secondary" type="button" onClick={() => setFullRecordOpen(true)}>{text(ar, "Open full record", "فتح الملف الكامل")}</button></div>
         </aside>
       </section>
       </> : null}
@@ -262,7 +263,7 @@ export function SalesPipelineWorkspace({ externalReservation }: { externalReserv
               <section>
                 <h3>ملخص الفرصة</h3>
                 <dl>
-                  <div><dt>الحالة الحالية</dt><dd><i className={`stage-pill stage-pill-${selected.stage}`}>{stageMeta[selected.stage].shortLabel}</i></dd></div>
+                  <div><dt>{text(ar, "Current status", "الحالة الحالية")}</dt><dd><i className={`stage-pill stage-pill-${selected.stage}`}>{stageMeta(ar)[selected.stage].shortLabel}</i></dd></div>
                   <div><dt>مصدر العميل</dt><dd>{selected.source}</dd></div>
                   <div><dt>آخر تواصل</dt><dd>{selected.lastContact}</dd></div>
                   <div><dt>الإجراء التالي</dt><dd>{selected.nextAction}</dd></div>
