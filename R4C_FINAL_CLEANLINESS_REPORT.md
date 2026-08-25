@@ -1,8 +1,11 @@
 # R4C Final Cleanliness and Qualification Report
 
-Date: 2026-08-25  
-Hardening branch: `codex/r4c-core-rc-hardening`  
-Core RC SHA: `3d3ec7245e6ab6a51bc9e2b5d9dd39bd3e52f13a`  
+Date: 2026-08-25
+
+Hardening branch: `codex/r4c-core-rc-hardening`
+
+Core RC qualified source SHA: `3d3ec7245e6ab6a51bc9e2b5d9dd39bd3e52f13a`
+
 Draft review: PR #77
 
 ## 1. Executive result
