@@ -77,13 +77,109 @@ test("C03 invariants enforce capability, ownership, lifecycle, consent, tenant, 
     }
     const manualReserved = await local.request(`/commercial/leads/${lead.body.id}/status`, { token: agentToken, method: "PATCH", body: { status: "RESERVED" } });
     expectStatus(manualReserved, 400, api);
+    await prisma.unit.update({ where: { id: fixture.unit.id }, data: { status: "RESERVED" } });
     await prisma.lead.update({ where: { id: lead.body.id }, data: { status: "RESERVED" } });
     const won = await local.request(`/commercial/leads/${lead.body.id}/status`, { token: agentToken, method: "PATCH", body: { status: "WON" } });
     expectStatus(won, 200, api);
     const reverseTerminal = await local.request(`/commercial/leads/${lead.body.id}/status`, { token: agentToken, method: "PATCH", body: { status: "LOST" } });
     expectStatus(reverseTerminal, 409, api);
     const storedUnit = await prisma.unit.findUniqueOrThrow({ where: { id: fixture.unit.id } });
-    assert.equal(storedUnit.status, UnitStatus.AVAILABLE, "Lead.RESERVED/WON must not change Unit.status in C03");
+    assert.equal(storedUnit.status, UnitStatus.SOLD, "Lead.RESERVED/WON must sell the linked reserved Unit atomically");
+    const wonUnitAudit = await prisma.auditEvent.findFirst({
+      where: { tenantId: fixture.tenant.id, entityId: fixture.unit.id, action: "COMMERCIAL_UNIT_STATUS_RESOLVED_BY_LEAD_OUTCOME" },
+    });
+    assert.deepEqual(wonUnitAudit?.metadata, {
+      leadId: lead.body.id,
+      leadOutcome: "WON",
+      from: "RESERVED",
+      to: "SOLD",
+    });
+
+    const lostUnit = await prisma.unit.create({
+      data: {
+        tenantId: fixture.tenant.id,
+        projectId: fixture.project.id,
+        phaseId: fixture.phase.id,
+        buildingId: fixture.building.id,
+        floorId: fixture.floor.id,
+        unitTypeId: fixture.unitType.id,
+        code: `U102-${suffix}`,
+        number: "102",
+        grossArea: "80.00",
+        bedrooms: 1,
+        bathrooms: 1,
+        status: "RESERVED",
+      },
+    });
+    const lostLead = await local.request("/commercial/leads", {
+      token: agentToken,
+      method: "POST",
+      body: { projectId: fixture.project.id, unitId: lostUnit.id, source: "lifecycle-test" },
+    });
+    expectStatus(lostLead, 201, api);
+    await prisma.lead.update({ where: { id: lostLead.body.id }, data: { status: "RESERVED" } });
+    const lost = await local.request(`/commercial/leads/${lostLead.body.id}/status`, { token: agentToken, method: "PATCH", body: { status: "LOST" } });
+    expectStatus(lost, 200, api);
+    assert.equal((await prisma.unit.findUniqueOrThrow({ where: { id: lostUnit.id } })).status, UnitStatus.AVAILABLE);
+
+    const missingUnitLead = await local.request("/commercial/leads", { token: agentToken, method: "POST", body: { source: "missing-unit-test" } });
+    expectStatus(missingUnitLead, 201, api);
+    await prisma.lead.update({ where: { id: missingUnitLead.body.id }, data: { status: "RESERVED" } });
+    const missingUnitOutcome = await local.request(`/commercial/leads/${missingUnitLead.body.id}/status`, { token: agentToken, method: "PATCH", body: { status: "WON" } });
+    expectStatus(missingUnitOutcome, 409, api);
+    assert.equal((await prisma.lead.findUniqueOrThrow({ where: { id: missingUnitLead.body.id } })).status, "RESERVED");
+
+    const staleUnit = await prisma.unit.create({
+      data: {
+        tenantId: fixture.tenant.id,
+        projectId: fixture.project.id,
+        phaseId: fixture.phase.id,
+        buildingId: fixture.building.id,
+        floorId: fixture.floor.id,
+        unitTypeId: fixture.unitType.id,
+        code: `U103-${suffix}`,
+        number: "103",
+        grossArea: "80.00",
+        bedrooms: 1,
+        bathrooms: 1,
+        status: "AVAILABLE",
+      },
+    });
+    const staleLead = await local.request("/commercial/leads", { token: agentToken, method: "POST", body: { unitId: staleUnit.id, source: "stale-unit-test" } });
+    expectStatus(staleLead, 201, api);
+    await prisma.lead.update({ where: { id: staleLead.body.id }, data: { status: "RESERVED" } });
+    const staleOutcome = await local.request(`/commercial/leads/${staleLead.body.id}/status`, { token: agentToken, method: "PATCH", body: { status: "WON" } });
+    expectStatus(staleOutcome, 409, api);
+    assert.equal((await prisma.lead.findUniqueOrThrow({ where: { id: staleLead.body.id } })).status, "RESERVED", "Unit conflict must roll back the Lead transition");
+
+    const consentLead = await local.request("/commercial/leads", {
+      token: agentToken,
+      method: "POST",
+      body: {
+        source: "consent-test",
+        enquiryConsentGranted: true,
+        enquiryConsentAt: new Date().toISOString(),
+        enquiryConsentChannel: "web-form",
+        enquiryConsentPurpose: "respond to enquiry",
+        marketingConsentGranted: true,
+        marketingConsentAt: new Date().toISOString(),
+        marketingConsentChannel: "web-form",
+        marketingConsentPurpose: "marketing follow-up",
+      },
+    });
+    expectStatus(consentLead, 201, api);
+    const readerWithdrawal = await local.request(`/commercial/leads/${consentLead.body.id}/consent/withdraw`, { token: readerToken, method: "POST", body: { consentType: "marketing" } });
+    expectStatus(readerWithdrawal, 403, api);
+    const outsiderWithdrawal = await local.request(`/commercial/leads/${consentLead.body.id}/consent/withdraw`, { token: outsiderLogin.body.accessToken, method: "POST", body: { consentType: "marketing" } });
+    expectStatus(outsiderWithdrawal, 404, api);
+    const withdrawal = await local.request(`/commercial/leads/${consentLead.body.id}/consent/withdraw`, { token: agentToken, method: "POST", body: { consentType: "marketing", reason: "Customer request" } });
+    expectStatus(withdrawal, 201, api);
+    assert.equal(withdrawal.body.marketingConsent.granted, false);
+    assert.equal(withdrawal.body.enquiryConsent.granted, true, "Withdrawing one purpose must not affect another purpose");
+    const repeatedWithdrawal = await local.request(`/commercial/leads/${consentLead.body.id}/consent/withdraw`, { token: agentToken, method: "POST", body: { consentType: "marketing" } });
+    expectStatus(repeatedWithdrawal, 409, api);
+    const withdrawalAudit = await prisma.auditEvent.findFirst({ where: { tenantId: fixture.tenant.id, entityId: consentLead.body.id, action: "COMMERCIAL_LEAD_CONSENT_WITHDRAWN" } });
+    assert.deepEqual(withdrawalAudit?.metadata, { consentType: "marketing", reason: "Customer request" });
 
     const disqualified = await local.request("/commercial/leads", { token: agentToken, method: "POST", body: { source: "walk-in" } });
     expectStatus(disqualified, 201, api);

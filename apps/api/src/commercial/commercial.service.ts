@@ -792,6 +792,9 @@ export class CommercialService {
         : current.status === LeadStatus.RESERVED && next === LeadStatus.LOST
         ? { from: UnitStatus.RESERVED, to: UnitStatus.AVAILABLE }
         : null;
+    if (unitResolution && !current.unitId) {
+      throw new ConflictException("Reserved Lead has no linked Unit");
+    }
     return this.prisma.$transaction(async (tx) => {
       const changed = await tx.lead.updateMany({
         where: { id, tenantId: user.tenantId, status: current.status },
@@ -849,7 +852,14 @@ export class CommercialService {
       ? { marketingConsentGranted: false, marketingConsentAt: null, marketingConsentChannel: null, marketingConsentPurpose: null }
       : { enquiryConsentGranted: false, enquiryConsentAt: null, enquiryConsentChannel: null, enquiryConsentPurpose: null };
     return this.prisma.$transaction(async (tx) => {
-      const changed = await tx.lead.updateMany({ where: { id, tenantId: user.tenantId }, data });
+      const changed = await tx.lead.updateMany({
+        where: {
+          id,
+          tenantId: user.tenantId,
+          ...(isMarketing ? { marketingConsentGranted: true } : { enquiryConsentGranted: true }),
+        },
+        data,
+      });
       if (changed.count !== 1) throw new ConflictException("Lead state changed concurrently");
       const lead = await tx.lead.findUniqueOrThrow({ where: { id }, include: this.leadInclude() });
       await this.audit(tx, user, "COMMERCIAL_LEAD_CONSENT_WITHDRAWN", "Lead", id, {
