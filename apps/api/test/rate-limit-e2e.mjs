@@ -93,6 +93,13 @@ test(
       env: {
         ...process.env,
         API_PORT: String(port),
+        JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET ?? "rate-limit-test-access-secret-that-is-long-enough",
+        JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET ?? "rate-limit-test-refresh-secret-that-is-long-enough",
+        S3_ENDPOINT: process.env.S3_ENDPOINT ?? "http://127.0.0.1:9000",
+        S3_REGION: process.env.S3_REGION ?? "us-east-1",
+        S3_BUCKET: process.env.S3_BUCKET ?? "r4c-rate-limit",
+        S3_ACCESS_KEY: process.env.S3_ACCESS_KEY ?? "rate-limit-access",
+        S3_SECRET_KEY: process.env.S3_SECRET_KEY ?? "rate-limit-secret",
         HOLD_EXPIRY_SWEEP_INTERVAL_MS: process.env.HOLD_EXPIRY_SWEEP_INTERVAL_MS ?? "3600000",
         BIM_WORKER_URL: process.env.BIM_WORKER_URL ?? "http://127.0.0.1:65535",
         BIM_WORKER_TOKEN: process.env.BIM_WORKER_TOKEN ?? "rate-limit-ci-worker-token",

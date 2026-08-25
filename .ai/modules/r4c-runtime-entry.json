@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-runtime-entry.json",
-    "bodyDigest": "c696a9f394c8d7ad2f8a5bd12a8afe1f025e6572fe1217f6fd7a89e421b43349",
+    "bodyDigest": "3bd7244339392c58fd7d03a76741e53fcd567a757cb1625bef3e99bb7b62cbd7",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "7888d1c50b782f02763b7e34a7d5ea21c202f9fcfa3343c0dfd1302ae790bebb",
+    "inputDigest": "590f19ec53125f408a908ac39efc74bdceb252a9df269d96162ae974d25bd136",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -95,6 +95,7 @@
       "docs/product-reset-blueprint.md",
       "docs/production-readiness.md",
       "docs/quality-field-control.md",
+      "docs/quotation/non-production-migration-rehearsal.md",
       "docs/r0-1-enterprise-regulatory-architecture.md",
       "docs/r0-open-pr-reconciliation.md",
       "docs/research-zatca-wafi-evidence.md",
