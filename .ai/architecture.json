@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "1e69fc13e160927dda4e2afbf7dcfdb1a1038911bccf5b1531737c36c2588d9f",
+    "bodyDigest": "b2a0575abb76fe8588a8cb372770df77734ca41a100344bf74f42d648bbe48f7",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "590f19ec53125f408a908ac39efc74bdceb252a9df269d96162ae974d25bd136",
+    "inputDigest": "60804feed079cd88aa3f2dfc12df26dacf9bef897f110b1f0bdd4c22ee07f0fb",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -290,25 +290,26 @@
     },
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 2 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 3 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
       "dependsOn": [],
       "discovery": {
-        "codeFileCount": 2,
+        "codeFileCount": 3,
         "discovered": true,
         "entryPoints": [
           "scripts/generate-production-env.sh",
           "scripts/local-setup.sh"
         ],
         "languages": [
+          "javascript",
           "json",
           "shell"
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 3
+        "sourceFileCount": 4
       },
       "id": "r4c-scripts",
       "ownedEntities": [],
