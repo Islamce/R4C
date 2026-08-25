@@ -11,7 +11,11 @@ async function bootstrap() {
   express.set("trust proxy", trustProxyHops());
 
   app.setGlobalPrefix("api/v1");
-  const corsOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:3000")
+  const configuredCorsOrigins = process.env.CORS_ORIGINS;
+  if (!configuredCorsOrigins && process.env.NODE_ENV === "production") {
+    throw new Error("CORS_ORIGINS is required in production");
+  }
+  const corsOrigins = (configuredCorsOrigins ?? "http://localhost:3000")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);

@@ -11,6 +11,8 @@ const suite = await readFile(new URL("../components/CommercialWorkspaceSuite.tsx
 const pipeline = await readFile(new URL("../components/SalesPipelineWorkspace.tsx", import.meta.url), "utf8");
 const commercialPage = await readFile(new URL("../app/(authenticated)/commercial/page.tsx", import.meta.url), "utf8");
 const designPreviewPage = await readFile(new URL("../app/design-preview/page.tsx", import.meta.url), "utf8");
+const serverSession = await readFile(new URL("../lib/server-session.ts", import.meta.url), "utf8");
+const tenantResolution = await readFile(new URL("../lib/tenant-resolution.ts", import.meta.url), "utf8");
 
 test("production entry routes users into the commercial journey", () => {
   assert.match(home, /redirect\("\/login"\)/);
@@ -69,4 +71,9 @@ test("project inventory requests cannot overwrite a newer unit selection context
   assert.match(workspace, /if \(active\) setUnits\(items\)/);
   assert.match(workspace, /return \(\) => \{ active = false; \};/);
   assert.match(workspace, /status: "AVAILABLE"/);
+});
+
+test("production web configuration cannot fall back to localhost or a .local tenant domain", () => {
+  assert.match(serverSession, /API_URL is required in production/);
+  assert.match(tenantResolution, /TENANT_BASE_DOMAIN is required in production/);
 });

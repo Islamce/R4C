@@ -51,7 +51,11 @@ export function tenantCodeForRequest({
   const overrideCode = normalizeTenantCode(override);
   if (overrideCode && (local || process.env.NODE_ENV !== "production")) return overrideCode;
 
-  const baseDomain = (process.env.TENANT_BASE_DOMAIN ?? "r4c.local")
+  const configuredBaseDomain = process.env.TENANT_BASE_DOMAIN;
+  if (!configuredBaseDomain && process.env.NODE_ENV === "production") {
+    throw new Error("TENANT_BASE_DOMAIN is required in production");
+  }
+  const baseDomain = (configuredBaseDomain ?? "r4c.local")
     .trim()
     .toLowerCase()
     .replace(/^\.+|\.+$/g, "");
