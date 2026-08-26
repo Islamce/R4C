@@ -1,7 +1,7 @@
 # KYNOX authenticated shell design QA
 
 - Source visual truth: `C:\Users\Islam\AppData\Local\Temp\codex-clipboard-c3f91e34-6597-4ae0-9928-2ecce8ac9963.png`
-- Browser-rendered implementation: `C:\Users\Islam\Documents\GitHub\R4C\design-qa-implementation.png`
+- Browser-rendered implementation: `C:\Users\Islam\Documents\GitHub\R4C\docs\uat\kynox-shell-design-qa.png`
 - Source pixels: 932 × 343; cropped defect evidence supplied by the user
 - Implementation pixels / CSS viewport: 1265 × 712 at device scale factor 1
 - State: Arabic RTL, KYNOX dark shell, development design preview
