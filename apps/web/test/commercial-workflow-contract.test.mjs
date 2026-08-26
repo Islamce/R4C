@@ -13,6 +13,8 @@ const commercialPage = await readFile(new URL("../app/(authenticated)/commercial
 const designPreviewPage = await readFile(new URL("../app/design-preview/page.tsx", import.meta.url), "utf8");
 const serverSession = await readFile(new URL("../lib/server-session.ts", import.meta.url), "utf8");
 const tenantResolution = await readFile(new URL("../lib/tenant-resolution.ts", import.meta.url), "utf8");
+const shell = await readFile(new URL("../components/AppShell.tsx", import.meta.url), "utf8");
+const shellModern = await readFile(new URL("../app/shell-modern.css", import.meta.url), "utf8");
 
 test("production entry routes users into the commercial journey", () => {
   assert.match(home, /redirect\("\/login"\)/);
@@ -76,4 +78,17 @@ test("project inventory requests cannot overwrite a newer unit selection context
 test("production web configuration cannot fall back to localhost or a .local tenant domain", () => {
   assert.match(serverSession, /API_URL is required in production/);
   assert.match(tenantResolution, /TENANT_BASE_DOMAIN is required in production/);
+});
+
+test("authenticated routes share the KYNOX shell and commercial tools use real navigation targets", () => {
+  for (const target of ["/projects", "/commercial?view=customers#commercial-customers", "/commercial?view=units#commercial-units", "/commercial?view=transfer#commercial-transfer", "/commercial?view=operations#commercial-operations"]) {
+    assert.match(shell, new RegExp(target.replace(/[?]/g, "\\?")));
+  }
+  assert.match(shell, /className="kynox-tool-link" href=\{href\}/);
+  assert.match(shellModern, /\.app-shell \{ grid-template-columns: 112px/);
+  assert.match(shellModern, /\.kynox-tool-link:hover/);
+  assert.match(workspace, /id="commercial-customers"/);
+  assert.match(workspace, /id="commercial-units"/);
+  assert.match(workspace, /id="commercial-transfer"/);
+  assert.match(workspace, /id="commercial-operations"/);
 });

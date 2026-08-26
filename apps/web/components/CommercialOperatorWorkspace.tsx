@@ -273,7 +273,7 @@ export function CommercialOperatorWorkspace() {
 
         {!canOperate ? <section className="create-panel"><p>{t("commercial.restricted")}</p></section> : (
           <>
-            <section className="bulk-import-panel">
+            <section className="bulk-import-panel" id="commercial-operations">
               <div><h2>{t("commercial.bulkTitle")}</h2><p>{t("commercial.bulkHint")}</p></div>
               <button className="button button-secondary" type="button" onClick={() => setBulkOpen((open) => !open)}>{bulkOpen ? t("commercial.bulkClose") : t("commercial.bulkOpen")}</button>
               {bulkOpen ? <div className="bulk-import-body">
@@ -284,7 +284,7 @@ export function CommercialOperatorWorkspace() {
                 {bulkSummary ? <p className="bulk-summary" role="status">{bulkSummary}</p> : null}
               </div> : null}
             </section>
-            <section className="commercial-journey-grid">
+            <section className="commercial-journey-grid" id="commercial-customers">
               <form className="create-panel commercial-capture" onSubmit={captureLead}>
                 <h2>{t("commercial.newLead")}</h2>
                 <fieldset><legend>{t("commercial.customer")}</legend>
@@ -318,10 +318,11 @@ export function CommercialOperatorWorkspace() {
               </div>
             </section> : null}
 
+            <span className="commercial-anchor" id="commercial-transfer" aria-hidden="true" />
             {selectedLead ? <section className="commercial-work-grid">
               <section className="create-panel"><h2>{t("commercial.activities")}</h2><form className="activity-form" onSubmit={(event) => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); void action(async () => { const created = await commercialApi.logActivity(selectedLead.id, { type: data.get("type"), notes: data.get("notes") }); setActivities((rows) => [...rows, created]); form.reset(); }); }}><label><span>{t("commercial.activityType")}</span><select name="type">{activityTypes.map((type) => <option key={type} value={type}>{t(`commercial.activity.${type}` as "commercial.activity.CALL")}</option>)}</select></label><label><span>{t("commercial.notes")}</span><textarea name="notes" required maxLength={4000} /></label><button className="button button-primary" disabled={busy}>{t("commercial.logActivity")}</button></form><ol className="activity-list">{activities.map((item) => <li key={item.id}><strong>{t(`commercial.activity.${item.type}` as "commercial.activity.CALL")} · {item.actor.displayName}</strong><p>{item.notes}</p><time>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></li>)}</ol>{activities.length === 0 ? <p>{t("commercial.noActivities")}</p> : null}</section>
 
-              <section className="create-panel"><h2>{t("commercial.units")}</h2><label><span>{t("commercial.project")}</span><select value={projectId} onChange={(event) => { setProjectId(event.target.value); setSelectedUnit(null); }}><option value="">{t("commercial.selectProject")}</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.code} — {project.name}</option>)}</select></label><label><span>{t("commercial.availableOnly")}</span><select value={selectedUnit?.id ?? ""} onChange={(event) => void chooseUnit(event.target.value)}><option value="">{t("commercial.selectUnit")}</option>{units.map((unit) => <option key={unit.id} value={unit.id}>{unit.code} — {unit.number} · {unit.grossArea} m²</option>)}</select></label>{projectId && units.length === 0 ? <p>{t("commercial.noUnits")}</p> : null}
+              <section className="create-panel" id="commercial-units"><h2>{t("commercial.units")}</h2><label><span>{t("commercial.project")}</span><select value={projectId} onChange={(event) => { setProjectId(event.target.value); setSelectedUnit(null); }}><option value="">{t("commercial.selectProject")}</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.code} — {project.name}</option>)}</select></label><label><span>{t("commercial.availableOnly")}</span><select value={selectedUnit?.id ?? ""} onChange={(event) => void chooseUnit(event.target.value)}><option value="">{t("commercial.selectUnit")}</option>{units.map((unit) => <option key={unit.id} value={unit.id}>{unit.code} — {unit.number} · {unit.grossArea} m²</option>)}</select></label>{projectId && units.length === 0 ? <p>{t("commercial.noUnits")}</p> : null}
                 {selectedUnit ? <div className="unit-review"><h3>{selectedUnit.code} · {selectedUnit.unitType.name}</h3><p>{selectedUnit.building.name} / {selectedUnit.floor.name} · {selectedUnit.bedrooms} / {selectedUnit.bathrooms}</p><dl><div><dt>{t("commercial.publishedPrice")}</dt><dd>{activePrice ? formatMoney(activePrice.listPriceMinor, activePrice.currency, locale) : "—"}</dd></div><div><dt>{t("commercial.description")}</dt><dd>{selectedUnit.descriptions.unitType.value ?? "—"}{selectedUnit.descriptions.unitType.fallbackUsed ? <small> · {t("commercial.fallback")}</small> : null}</dd></div></dl>
                   {has(user, "commercial:hold:create") && selectedUnit.status === "AVAILABLE" ? <form className="hold-form" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); void action(async () => setHold(await commercialApi.createHold({ leadId: selectedLead.id, unitId: selectedUnit.id, holdExpiresAt: new Date(String(data.get("holdExpiresAt"))).toISOString() }))); }}><label><span>{t("commercial.holdExpiry")}</span><input name="holdExpiresAt" type="datetime-local" defaultValue={localDateTime()} min={localDateTime(0.1)} required /></label><button className="button button-primary" disabled={busy}>{t("commercial.hold")}</button></form> : null}
                 </div> : null}
@@ -333,7 +334,7 @@ export function CommercialOperatorWorkspace() {
           </>
         )}
       </main>
-      {canManage ? <section className="commercial-admin-boundary"><header><h2>{t("commercial.admin")}</h2><p>{t("commercial.adminHint")}</p></header><CommercialInventory /></section> : null}
+      {canManage ? <section className="commercial-admin-boundary" id="commercial-inventory-admin"><header><h2>{t("commercial.admin")}</h2><p>{t("commercial.adminHint")}</p></header><CommercialInventory /></section> : null}
     </>
   );
 }

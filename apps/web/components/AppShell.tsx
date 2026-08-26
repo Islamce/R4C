@@ -109,16 +109,23 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
           </section>
           <section className="kynox-sidebar-tools" aria-label={locale === "ar" ? "أدوات العمل التجاري" : "Commercial tools"}>
             {([
-              ["portfolio", Gauge, locale === "ar" ? "المحفظة" : "Portfolio"],
-              ["pipeline", UsersThree, locale === "ar" ? "العملاء" : "Customers"],
-              ["units", HouseLine, locale === "ar" ? "الوحدات" : "Units"],
-              ["transfer", Files, locale === "ar" ? "الإفراغ" : "Transfer"],
-              ["operations", CalendarCheck, locale === "ar" ? "العمليات" : "Operations"],
-            ] as const).map(([id, Icon, label]) => (
-              <button key={id} type="button" onClick={() => window.dispatchEvent(new CustomEvent("r4c:commercial-tab", { detail: id }))}>
-                <Icon size={22} weight="duotone" aria-hidden="true" />
-                <span>{label}</span>
-              </button>
+              ["portfolio", Gauge, locale === "ar" ? "المحفظة" : "Portfolio", "/projects"],
+              ["pipeline", UsersThree, locale === "ar" ? "العملاء" : "Customers", "/commercial?view=customers#commercial-customers"],
+              ["units", HouseLine, locale === "ar" ? "الوحدات" : "Units", "/commercial?view=units#commercial-units"],
+              ["transfer", Files, locale === "ar" ? "الحجز والإفراغ" : "Booking & transfer", "/commercial?view=transfer#commercial-transfer"],
+              ["operations", CalendarCheck, locale === "ar" ? "العمليات" : "Operations", "/commercial?view=operations#commercial-operations"],
+            ] as const).map(([id, Icon, label, href]) => (
+              preview ? (
+                <button key={id} type="button" onClick={() => window.dispatchEvent(new CustomEvent("r4c:commercial-tab", { detail: id }))}>
+                  <Icon size={22} weight="duotone" aria-hidden="true" />
+                  <span>{label}</span>
+                </button>
+              ) : (
+                <Link key={id} className="kynox-tool-link" href={href}>
+                  <Icon size={22} weight="duotone" aria-hidden="true" />
+                  <span>{label}</span>
+                </Link>
+              )
             ))}
           </section>
         </nav>
