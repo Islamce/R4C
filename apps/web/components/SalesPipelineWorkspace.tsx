@@ -30,6 +30,7 @@ import {
   UsersThree,
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
+import { commercialApi, type SalesAssignee } from "../lib/commercial-api";
 
 export type UnitReservationHandoff = {
   reference: string;
@@ -97,7 +98,7 @@ const projects = ["جميع المشروعات", "مرتفعات الرياض", 
 const stageOrder: Stage[] = ["lead", "interest", "hold", "booking"];
 const stageIcons = { lead: UserPlus, interest: HandHeart, hold: CalendarCheck, booking: CheckCircle };
 
-export function SalesPipelineWorkspace({ externalReservation, ar }: { externalReservation?: UnitReservationHandoff | null; ar: boolean }) {
+export function SalesPipelineWorkspace({ externalReservation, ar, persistent = false }: { externalReservation?: UnitReservationHandoff | null; ar: boolean; persistent?: boolean }) {
   const [customers, setCustomers] = useState(seedCustomers);
   const [project, setProject] = useState("جميع المشروعات");
   const [stage, setStage] = useState<Stage | "all">("all");
@@ -256,7 +257,7 @@ export function SalesPipelineWorkspace({ externalReservation, ar }: { externalRe
       </section>
       </> : null}
       {workspaceView === "media" ? <ProjectMediaRepository project={project} setProject={setProject} onNotice={setNotice} notice={notice} /> : null}
-      {workspaceView === "tasks" ? <SalesTeamTasks onNotice={setNotice} notice={notice} /> : null}
+      {workspaceView === "tasks" ? <SalesTeamTasks onNotice={setNotice} notice={notice} persistent={persistent} /> : null}
       {workspaceView === "performance" ? <SalesPerformanceDashboard /> : null}
       {fullRecordOpen ? (
         <div className="customer-file-backdrop" role="presentation" onMouseDown={(event) => {
@@ -337,13 +338,22 @@ const initialTasks: TeamTask[] = [
   { id: "T-219", title: "تأكيد زيارة موقع مرتفعات الرياض", assignee: "أحمد العتيبي", manager: "خالد الشهري", due: "26 أغسطس", priority: "متوسطة", status: "جديدة" },
 ];
 
-function SalesTeamTasks({ onNotice, notice }: { onNotice: (notice: string) => void; notice: string }) {
+function SalesTeamTasks({ onNotice, notice, persistent }: { onNotice: (notice: string) => void; notice: string; persistent: boolean }) {
   const [tasks, setTasks] = useState(initialTasks);
+  const [assignees, setAssignees] = useState<SalesAssignee[]>([]);
+  useEffect(() => {
+    if (!persistent) return;
+    void commercialApi.tasks().then((storedTasks) => {
+      setTasks(storedTasks.map((task) => ({ id: task.id, title: task.title, assignee: task.assignee.displayName, manager: task.createdBy.displayName, due: new Date(task.dueAt).toLocaleDateString("ar-SA"), priority: ({ LOW: "منخفضة", MEDIUM: "متوسطة", HIGH: "عالية", URGENT: "عاجلة" } as const)[task.priority], status: ({ OPEN: "جديدة", IN_PROGRESS: "قيد التنفيذ", COMPLETED: "مكتملة", CANCELLED: "ملغاة" } as const)[task.status] })));
+    }).catch(() => onNotice("تعذر تحميل المهام المحفوظة. تحقق من الصلاحيات والاتصال."));
+    // Sales agents may view their assigned tasks but cannot enumerate or manage the team.
+    void commercialApi.assignees().then(setAssignees).catch(() => setAssignees([]));
+  }, [onNotice, persistent]);
   return <section className="workspace-module team-tasks" aria-label="توزيع مهام فريق المبيعات">
     <WorkspaceNotice notice={notice} onClose={() => onNotice("")} />
     <header className="module-heading"><div><p>إدارة فريق المبيعات</p><h2>المهام والأدوار</h2><span>توزيع العمل وإسناده لأعضاء الفريق التابعين لكل مسؤول مبيعات.</span></div><div className="module-kpis"><span><b>3</b> فرق</span><span><b>{tasks.length}</b> مهام نشطة</span><span className="warn"><b>{tasks.filter((task) => task.status === "متأخرة").length}</b> متأخرة</span></div></header>
-    <div className="task-layout"><form className="task-assignment" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); const assignee = String(data.get("assignee")); setTasks((current) => [{ id: `T-${222 + current.length}`, title: String(data.get("title")), assignee, manager: assignee === "ناصر المطيري" || assignee === "ريم الحربي" ? "سارة الدوسري" : "خالد الشهري", due: String(data.get("due")), priority: String(data.get("priority")), status: "جديدة" }, ...current]); onNotice(`تم إسناد المهمة إلى ${assignee} وإرسال تنبيه له.`); event.currentTarget.reset(); }}><h3><UserSwitch size={21} weight="duotone" />إسناد مهمة جديدة</h3><label><span>عنوان المهمة</span><input name="title" placeholder="مثال: متابعة عرض السعر" required /></label><label><span>عضو الفريق</span><select name="assignee"><option>ريم الحربي</option><option>ناصر المطيري</option><option>أحمد العتيبي</option><option>مها القحطاني</option></select></label><div><label><span>موعد الاستحقاق</span><input name="due" type="date" required /></label><label><span>الأولوية</span><select name="priority"><option>عاجلة</option><option>عالية</option><option>متوسطة</option><option>منخفضة</option></select></label></div><button className="button button-primary" type="submit"><Plus size={18} />إسناد وإرسال تنبيه</button></form>
-      <div className="task-board"><header><span>المهمة</span><span>المسند إليه</span><span>المسؤول</span><span>الاستحقاق</span><span>الأولوية</span><span>الحالة</span></header>{tasks.map((task) => <article key={task.id}><span><b>{task.title}</b><small>{task.id}</small></span><strong>{task.assignee}</strong><span>{task.manager}</span><time>{task.due}</time><i className={`priority-${task.priority}`}>{task.priority}</i><button type="button" onClick={() => { setTasks((current) => current.map((item) => item.id === task.id ? { ...item, status: "مكتملة" } : item)); onNotice(`تم إغلاق المهمة ${task.id} وتحديث تقييم ${task.assignee}.`); }}>{task.status}</button></article>)}</div></div>
+    <div className="task-layout"><form className="task-assignment" onSubmit={(event) => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); const assigneeValue = String(data.get("assignee")); const assignee = persistent ? assignees.find((item) => item.id === assigneeValue)?.displayName ?? assigneeValue : assigneeValue; const newTask = { id: `T-${222 + tasks.length}`, title: String(data.get("title")), assignee, manager: "مدير المبيعات", due: String(data.get("due")), priority: String(data.get("priority")), status: "جديدة" }; if (persistent) { const priority = ({ "عاجلة": "URGENT", "عالية": "HIGH", "متوسطة": "MEDIUM", "منخفضة": "LOW" } as const)[newTask.priority as "عاجلة" | "عالية" | "متوسطة" | "منخفضة"]; void commercialApi.createTask({ title: newTask.title, assigneeId: assigneeValue, dueAt: new Date(`${newTask.due}T12:00:00+03:00`).toISOString(), priority }).then((saved) => { setTasks((current) => [{ ...newTask, id: saved.id, assignee: saved.assignee.displayName, manager: saved.createdBy.displayName }, ...current]); onNotice(`تم حفظ المهمة وإسنادها إلى ${saved.assignee.displayName}.`); form.reset(); }).catch(() => onNotice("تعذر حفظ المهمة. تحقق من الصلاحيات والبيانات.")); } else { setTasks((current) => [newTask, ...current]); onNotice(`تم إسناد المهمة إلى ${assignee} وإرسال تنبيه له.`); form.reset(); } }}><h3><UserSwitch size={21} weight="duotone" />إسناد مهمة جديدة</h3><label><span>عنوان المهمة</span><input name="title" placeholder="مثال: متابعة عرض السعر" required /></label><label><span>عضو الفريق</span><select name="assignee">{persistent ? assignees.map((item) => <option key={item.id} value={item.id}>{item.displayName}</option>) : <><option>ريم الحربي</option><option>ناصر المطيري</option><option>أحمد العتيبي</option><option>مها القحطاني</option></>}</select></label><div><label><span>موعد الاستحقاق</span><input name="due" type="date" required /></label><label><span>الأولوية</span><select name="priority"><option>عاجلة</option><option>عالية</option><option>متوسطة</option><option>منخفضة</option></select></label></div><button className="button button-primary" type="submit" disabled={persistent && assignees.length === 0}><Plus size={18} />إسناد وحفظ المهمة</button></form>
+      <div className="task-board"><header><span>المهمة</span><span>المسند إليه</span><span>المسؤول</span><span>الاستحقاق</span><span>الأولوية</span><span>الحالة</span></header>{tasks.map((task) => <article key={task.id}><span><b>{task.title}</b><small>{task.id}</small></span><strong>{task.assignee}</strong><span>{task.manager}</span><time>{task.due}</time><i className={`priority-${task.priority}`}>{task.priority}</i><button type="button" onClick={() => { const close = () => { setTasks((current) => current.map((item) => item.id === task.id ? { ...item, status: "مكتملة" } : item)); onNotice(`تم إغلاق المهمة ${task.id} وتحديث تقييم ${task.assignee}.`); }; if (persistent) void commercialApi.updateTask(task.id, { status: "COMPLETED" }).then(close).catch(() => onNotice("تعذر إغلاق المهمة المحفوظة.")); else close(); }}>{task.status}</button></article>)}</div></div>
   </section>;
 }
 

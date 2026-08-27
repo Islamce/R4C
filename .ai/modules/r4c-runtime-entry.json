@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-runtime-entry.json",
-    "bodyDigest": "c1a1bc848c356d9b9ca5bc4b662c8d5b5bb992e13a47998c850898105a9d1d3d",
+    "bodyDigest": "b2c4c623b77318a9e5890f3dd05ee2dc0b963fbca8b5a04b1e91c809d161608d",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "909eb793b70024397d0abe3c96f16d332d892fdc1049077fc7fbefd4bf5a1e66",
+    "inputDigest": "96dc439626aa01975907e63a36c63916ff015083cb6405e0609f89680bbc8fa7",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -51,6 +51,8 @@
       "README.md",
       "RECON_CRM_RESCOPE.md",
       "UAT_FULL_TEST_RUN_2026-08-24.md",
+      "artifacts/uat/approved-product-final/UAT_REPORT.md",
+      "artifacts/uat/full-sales-cycle/UAT_EXECUTION_REPORT.md",
       "deploy/hostinger-external/nonproduction-web-apps.manifest.yaml",
       "design-qa.md",
       "docker-compose.prod.yml",

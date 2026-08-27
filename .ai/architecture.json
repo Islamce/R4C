@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "5b1c04d2ba08052fd57c8086a99ac5c14aa76bf407ecd8c04fcc5f5f57aedbd3",
+    "bodyDigest": "6001be8a07c26b53a1f6830468bd88b58238c6749d53564588ca1e3a12020091",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "909eb793b70024397d0abe3c96f16d332d892fdc1049077fc7fbefd4bf5a1e66",
+    "inputDigest": "96dc439626aa01975907e63a36c63916ff015083cb6405e0609f89680bbc8fa7",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -114,6 +114,7 @@
       "ownedEntities": [
         "approval",
         "building",
+        "commercial-dispatch",
         "customer",
         "design-document",
         "development-phase",
@@ -125,6 +126,9 @@
         "project",
         "reservation",
         "sales-activity",
+        "sales-task",
+        "transfer-case",
+        "transfer-document",
         "translation",
         "unit",
         "unit-hold",
@@ -275,7 +279,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 83
+        "sourceFileCount": 85
       },
       "id": "r4c-runtime-entry",
       "ownedEntities": [],
@@ -393,6 +397,17 @@
     {
       "confidence": "verified",
       "key": "commercial:customer:view",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:dispatch:create",
       "module": "r4c-api",
       "roles": [
         "ADMIN",
@@ -591,6 +606,48 @@
       "module": "r4c-api",
       "roles": [
         "ADMIN"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:task:manage",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_MANAGER"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:task:view",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:transfer:review",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_MANAGER"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:transfer:view",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
       ],
       "sourceManifest": "apps/api/kaaf.module.json"
     }

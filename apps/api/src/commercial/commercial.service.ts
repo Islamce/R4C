@@ -18,6 +18,12 @@ import {
   CreateUnitHoldDto,
   CreateLeadDto,
   CreateSalesActivityDto,
+  CreateSalesTaskDto,
+  UpdateSalesTaskDto,
+  CreateTransferCaseDto,
+  ReviewTransferDocumentDto,
+  ReviewTransferCaseDto,
+  CreateCommercialDispatchDto,
   CreatePaymentPlanDto,
   CreateUnitPriceRevisionDto,
   CreateFloorDto,
@@ -927,6 +933,89 @@ export class CommercialService {
       });
       await this.audit(tx, user, "COMMERCIAL_SALES_ACTIVITY_LOGGED", "SalesActivity", activity.id, { leadId, type: activity.type });
       return this.activityView(activity);
+    });
+  }
+
+  async tasks(user: AuthContext) {
+    const canViewAll = user.permissions.includes("commercial:lead:view-all") || user.permissions.includes("commercial:task:manage");
+    return this.prisma.salesTask.findMany({
+      where: { tenantId: user.tenantId, ...(canViewAll ? {} : { assigneeId: user.userId }) },
+      include: { assignee: { select: { id: true, displayName: true } }, createdBy: { select: { id: true, displayName: true } }, project: { select: { id: true, code: true, name: true } }, lead: { select: { id: true, status: true } } },
+      orderBy: [{ status: "asc" }, { dueAt: "asc" }],
+    });
+  }
+
+  async createTask(user: AuthContext, command: CreateSalesTaskDto) {
+    await this.requireTenantAssignee(this.prisma, user.tenantId, command.assigneeId);
+    if (command.projectId) await this.requireProject(user.tenantId, command.projectId);
+    if (command.leadId) await this.requireLead(user.tenantId, command.leadId);
+    return this.prisma.$transaction(async (tx) => {
+      const task = await tx.salesTask.create({ data: { tenantId: user.tenantId, title: command.title.trim(), ...(command.description ? { description: command.description.trim() } : {}), assigneeId: command.assigneeId, createdById: user.userId, dueAt: new Date(command.dueAt), ...(command.projectId ? { projectId: command.projectId } : {}), ...(command.leadId ? { leadId: command.leadId } : {}), ...(command.priority ? { priority: command.priority } : {}) }, include: { assignee: { select: { id: true, displayName: true } }, createdBy: { select: { id: true, displayName: true } } } });
+      await this.audit(tx, user, "COMMERCIAL_SALES_TASK_CREATED", "SalesTask", task.id, { assigneeId: task.assigneeId, dueAt: task.dueAt });
+      return task;
+    });
+  }
+
+  async updateTask(user: AuthContext, id: string, command: UpdateSalesTaskDto) {
+    const task = await this.prisma.salesTask.findFirst({ where: { id, tenantId: user.tenantId } });
+    if (!task) throw new NotFoundException("Sales task not found");
+    if (command.assigneeId) await this.requireTenantAssignee(this.prisma, user.tenantId, command.assigneeId);
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.salesTask.update({ where: { id }, data: { ...(command.status ? { status: command.status, completedAt: command.status === "COMPLETED" ? new Date() : null } : {}), ...(command.priority ? { priority: command.priority } : {}), ...(command.dueAt ? { dueAt: new Date(command.dueAt) } : {}), ...(command.assigneeId ? { assigneeId: command.assigneeId } : {}) } });
+      await this.audit(tx, user, "COMMERCIAL_SALES_TASK_UPDATED", "SalesTask", id, { fromStatus: task.status, toStatus: updated.status });
+      return updated;
+    });
+  }
+
+  async transferCases(tenantId: string) {
+    return this.prisma.transferCase.findMany({ where: { tenantId }, include: { project: { select: { id: true, code: true, name: true } }, reservation: { select: { id: true, status: true, currency: true, confirmedAt: true, customer: { select: { id: true, firstName: true, lastName: true, phone: true, email: true } }, unit: { select: { id: true, code: true, number: true, status: true } } } }, documents: { orderBy: { documentType: "asc" } }, reviewedBy: { select: { id: true, displayName: true } } }, orderBy: { updatedAt: "desc" } });
+  }
+
+  async createTransferCase(user: AuthContext, command: CreateTransferCaseDto) {
+    const reservation = await this.prisma.reservation.findFirst({ where: { id: command.reservationId, tenantId: user.tenantId }, include: { unit: true } });
+    if (!reservation) throw new NotFoundException("Reservation not found");
+    const documentTypes = ["SELLER_ID", "BUYER_ID", "TITLE_DEED", "BENEFICIARY_IBAN", "RETT_REFERENCE", "UNIT_SUBDIVISION", "MORTGAGEE_APPROVAL", "SIGNED_CONTRACT", "EVIDENCE"];
+    return this.prisma.$transaction(async (tx) => {
+      const transferCase = await tx.transferCase.create({ data: { tenantId: user.tenantId, projectId: reservation.unit.projectId, reservationId: reservation.id, documents: { create: documentTypes.map((documentType) => ({ documentType, status: documentType === "UNIT_SUBDIVISION" ? "NOT_APPLICABLE" : "MISSING" })) } }, include: { documents: true } });
+      await this.audit(tx, user, "COMMERCIAL_TRANSFER_CASE_CREATED", "TransferCase", transferCase.id, { reservationId: reservation.id });
+      return transferCase;
+    });
+  }
+
+  async reviewTransferDocument(user: AuthContext, id: string, command: ReviewTransferDocumentDto) {
+    const before = await this.prisma.transferDocument.findFirst({ where: { id, tenantId: user.tenantId } });
+    if (!before) throw new NotFoundException("Transfer document not found");
+    return this.prisma.$transaction(async (tx) => {
+      const document = await tx.transferDocument.update({ where: { id }, data: { status: command.status, ...(command.storageKey ? { storageKey: command.storageKey.trim() } : {}), ...(command.notes ? { notes: command.notes.trim() } : {}), reviewedById: user.userId, reviewedAt: new Date() } });
+      const all = await tx.transferDocument.findMany({ where: { transferCaseId: before.transferCaseId } });
+      const ready = all.filter((item) => ["VERIFIED", "NOT_APPLICABLE"].includes(item.status)).length;
+      await tx.transferCase.update({ where: { id: before.transferCaseId }, data: { readiness: Math.round((ready / all.length) * 100) } });
+      await this.audit(tx, user, "COMMERCIAL_TRANSFER_DOCUMENT_REVIEWED", "TransferDocument", id, { fromStatus: before.status, toStatus: document.status });
+      return document;
+    });
+  }
+
+  async reviewTransferCase(user: AuthContext, id: string, command: ReviewTransferCaseDto) {
+    const transferCase = await this.prisma.transferCase.findFirst({ where: { id, tenantId: user.tenantId }, include: { documents: true } });
+    if (!transferCase) throw new NotFoundException("Transfer case not found");
+    if (["APPROVED", "READY_FOR_AUTHORITY", "COMPLETED"].includes(command.status) && transferCase.readiness !== 100) throw new ConflictException("All applicable documents must be verified before approval");
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.transferCase.update({ where: { id }, data: { status: command.status, reviewedById: user.userId, reviewedAt: new Date() } });
+      await this.audit(tx, user, "COMMERCIAL_TRANSFER_CASE_REVIEWED", "TransferCase", id, { fromStatus: transferCase.status, toStatus: updated.status });
+      return updated;
+    });
+  }
+
+  async createDispatch(user: AuthContext, command: CreateCommercialDispatchDto) {
+    await this.requireProject(user.tenantId, command.projectId);
+    const customer = await this.prisma.customer.findFirst({ where: { id: command.customerId, tenantId: user.tenantId } });
+    if (!customer) throw new NotFoundException("Customer not found");
+    const assets = await this.prisma.projectMedia.findMany({ where: { id: { in: command.assetIds }, tenantId: user.tenantId, projectId: command.projectId } });
+    if (assets.length !== new Set(command.assetIds).size) throw new BadRequestException("One or more media assets are not attached to the selected project");
+    return this.prisma.$transaction(async (tx) => {
+      const dispatch = await tx.commercialDispatch.create({ data: { tenantId: user.tenantId, projectId: command.projectId, customerId: customer.id, recipientEmail: command.recipientEmail.trim().toLowerCase(), subject: command.subject.trim(), message: command.message.trim(), assetIds: command.assetIds, createdById: user.userId } });
+      await this.audit(tx, user, "COMMERCIAL_MEDIA_DISPATCH_QUEUED", "CommercialDispatch", dispatch.id, { projectId: dispatch.projectId, customerId: dispatch.customerId, assetCount: command.assetIds.length });
+      return dispatch;
     });
   }
 

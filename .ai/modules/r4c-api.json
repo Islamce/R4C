@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-api.json",
-    "bodyDigest": "f0a838dd458d08c613d81187a6dd7c83085d502814132ced96f95f2ee92bd010",
+    "bodyDigest": "f673713944ba3bbfbd81ca4b156896e83d78679fe6cf15b42235a5906a9e3c5f",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "909eb793b70024397d0abe3c96f16d332d892fdc1049077fc7fbefd4bf5a1e66",
+    "inputDigest": "96dc439626aa01975907e63a36c63916ff015083cb6405e0609f89680bbc8fa7",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -253,6 +253,7 @@
   "ownedEntities": [
     "approval",
     "building",
+    "commercial-dispatch",
     "customer",
     "design-document",
     "development-phase",
@@ -264,6 +265,9 @@
     "project",
     "reservation",
     "sales-activity",
+    "sales-task",
+    "transfer-case",
+    "transfer-document",
     "translation",
     "unit",
     "unit-hold",
@@ -300,6 +304,14 @@
     },
     {
       "key": "commercial:customer:view",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:dispatch:create",
       "roles": [
         "ADMIN",
         "SALES_AGENT",
@@ -440,6 +452,36 @@
       "key": "commercial:status",
       "roles": [
         "ADMIN"
+      ]
+    },
+    {
+      "key": "commercial:task:manage",
+      "roles": [
+        "ADMIN",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:task:view",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:transfer:review",
+      "roles": [
+        "ADMIN",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:transfer:view",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
       ]
     }
   ],

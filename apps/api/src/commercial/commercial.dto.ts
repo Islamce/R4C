@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { DevelopmentPhaseStatus, LeadStatus, SalesActivityType, TranslationLocale, UnitStatus } from "@prisma/client";
+import { DevelopmentPhaseStatus, LeadStatus, SalesActivityType, SalesTaskPriority, SalesTaskStatus, TransferCaseStatus, TransferDocumentStatus, TranslationLocale, UnitStatus } from "@prisma/client";
 import {
   ArrayMinSize,
   IsArray,
@@ -313,4 +313,44 @@ export class WithdrawLeadConsentDto {
 export class CreateSalesActivityDto {
   @IsEnum(SalesActivityType) type!: SalesActivityType;
   @IsString() @Length(1, 4000) notes!: string;
+}
+
+export class CreateSalesTaskDto {
+  @IsString() @Length(2, 240) title!: string;
+  @IsOptional() @IsString() @Length(1, 4000) description?: string;
+  @IsUUID() assigneeId!: string;
+  @IsDateString() dueAt!: string;
+  @IsOptional() @IsUUID() projectId?: string;
+  @IsOptional() @IsUUID() leadId?: string;
+  @IsOptional() @IsEnum(SalesTaskPriority) priority?: SalesTaskPriority;
+}
+
+export class UpdateSalesTaskDto {
+  @IsOptional() @IsEnum(SalesTaskStatus) status?: SalesTaskStatus;
+  @IsOptional() @IsEnum(SalesTaskPriority) priority?: SalesTaskPriority;
+  @IsOptional() @IsDateString() dueAt?: string;
+  @IsOptional() @IsUUID() assigneeId?: string;
+}
+
+export class CreateTransferCaseDto {
+  @IsUUID() reservationId!: string;
+}
+
+export class ReviewTransferDocumentDto {
+  @IsEnum(TransferDocumentStatus) status!: TransferDocumentStatus;
+  @IsOptional() @IsString() @Length(1, 1024) storageKey?: string;
+  @IsOptional() @IsString() @Length(1, 2000) notes?: string;
+}
+
+export class ReviewTransferCaseDto {
+  @IsEnum(TransferCaseStatus) status!: TransferCaseStatus;
+}
+
+export class CreateCommercialDispatchDto {
+  @IsUUID() projectId!: string;
+  @IsUUID() customerId!: string;
+  @IsEmail() @Length(3, 320) recipientEmail!: string;
+  @IsString() @Length(2, 240) subject!: string;
+  @IsString() @Length(2, 10000) message!: string;
+  @IsArray() @ArrayMinSize(1) @IsUUID("4", { each: true }) assetIds!: string[];
 }

@@ -71,6 +71,11 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
     "commercial:hold:create",
     "commercial:hold:release",
     "commercial:reservation:confirm",
+    "commercial:task:view",
+    "commercial:task:manage",
+    "commercial:transfer:view",
+    "commercial:transfer:review",
+    "commercial:dispatch:create",
   ];
   await prisma.permission.createMany({ data: c04Permissions.map((code) => ({ code, name: code })), skipDuplicates: true });
   const permissionRows = await prisma.permission.findMany({ where: { code: { in: c04Permissions } } });
@@ -80,7 +85,7 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
   });
   await prisma.rolePermission.createMany({
     data: permissionRows
-      .filter((permission) => ["commercial:read", "commercial:price:view-published", "commercial:payment-plan:view", "commercial:hold:create", "commercial:hold:release"].includes(permission.code))
+      .filter((permission) => ["commercial:read", "commercial:price:view-published", "commercial:payment-plan:view", "commercial:hold:create", "commercial:hold:release", "commercial:task:view", "commercial:transfer:view", "commercial:dispatch:create"].includes(permission.code))
       .map((permission) => ({ roleId: agentRole.id, permissionId: permission.id })),
     skipDuplicates: true,
   });
@@ -130,6 +135,18 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
   const managerToken = managerLogin.body.accessToken;
   const agentToken = agentLogin.body.accessToken;
   const readerToken = readerLogin.body.accessToken;
+
+  const assignedTask = await api.request("/commercial/tasks", {
+    token: managerToken,
+    method: "POST",
+    body: { title: "متابعة مستندات العميل", assigneeId: fixture.agent.id, projectId: fixture.project.id, dueAt: new Date(Date.now() + 86_400_000).toISOString(), priority: "URGENT" },
+  });
+  expectStatus(assignedTask, 201, api);
+  const agentTasks = await api.request("/commercial/tasks", { token: agentToken });
+  expectStatus(agentTasks, 200, api);
+  assert.ok(agentTasks.body.some((task) => task.id === assignedTask.body.id));
+  const taskManageDenied = await api.request(`/commercial/tasks/${assignedTask.body.id}`, { token: agentToken, method: "PATCH", body: { status: "COMPLETED" } });
+  assert.equal(taskManageDenied.response.status, 403);
 
   const english = await api.request("/commercial/translations", {
     token: managerToken,
@@ -225,6 +242,22 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
   assert.equal(confirmed.body.listPriceSnapshotMinor, "12000000");
   assert.equal(confirmed.body.reservationAmountMinor, "12000000");
   assert.equal(confirmed.body.currency, "SAR");
+  const transferCase = await api.request("/commercial/transfer-cases", { token: managerToken, method: "POST", body: { reservationId: confirmed.body.id } });
+  expectStatus(transferCase, 201, api);
+  assert.equal(transferCase.body.documents.length, 9);
+  const transferVisible = await api.request("/commercial/transfer-cases", { token: agentToken });
+  expectStatus(transferVisible, 200, api);
+  assert.ok(transferVisible.body.some((item) => item.id === transferCase.body.id));
+  const prematureApproval = await api.request(`/commercial/transfer-cases/${transferCase.body.id}/status`, { token: managerToken, method: "PATCH", body: { status: "APPROVED" } });
+  assert.equal(prematureApproval.response.status, 409);
+  for (const document of transferCase.body.documents) {
+    const status = document.documentType === "UNIT_SUBDIVISION" ? "NOT_APPLICABLE" : "VERIFIED";
+    const reviewed = await api.request(`/commercial/transfer-documents/${document.id}`, { token: managerToken, method: "PATCH", body: { status, ...(status === "VERIFIED" ? { storageKey: `uat/${document.documentType}.pdf` } : {}) } });
+    expectStatus(reviewed, 200, api);
+  }
+  const approvedTransfer = await api.request(`/commercial/transfer-cases/${transferCase.body.id}/status`, { token: managerToken, method: "PATCH", body: { status: "APPROVED" } });
+  expectStatus(approvedTransfer, 200, api);
+  assert.equal(approvedTransfer.body.readiness, 100);
   const [reservedUnit, reservedLead, convertedHold] = await Promise.all([
     prisma.unit.findUniqueOrThrow({ where: { id: fixture.unit.id } }),
     prisma.lead.findUniqueOrThrow({ where: { id: primaryLead.id } }),

@@ -321,7 +321,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           </div>
         </section>
       ) : null}
-      {tab === "pipeline" ? <SalesPipelineWorkspace externalReservation={unitReservation} ar={ar} /> : null}
+      {tab === "pipeline" ? <SalesPipelineWorkspace externalReservation={unitReservation} ar={ar} persistent={!preview} /> : null}
       {tab === "portfolio" ? (
         <PortfolioDashboard
           selectedProject={project}

@@ -18,6 +18,8 @@ Release branch: `codex/restore-approved-product`
 - Sales activity recording the deposit receipt and signed-contract review.
 - Active, cancelled, expired and converted unit holds.
 - Confirmed reservation followed by a won sale and sold-unit status.
+- Persisted manager-assigned sales task with role-scoped agent visibility.
+- Persisted title-transfer case with nine governed document requirements.
 
 ## Real role and authorization checks
 
@@ -25,7 +27,8 @@ Release branch: `codex/restore-approved-product`
 |---|---|---|
 | Administrator | Full permission model and governed production configuration | PASS by contract/security suite |
 | Sales agent | Create/view owned customer and lead, log activity, advance allowed stages, create/cancel hold | PASS via real HTTP |
-| Sales manager | View all leads, approve reservation, close sale and resolve unit to SOLD | PASS via real HTTP |
+| Sales agent | View only assigned sales tasks; task management and transfer approval rejected | PASS via real HTTP |
+| Sales manager | View all leads, approve reservation, assign tasks, review transfer documents, close sale and resolve unit to SOLD | PASS via real HTTP |
 | Read-only user | Read access only; translation and commercial mutations rejected | PASS via HTTP 403 |
 | Other-tenant user | Cannot appear as assignee or access tenant records | PASS |
 
@@ -41,6 +44,8 @@ Release branch: `codex/restore-approved-product`
 8. Agent records deposit and signed-contract follow-up in the activity timeline.
 9. Manager closes the lead as WON; unit changes atomically from RESERVED to SOLD.
 10. Audit events prove hold creation, expiry behavior, reservation confirmation, activity logging and final unit resolution.
+11. Manager creates a transfer case for the confirmed reservation; the agent can view it but cannot approve it.
+12. Premature transfer approval is rejected with HTTP 409. The manager reviews each applicable document, marks the subdivision document not applicable, reaches 100% readiness and approves the case.
 
 ## Additional negative and resilience checks
 
@@ -51,6 +56,8 @@ Release branch: `codex/restore-approved-product`
 - Cross-tenant assignee leakage is blocked.
 - Missing consent or invalid consent metadata is rejected.
 - Arabic translations and English fallback behavior are verified.
+- Task assignee visibility is separated from manager-only team enumeration.
+- Transfer readiness is calculated from persisted document states and cannot be bypassed.
 
 ## Browser/UI evidence
 
@@ -58,7 +65,17 @@ Release branch: `codex/restore-approved-product`
 - `03-floor-hotspots.png`: all eight units visible and selectable directly from the floor layout.
 - `04-transfer-governance.png`: title-transfer portfolio reconciliation and manager-controlled workflow.
 
-## Evidence limits and remaining domain gap
+## Automated execution evidence
 
-The API currently models the commercial journey through a won sale and sold inventory. The title-transfer document checklist, supervisor approvals, sales tasks, alerts and project-content email composer are fully interactive in the approved workspace but are not yet all backed by dedicated persistent API entities. They must not be represented as production-persistent until those domain endpoints and migrations are implemented. Government submission correctly remains disabled until an authority integration agreement exists.
+- Prisma schema validation: PASS.
+- API security and governance contracts: 14/14 PASS.
+- CRM/customer/tenant real HTTP suite: 2/2 PASS.
+- Full sale, task assignment and transfer approval real HTTP suite: 1/1 PASS.
+- Commercial web workflow contracts: 10/10 PASS.
+- Repository TypeScript checks: PASS.
+- API and Next.js optimized production build: PASS.
+- KAAF generated context and all architecture validators: PASS (one informational documented dependency, no warnings or errors).
 
+## Evidence limits and remaining integration boundary
+
+Sales tasks, transfer cases, transfer-document reviews and commercial dispatch records now have dedicated tenant-scoped persistence, permissions, audit events and bounded browser API paths. The government submission action correctly remains disabled until an authority integration agreement and issued credentials exist. External email delivery is represented as a governed dispatch record; an email provider must be configured and separately smoke-tested before claiming delivery outside R4C.

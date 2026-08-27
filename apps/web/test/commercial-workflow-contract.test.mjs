@@ -16,6 +16,7 @@ const tenantResolution = await readFile(new URL("../lib/tenant-resolution.ts", i
 const shell = await readFile(new URL("../components/AppShell.tsx", import.meta.url), "utf8");
 const shellModern = await readFile(new URL("../app/shell-modern.css", import.meta.url), "utf8");
 const salesPipelineCss = await readFile(new URL("../app/sales-pipeline.css", import.meta.url), "utf8");
+const commercialApi = await readFile(new URL("../lib/commercial-api.ts", import.meta.url), "utf8");
 
 test("production entry routes users into the commercial journey", () => {
   assert.match(home, /redirect\("\/login"\)/);
@@ -57,6 +58,18 @@ test("the browser proxy exposes only the bounded journey contracts", () => {
   assert.match(proxy, /commercial\\\/holds/);
   assert.match(proxy, /commercial\\\/assignees/);
   assert.match(proxy, /admin\\\/users/);
+  for (const route of ["tasks", "transfer-cases", "transfer-documents", "dispatches"]) assert.match(proxy, new RegExp(route));
+});
+
+test("production commercial operations persist tasks, transfer reviews, and dispatches", () => {
+  assert.match(suite, /SalesPipelineWorkspace externalReservation=\{unitReservation\} ar=\{ar\} persistent=\{!preview\}/);
+  assert.match(pipeline, /commercialApi\.tasks\(\)/);
+  assert.match(pipeline, /commercialApi\.createTask/);
+  assert.match(pipeline, /commercialApi\.updateTask/);
+  assert.match(commercialApi, /transferCases:/);
+  assert.match(commercialApi, /reviewTransferDocument:/);
+  assert.match(commercialApi, /reviewTransferCase:/);
+  assert.match(commercialApi, /createDispatch:/);
 });
 
 test("mass import validates contacts and campaign results before governed creation", () => {
