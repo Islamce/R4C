@@ -285,8 +285,34 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
   assert.equal(raceUnit.status, "RESERVED");
   assert.equal(raceHold.status, "CONVERTED");
 
-  const audit = await prisma.auditEvent.findMany({ where: { tenantId: fixture.tenant.id, action: { in: ["COMMERCIAL_UNIT_HOLD_CREATED", "COMMERCIAL_UNIT_HOLD_EXPIRED", "COMMERCIAL_RESERVATION_CONFIRMED"] } } });
+  const followUp = await api.request(`/commercial/leads/${primaryLead.id}/activities`, {
+    token: agentToken,
+    method: "POST",
+    body: { type: "NOTE", notes: "تم استلام العربون ومراجعة عقد البيع مع العميل" },
+  });
+  expectStatus(followUp, 201, api);
+  const activityTimeline = await api.request(`/commercial/leads/${primaryLead.id}/activities`, { token: managerToken });
+  expectStatus(activityTimeline, 200, api);
+  assert.ok(activityTimeline.body.some((activity) => activity.notes.includes("استلام العربون")));
+
+  const won = await api.request(`/commercial/leads/${primaryLead.id}/status`, {
+    token: managerToken,
+    method: "PATCH",
+    body: { status: "WON" },
+  });
+  expectStatus(won, 200, api);
+  assert.equal(won.body.status, "WON");
+  const [soldUnit, wonLead] = await Promise.all([
+    prisma.unit.findUniqueOrThrow({ where: { id: fixture.unit.id } }),
+    prisma.lead.findUniqueOrThrow({ where: { id: primaryLead.id } }),
+  ]);
+  assert.equal(soldUnit.status, "SOLD");
+  assert.equal(wonLead.status, "WON");
+
+  const audit = await prisma.auditEvent.findMany({ where: { tenantId: fixture.tenant.id, action: { in: ["COMMERCIAL_UNIT_HOLD_CREATED", "COMMERCIAL_UNIT_HOLD_EXPIRED", "COMMERCIAL_RESERVATION_CONFIRMED", "COMMERCIAL_SALES_ACTIVITY_LOGGED", "COMMERCIAL_LEAD_STATUS_ADVANCED", "COMMERCIAL_UNIT_STATUS_RESOLVED_BY_LEAD_OUTCOME"] } } });
   assert.ok(audit.some((event) => event.action === "COMMERCIAL_UNIT_HOLD_CREATED"));
   assert.ok(audit.some((event) => event.action === "COMMERCIAL_UNIT_HOLD_EXPIRED"));
   assert.ok(audit.some((event) => event.action === "COMMERCIAL_RESERVATION_CONFIRMED"));
+  assert.ok(audit.some((event) => event.action === "COMMERCIAL_SALES_ACTIVITY_LOGGED"));
+  assert.ok(audit.some((event) => event.action === "COMMERCIAL_UNIT_STATUS_RESOLVED_BY_LEAD_OUTCOME"));
 });
