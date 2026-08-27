@@ -45,17 +45,20 @@
 }
 
 @media (max-width: 720px) {
-  .app-shell { grid-template-columns: 1fr; }
-  .app-sidebar { position: relative; height: auto; padding: .65rem; flex-direction: row; align-items: center; overflow-x: auto; overflow-y: hidden; }
+  .app-shell { width: 100%; max-width: 100%; grid-template-columns: minmax(0, 1fr); overflow-x: clip; }
+  .app-stage,
+  .app-content { width: 100%; min-width: 0; max-width: 100%; }
+  .app-sidebar { position: relative; width: 100%; min-width: 0; max-width: 100%; height: auto; padding: .55rem; flex-direction: row; align-items: center; overflow: hidden; }
   .brand-lockup { flex: 0 0 auto; padding: 0; border: 0; }
   .kynox-brand-symbol { width: 48px; height: 48px; }
-  .app-nav { min-width: max-content; margin: 0; flex-direction: row; align-items: center; }
-  .nav-group { display: flex; }
-  .nav-link { min-width: 92px; min-height: 52px; display: flex; padding: .4rem .65rem; }
-  .kynox-sidebar-tools { display: flex; margin: 0; padding: 0 0 0 .65rem; border-top: 0; border-inline-start: 1px solid rgb(255 255 255 / 18%); }
+  .app-nav { min-width: 0; margin: 0; flex-direction: row; align-items: center; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: none; }
+  .app-nav::-webkit-scrollbar { display: none; }
+  .nav-group { display: flex; flex: 0 0 auto; }
+  .nav-link { min-width: 80px; min-height: 50px; display: flex; padding: .35rem .5rem; }
+  .kynox-sidebar-tools { display: none; }
   .kynox-sidebar-tools button,
   .kynox-tool-link { min-width: 82px; min-height: 50px; }
-  .app-header { grid-template-columns: 1fr; }
+  .app-header { min-height: 72px; grid-template-columns: minmax(0, 1fr); padding: .65rem .75rem; }
   .modern-session-card { border-inline-start: 0; padding-inline-start: 0; }
   .app-header .header-actions { flex-wrap: wrap; }
 }

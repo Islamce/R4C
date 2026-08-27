@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-runtime-entry.json",
-    "bodyDigest": "f5dc57223acf8cd5e93b02b9e44d24d415bb282335628f0b0f141e136ba3736a",
+    "bodyDigest": "ab8e4ab9f850da46b14422af10d811da45733042e4051c7b1d21cc46639bd544",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "8b082a68b94b0049260b0100e2eb146fc6fa115b52704129ac423265c58caf6d",
+    "inputDigest": "2eae7e6d717e83e0a7d26ff2ef792e1b28e2a678d6c66b1729484c174b3fd3cc",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -34,6 +34,7 @@
     "parseErrors": [],
     "publicSymbols": [],
     "sourceFiles": [
+      ".codex-audit/commercial-command-center-pr.md",
       ".github/dependabot.yml",
       ".github/workflows/architecture.yml",
       ".github/workflows/auth-session-verification.yml",
@@ -104,6 +105,8 @@
       "docs/security.md",
       "docs/shared-hosting-deployment-contract.md",
       "docs/software-supply-chain-security.md",
+      "docs/uat/2026-08-26/R4C_UAT_RERUN.md",
+      "docs/uat/2026-08-27/R4C_UAT_REMEDIATION.md",
       "docs/wafi-readiness.md",
       "docs/zatca-architecture.md",
       "hostinger-web-entry.cjs",

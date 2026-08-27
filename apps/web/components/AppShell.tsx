@@ -151,7 +151,7 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
               <strong>{t("shell.sessionLoading")}</strong>
             )}
             </div>
-            {user ? <span className="role-chip"><ShieldCheck size={14} weight="fill" />{user.role}</span> : null}
+            {user ? <span className="role-chip"><ShieldCheck size={14} weight="fill" />{locale === "ar" && user.role === "ADMIN" ? "مدير النظام" : user.role}</span> : null}
           </div>
           <div className="header-actions">
             {user ? (
@@ -178,7 +178,7 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
               disabled={working || preview}
             >
               <SignOut size={18} aria-hidden="true" />
-              {preview ? "Preview mode" : t("header.logout")}
+              {preview ? (locale === "ar" ? "وضع المعاينة" : "Preview mode") : t("header.logout")}
             </button>
           </div>
         </header>

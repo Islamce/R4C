@@ -15,6 +15,7 @@ const serverSession = await readFile(new URL("../lib/server-session.ts", import.
 const tenantResolution = await readFile(new URL("../lib/tenant-resolution.ts", import.meta.url), "utf8");
 const shell = await readFile(new URL("../components/AppShell.tsx", import.meta.url), "utf8");
 const shellModern = await readFile(new URL("../app/shell-modern.css", import.meta.url), "utf8");
+const salesPipelineCss = await readFile(new URL("../app/sales-pipeline.css", import.meta.url), "utf8");
 
 test("production entry routes users into the commercial journey", () => {
   assert.match(home, /redirect\("\/login"\)/);
@@ -87,8 +88,20 @@ test("authenticated routes share the KYNOX shell and commercial tools use real n
   assert.match(shell, /className="kynox-tool-link" href=\{href\}/);
   assert.match(shellModern, /\.app-shell \{ grid-template-columns: 112px/);
   assert.match(shellModern, /\.kynox-tool-link:hover/);
+  assert.match(shell, /locale === "ar" \? "وضع المعاينة" : "Preview mode"/);
+  assert.match(shell, /locale === "ar" && user\.role === "ADMIN" \? "مدير النظام" : user\.role/);
   assert.match(workspace, /id="commercial-customers"/);
   assert.match(workspace, /id="commercial-units"/);
   assert.match(workspace, /id="commercial-transfer"/);
   assert.match(workspace, /id="commercial-operations"/);
+});
+
+test("commercial UAT safeguards localization, dialogs, contrast, and mobile containment", () => {
+  assert.doesNotMatch(suite, /caption = "Portfolio current view"/);
+  assert.match(suite, /"Portfolio current view", "عرض المحفظة الحالي"/);
+  assert.match(suite, /role="dialog" aria-modal="true" aria-labelledby="reservation-dialog-title"/);
+  assert.match(suite, /role="dialog"\s+aria-modal="true"\s+aria-labelledby="interest-dialog-title"/);
+  assert.match(salesPipelineCss, /\.commercial-suite \.commercial-operator \.page-heading h1 \{ color: #fff; \}/);
+  assert.match(shellModern, /\.app-shell \{ width: 100%; max-width: 100%; grid-template-columns: minmax\(0, 1fr\); overflow-x: clip; \}/);
+  assert.match(shellModern, /\.app-nav \{ min-width: 0;[^}]+overflow-x: auto;/);
 });

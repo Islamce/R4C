@@ -345,8 +345,8 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
 }
 
 function PreviewSalesOperations({ project, ar }: { project: string; ar: boolean }) {
-  const [leadStatus, setLeadStatus] = useState("Qualified");
-  const [activity, setActivity] = useState("Site visit scheduled for 18 August, 16:00");
+  const [leadStatus, setLeadStatus] = useState(localize(ar, "Qualified", "مؤهل"));
+  const [activity, setActivity] = useState(localize(ar, "Site visit scheduled for 18 August, 16:00", "زيارة الموقع مجدولة في 18 أغسطس، الساعة 16:00"));
   const [notice, setNotice] = useState("");
 
   return (
@@ -355,7 +355,7 @@ function PreviewSalesOperations({ project, ar }: { project: string; ar: boolean 
         <div>
           <p className="eyebrow">{localize(ar, "Sales workflow", "مسار عمل المبيعات")}</p>
           <h1>{localize(ar, "Lead, interest & reservation control", "إدارة العملاء والاهتمامات والحجوزات")}</h1>
-          <p>{localize(ar, `Operate the full buyer journey for ${project} with evidence, ownership and approval gates.`, `إدارة رحلة المشتري الكاملة لمشروع ${project} مع الأدلة والملكية وبوابات الاعتماد.`)}</p>
+          <p>{localize(ar, `Operate the full buyer journey for ${projectDisplayName(ar, project)} with evidence, ownership and approval gates.`, `إدارة رحلة المشتري الكاملة لمشروع ${projectDisplayName(ar, project)} مع الأدلة والملكية وبوابات الاعتماد.`)}</p>
         </div>
         <span className="status-badge">{localize(ar, "Interactive preview", "معاينة تفاعلية")}</span>
       </header>
@@ -365,25 +365,25 @@ function PreviewSalesOperations({ project, ar }: { project: string; ar: boolean 
       <section className="commercial-journey-grid">
         <form className="create-panel commercial-capture" onSubmit={(event) => {
           event.preventDefault();
-          setNotice("Lead captured and assigned to the project sales queue.");
+          setNotice(localize(ar, "Lead captured and assigned to the project sales queue.", "تم تسجيل العميل المحتمل وإسناده إلى قائمة مبيعات المشروع."));
           event.currentTarget.reset();
         }}>
           <p className="eyebrow">{localize(ar, "New enquiry", "استفسار جديد")}</p>
           <h2>{localize(ar, "Capture buyer evidence", "تسجيل بيانات وأدلة المشتري")}</h2>
-          <label><span>{localize(ar, "Customer name", "اسم العميل")}</span><input name="name" defaultValue="Lina Al Rashid" required /></label>
+          <label><span>{localize(ar, "Customer name", "اسم العميل")}</span><input name="name" defaultValue={localize(ar, "Lina Al Rashid", "لينا الراشد")} required /></label>
           <label><span>{localize(ar, "Contact number", "رقم التواصل")}</span><input name="phone" defaultValue="+966 55 240 8812" required /></label>
           <label><span>{localize(ar, "Email", "البريد الإلكتروني")}</span><input name="email" type="email" defaultValue="lina@example.com" required /></label>
-          <label><span>{localize(ar, "Evidence / source", "الدليل / المصدر")}</span><input name="source" defaultValue="Website enquiry — floor plan downloaded" required /></label>
+          <label><span>{localize(ar, "Evidence / source", "الدليل / المصدر")}</span><input name="source" defaultValue={localize(ar, "Website enquiry — floor plan downloaded", "استفسار من الموقع — تم تنزيل مخطط الدور")} required /></label>
           <button className="button button-primary">{localize(ar, "Record interest", "تسجيل اهتمام")}</button>
         </form>
 
         <section className="create-panel commercial-pipeline">
-          <div className="section-heading"><div><p className="eyebrow">{localize(ar, "Active opportunity", "فرصة نشطة")}</p><h2>Ahmed Al Harbi</h2></div><span className="status-badge">{leadStatus}</span></div>
+          <div className="section-heading"><div><p className="eyebrow">{localize(ar, "Active opportunity", "فرصة نشطة")}</p><h2>{buyerDisplayName(ar, "Ahmed Al Harbi")}</h2></div><span className="status-badge">{leadStatus}</span></div>
           <dl>
-            <div><dt>Project</dt><dd>{project}</dd></div>
-            <div><dt>Preferred unit</dt><dd>A-1204 · 3BR · Floor 12</dd></div>
-            <div><dt>Contact</dt><dd>+966 50 318 4472<br />ahmed@example.com</dd></div>
-            <div><dt>Evidence</dt><dd>Site visit · ID received</dd></div>
+            <div><dt>{localize(ar, "Project", "المشروع")}</dt><dd>{projectDisplayName(ar, project)}</dd></div>
+            <div><dt>{localize(ar, "Preferred unit", "الوحدة المفضلة")}</dt><dd>{localize(ar, "A-1204 · 3BR · Floor 12", "A-1204 · ثلاث غرف · الدور 12")}</dd></div>
+            <div><dt>{localize(ar, "Contact", "التواصل")}</dt><dd>+966 50 318 4472<br />ahmed@example.com</dd></div>
+            <div><dt>{localize(ar, "Evidence", "الأدلة")}</dt><dd>{localize(ar, "Site visit · ID received", "زيارة الموقع · تم استلام الهوية")}</dd></div>
           </dl>
           <div className="lead-actions">
             <button className="button button-primary" type="button" onClick={() => { setLeadStatus(localize(ar, "Reservation pending", "الحجز قيد الاعتماد")); setNotice(localize(ar, "Unit A-1204 placed in the reservation approval queue.", "تمت إضافة الوحدة A-1204 إلى قائمة اعتماد الحجوزات.")); }}>{localize(ar, "Create reservation", "إنشاء حجز")}</button>
@@ -393,22 +393,22 @@ function PreviewSalesOperations({ project, ar }: { project: string; ar: boolean 
       </section>
 
       <section className="commercial-work-grid">
-        <form className="create-panel" onSubmit={(event) => { event.preventDefault(); setNotice("Activity added to the auditable customer timeline."); }}>
+        <form className="create-panel" onSubmit={(event) => { event.preventDefault(); setNotice(localize(ar, "Activity added to the auditable customer timeline.", "تمت إضافة النشاط إلى السجل الزمني القابل للتدقيق للعميل.")); }}>
           <p className="eyebrow">{localize(ar, "Evidence timeline", "سجل الأدلة")}</p>
           <h2>{localize(ar, "Log sales activity", "تسجيل نشاط المبيعات")}</h2>
           <label><span>{localize(ar, "Activity note", "ملاحظة النشاط")}</span><textarea value={activity} onChange={(event) => setActivity(event.target.value)} required /></label>
           <button className="button button-primary">{localize(ar, "Save activity", "حفظ النشاط")}</button>
         </form>
         <section className="create-panel unit-review">
-          <p className="eyebrow">Selected inventory</p>
-          <h2>A-1204 · 3 Bedroom</h2>
+          <p className="eyebrow">{localize(ar, "Selected inventory", "المخزون المحدد")}</p>
+          <h2>{localize(ar, "A-1204 · 3 Bedroom", "A-1204 · ثلاث غرف")}</h2>
           <dl>
-            <div><dt>Floor / area</dt><dd>12 · 162.3 m²</dd></div>
-            <div><dt>List price</dt><dd>SAR 1,980,000</dd></div>
-            <div><dt>Availability</dt><dd>Interest recorded</dd></div>
-            <div><dt>Construction</dt><dd>Structure · 62%</dd></div>
+            <div><dt>{localize(ar, "Floor / area", "الدور / المساحة")}</dt><dd>12 · 162.3 م²</dd></div>
+            <div><dt>{localize(ar, "List price", "سعر القائمة")}</dt><dd>{localize(ar, "SAR 1,980,000", "1,980,000 ر.س")}</dd></div>
+            <div><dt>{localize(ar, "Availability", "الحالة")}</dt><dd>{localize(ar, "Interest recorded", "تم تسجيل اهتمام")}</dd></div>
+            <div><dt>{localize(ar, "Construction", "الإنشاء")}</dt><dd>{localize(ar, "Structure · 62%", "الهيكل الإنشائي · 62%")}</dd></div>
           </dl>
-          <button className="button button-secondary" type="button" onClick={() => setNotice("Unit A-1204 opened in Project & unit control.")}>Open linked unit</button>
+          <button className="button button-secondary" type="button" onClick={() => setNotice(localize(ar, "Unit A-1204 opened in Project & unit control.", "تم فتح الوحدة A-1204 في إدارة المشروع والوحدات."))}>{localize(ar, "Open linked unit", "فتح الوحدة المرتبطة")}</button>
         </section>
       </section>
     </main>
@@ -419,12 +419,12 @@ function Metric({
   value,
   label,
   tone,
-  caption = "Portfolio current view",
+  caption,
 }: {
   value: string;
   label: string;
   tone?: string;
-  caption?: string;
+  caption: string;
 }) {
   return (
     <article className="suite-metric">
@@ -496,12 +496,12 @@ function PortfolioDashboard({
         </div>
       </section>
       <section className="suite-metrics">
-        <Metric value="8" label={localize(ar, "Active projects", "المشروعات النشطة")} />
-        <Metric value="1,248" label={localize(ar, "Total units", "إجمالي الوحدات")} />
-        <Metric value="684" label={localize(ar, "Sold", "المباع")} tone="good" />
-        <Metric value="92" label={localize(ar, "Pending / reserved", "قيد الانتظار / محجوز")} />
-        <Metric value="147" label={localize(ar, "Active leads", "العملاء المحتملون النشطون")} />
-        <Metric value="SAR 1.84B" label={localize(ar, "Contracted value", "القيمة التعاقدية")} tone="good" />
+        <Metric value="8" label={localize(ar, "Active projects", "المشروعات النشطة")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
+        <Metric value="1,248" label={localize(ar, "Total units", "إجمالي الوحدات")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
+        <Metric value="684" label={localize(ar, "Sold", "المباع")} tone="good" caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
+        <Metric value="92" label={localize(ar, "Pending / reserved", "قيد الانتظار / محجوز")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
+        <Metric value="147" label={localize(ar, "Active leads", "العملاء المحتملون النشطون")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
+        <Metric value="SAR 1.84B" label={localize(ar, "Contracted value", "القيمة التعاقدية")} tone="good" caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
       </section>
       <section className="portfolio-layout">
         <div className="suite-panel">
@@ -816,16 +816,17 @@ function UnitDashboard({
   return (
     <main className="suite-dashboard">
       <section className="suite-metrics">
-        <Metric value={`${project.progress}%`} label={localize(ar, "Construction", "الإنشاء")} />
-        <Metric value={localize(ar, project.phase, project.phase === "Structure" ? "الهيكل الإنشائي" : project.phase === "Finishing" ? "التشطيبات" : "الأعمال الأولية")} label={localize(ar, "Current phase", "المرحلة الحالية")} />
-        <Metric value={String(project.units)} label={localize(ar, "Total units", "إجمالي الوحدات")} />
+        <Metric value={`${project.progress}%`} label={localize(ar, "Construction", "الإنشاء")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
+        <Metric value={localize(ar, project.phase, project.phase === "Structure" ? "الهيكل الإنشائي" : project.phase === "Finishing" ? "التشطيبات" : "الأعمال الأولية")} label={localize(ar, "Current phase", "المرحلة الحالية")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
+        <Metric value={String(project.units)} label={localize(ar, "Total units", "إجمالي الوحدات")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
         <Metric
           value={String(project.available)}
           label={localize(ar, "Available", "المتاح")}
           tone="good"
+          caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")}
         />
-        <Metric value={String(project.pending)} label={localize(ar, "Held / reserved", "موقوف / محجوز")} />
-        <Metric value="18" label={localize(ar, "Number of floors", "عدد الأدوار")} />
+        <Metric value={String(project.pending)} label={localize(ar, "Held / reserved", "موقوف / محجوز")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
+        <Metric value="18" label={localize(ar, "Number of floors", "عدد الأدوار")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
       </section>
       <section className="unit-layout">
         <aside className="suite-panel floor-navigator">
@@ -1101,7 +1102,7 @@ function UnitDashboard({
       </section>
       {reservationOpen ? (
         <div className="suite-modal-backdrop" role="presentation" onMouseDown={() => setReservationOpen(false)}>
-          <form className="suite-modal reservation-modal" onMouseDown={(event) => event.stopPropagation()} onSubmit={(event) => {
+          <form className="suite-modal reservation-modal" role="dialog" aria-modal="true" aria-labelledby="reservation-dialog-title" onMouseDown={(event) => event.stopPropagation()} onSubmit={(event) => {
             event.preventDefault();
             const reference = `RSV-${selectedRow.row[0]}-${String(Date.now()).slice(-4)}`;
             const form = new FormData(event.currentTarget);
@@ -1111,7 +1112,7 @@ function UnitDashboard({
             setReservationOpen(false);
           }}>
             <div className="suite-panel-heading">
-              <div><p className="eyebrow">{localize(ar, "Reservation", "الحجز")}</p><h2>{localize(ar, `Create reservation for ${selectedRow.row[0]}`, `إنشاء حجز للوحدة ${selectedRow.row[0]}`)}</h2></div>
+              <div><p className="eyebrow">{localize(ar, "Reservation", "الحجز")}</p><h2 id="reservation-dialog-title">{localize(ar, `Create reservation for ${selectedRow.row[0]}`, `إنشاء حجز للوحدة ${selectedRow.row[0]}`)}</h2></div>
               <button type="button" className="button button-quiet" onClick={() => setReservationOpen(false)}>{localize(ar, "Close", "إغلاق")}</button>
             </div>
             <label>{localize(ar, "Customer name", "اسم العميل")}<input name="customer" required defaultValue={localize(ar, "Mohammed Abdullah", "محمد عبدالله")} /></label>
@@ -1131,6 +1132,9 @@ function UnitDashboard({
         >
           <form
             className="suite-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="interest-dialog-title"
             onMouseDown={(e) => e.stopPropagation()}
             onSubmit={(e) => {
               e.preventDefault();
@@ -1144,7 +1148,7 @@ function UnitDashboard({
             <div className="suite-panel-heading">
               <div>
                 <p className="eyebrow">{localize(ar, "Buyer evidence", "بيانات المشتري")}</p>
-                <h2>{localize(ar, `Record interest for ${selectedUnit}`, `تسجيل اهتمام بالوحدة ${selectedUnit}`)}</h2>
+                <h2 id="interest-dialog-title">{localize(ar, `Record interest for ${selectedUnit}`, `تسجيل اهتمام بالوحدة ${selectedUnit}`)}</h2>
               </div>
               <button
                 type="button"
