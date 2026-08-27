@@ -305,6 +305,11 @@ export class AssignLeadDto {
   @IsUUID() assignedToId!: string;
 }
 
+export class WithdrawLeadConsentDto {
+  @IsIn(["enquiry", "marketing"]) consentType!: "enquiry" | "marketing";
+  @IsOptional() @IsString() @Length(1, 240) reason?: string;
+}
+
 export class CreateSalesActivityDto {
   @IsEnum(SalesActivityType) type!: SalesActivityType;
   @IsString() @Length(1, 4000) notes!: string;

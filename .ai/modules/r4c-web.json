@@ -1,26 +1,29 @@
 {
   "_meta": {
     "artifact": "modules/r4c-web.json",
-    "bodyDigest": "781f50d7d56bacc16cd80d899b8322c730e552e007baae4c25111c5926ca842e",
+    "bodyDigest": "182d589c7bfbb2b2369dd4f1b8b27a5777e92bf3c81e5c82a0da07f60bdb7eca",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "c32f3819ec2d3b55434f02f53918f86032e8dd287887658cdcf42904c3b6da05",
+    "inputDigest": "909eb793b70024397d0abe3c96f16d332d892fdc1049077fc7fbefd4bf5a1e66",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 60 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 62 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
-  "dependedOnBy": [],
+  "dependedOnBy": [
+    "r4c-runtime-entry"
+  ],
   "dependsOn": [
     "r4c-contracts"
   ],
   "discovery": {
     "codeFiles": [
+      "apps/web/app/(authenticated)/admin/users/page.tsx",
       "apps/web/app/(authenticated)/commercial/page.tsx",
       "apps/web/app/(authenticated)/cost-control/page.tsx",
       "apps/web/app/(authenticated)/layout.tsx",
@@ -61,6 +64,7 @@
       "apps/web/components/ProjectDetail.tsx",
       "apps/web/components/ProjectsJourney.tsx",
       "apps/web/components/ResetPasswordForm.tsx",
+      "apps/web/components/SalesPipelineWorkspace.tsx",
       "apps/web/components/StatePrimitives.tsx",
       "apps/web/lib/client-api.ts",
       "apps/web/lib/commercial-api.ts",
@@ -92,6 +96,7 @@
     "parseErrors": [],
     "publicSymbols": [],
     "sourceFiles": [
+      "apps/web/app/(authenticated)/admin/users/page.tsx",
       "apps/web/app/(authenticated)/commercial/page.tsx",
       "apps/web/app/(authenticated)/cost-control/page.tsx",
       "apps/web/app/(authenticated)/layout.tsx",
@@ -132,6 +137,7 @@
       "apps/web/components/ProjectDetail.tsx",
       "apps/web/components/ProjectsJourney.tsx",
       "apps/web/components/ResetPasswordForm.tsx",
+      "apps/web/components/SalesPipelineWorkspace.tsx",
       "apps/web/components/StatePrimitives.tsx",
       "apps/web/kaaf.module.json",
       "apps/web/lib/client-api.ts",

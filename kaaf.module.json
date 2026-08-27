@@ -1,0 +1,20 @@
+{
+  "apis": [],
+  "confidence": "verified",
+  "consumes": [],
+  "dependsOn": [
+    "r4c-web"
+  ],
+  "externalIntegrations": [],
+  "flows": [],
+  "id": "r4c-runtime-entry",
+  "ownedEntities": [],
+  "owner": "DevOps",
+  "permissions": [],
+  "publicEntryPoints": [
+    "package.json",
+    "hostinger-web-entry.cjs"
+  ],
+  "purpose": "Orchestrate the monorepo and provide the managed-hosting web process entry point.",
+  "schemaVersion": "1.0.0"
+}

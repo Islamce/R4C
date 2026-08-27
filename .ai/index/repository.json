@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "index/repository.json",
-    "bodyDigest": "1b811144f6f663e1f479c4df0746b569af8496118fa5349b18022bdde1c6bdc1",
+    "bodyDigest": "d667db8710daed168572e9f1c80ed32bc8a8c55defba8357acdc20f8975507cd",
     "confidence": "derived",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "c32f3819ec2d3b55434f02f53918f86032e8dd287887658cdcf42904c3b6da05",
+    "inputDigest": "909eb793b70024397d0abe3c96f16d332d892fdc1049077fc7fbefd4bf5a1e66",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -33,22 +33,19 @@
   ],
   "health": {
     "confidenceByLevel": {
-      "derived": 1,
-      "verified": 6
+      "verified": 7
     },
     "driftCounts": {
       "error": 0,
-      "info": 0,
-      "warning": 1
+      "info": 1,
+      "warning": 0
     },
     "hasDriftErrors": false,
     "moduleCount": 7,
-    "modulesUndeclared": 1,
-    "modulesWithoutOwner": [
-      "root"
-    ],
+    "modulesUndeclared": 0,
+    "modulesWithoutOwner": [],
     "note": "No publication timestamp is embedded: it would break byte-identical regeneration. Time-based staleness is computed at aggregation time from publication metadata supplied to the aggregator.",
-    "ownershipCoverage": 0.8571
+    "ownershipCoverage": 1.0
   },
   "indexSchemaVersion": "1.1.0",
   "kaafGeneratorVersion": "0.7.0",
@@ -131,6 +128,20 @@
       "confidence": "verified",
       "consumes": [],
       "declared": true,
+      "dependsOn": [
+        "r4c-web"
+      ],
+      "id": "r4c-runtime-entry",
+      "ownedEntities": [],
+      "owner": "DevOps",
+      "path": ".",
+      "purpose": "Orchestrate the monorepo and provide the managed-hosting web process entry point.",
+      "qualifiedId": "Islamce/R4C#r4c-runtime-entry"
+    },
+    {
+      "confidence": "verified",
+      "consumes": [],
+      "declared": true,
       "dependsOn": [],
       "id": "r4c-scripts",
       "ownedEntities": [],
@@ -152,18 +163,6 @@
       "path": "apps/web",
       "purpose": "Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards.",
       "qualifiedId": "Islamce/R4C#r4c-web"
-    },
-    {
-      "confidence": "derived",
-      "consumes": [],
-      "declared": false,
-      "dependsOn": [],
-      "id": "root",
-      "ownedEntities": [],
-      "owner": "unknown",
-      "path": ".",
-      "purpose": "Not declared — discovered from source.",
-      "qualifiedId": "Islamce/R4C#root"
     }
   ],
   "permissions": [

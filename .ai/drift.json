@@ -1,19 +1,19 @@
 {
   "_meta": {
     "artifact": "drift.json",
-    "bodyDigest": "7aaaf7c5281039ab8ba9b35e431100f1b98cac2d4142608ff1ceb57218a86941",
+    "bodyDigest": "2de4be72aeb420261f0583c3db428ffcd073e84eef5bd800e9b5ba4657037742",
     "confidence": "derived",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "c32f3819ec2d3b55434f02f53918f86032e8dd287887658cdcf42904c3b6da05",
+    "inputDigest": "909eb793b70024397d0abe3c96f16d332d892fdc1049077fc7fbefd4bf5a1e66",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "confidenceByModule": {
     "r4c-api": {
       "level": "verified",
-      "reason": "Declared and corroborated by 95 discovered code file(s)."
+      "reason": "Declared and corroborated by 99 discovered code file(s)."
     },
     "r4c-bim-worker": {
       "level": "verified",
@@ -27,29 +27,30 @@
       "level": "verified",
       "reason": "Declared and corroborated by 32 discovered code file(s)."
     },
+    "r4c-runtime-entry": {
+      "level": "verified",
+      "reason": "Declared and corroborated by 1 discovered code file(s)."
+    },
     "r4c-scripts": {
       "level": "verified",
-      "reason": "Declared and corroborated by 2 discovered code file(s)."
+      "reason": "Declared and corroborated by 3 discovered code file(s)."
     },
     "r4c-web": {
       "level": "verified",
-      "reason": "Declared and corroborated by 60 discovered code file(s)."
-    },
-    "root": {
-      "level": "derived",
-      "reason": "Discovered from source; no manifest declares this module."
+      "reason": "Declared and corroborated by 62 discovered code file(s)."
     }
   },
   "counts": {
     "error": 0,
-    "info": 0,
-    "warning": 1
+    "info": 1,
+    "warning": 0
   },
   "declaredModules": [
     "r4c-api",
     "r4c-bim-worker",
     "r4c-contracts",
     "r4c-kaaf-tooling",
+    "r4c-runtime-entry",
     "r4c-scripts",
     "r4c-web"
   ],
@@ -67,20 +68,20 @@
     "r4c-bim-worker",
     "r4c-contracts",
     "r4c-kaaf-tooling",
+    "r4c-runtime-entry",
     "r4c-scripts",
-    "r4c-web",
-    "root"
+    "r4c-web"
   ],
   "findings": [
     {
       "evidence": [
-        "hostinger-web-entry.cjs"
+        "kaaf.module.json"
       ],
-      "module": "root",
-      "recommendation": "Add ./kaaf.module.json declaring this module, or move the code into an existing module.",
-      "severity": "warning",
-      "summary": "1 code file(s) under '.' belong to no declared module.",
-      "type": "undeclared-module"
+      "module": "r4c-runtime-entry",
+      "recommendation": "Expected for documentation or process dependencies. If it was meant to be a code dependency, the import is missing.",
+      "severity": "info",
+      "summary": "'r4c-runtime-entry' declares a dependency on 'r4c-web' that no discovered import corroborates.",
+      "type": "unsupported-dependency"
     }
   ],
   "hasErrors": false,
@@ -90,7 +91,5 @@
     "info: expected divergence, such as a documentation-only dependency.",
     "Everything here is derived from a static read of the source: dynamic imports and runtime wiring are invisible to it, so absence of a finding is not proof of absence."
   ],
-  "undeclaredCode": [
-    "hostinger-web-entry.cjs"
-  ]
+  "undeclaredCode": []
 }

@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "ai-context.json",
-    "bodyDigest": "bf8ae08eba0992a9e9cd1ced9ec0490065f54d59616a2500825fa2bbd29f6191",
+    "bodyDigest": "ec06a9a57f9c2808b297007275f4e907d4fcccc5ca375aa46ea75cfcb90ea680",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "c32f3819ec2d3b55434f02f53918f86032e8dd287887658cdcf42904c3b6da05",
+    "inputDigest": "909eb793b70024397d0abe3c96f16d332d892fdc1049077fc7fbefd4bf5a1e66",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -24,15 +24,15 @@
     "apis": 0,
     "externalIntegrations": 3,
     "modules": 7,
-    "modulesDeclared": 6,
-    "modulesUndeclared": 1,
+    "modulesDeclared": 7,
+    "modulesUndeclared": 0,
     "permissions": 23
   },
   "drift": {
     "counts": {
       "error": 0,
-      "info": 0,
-      "warning": 1
+      "info": 1,
+      "warning": 0
     },
     "detail": ".ai/drift.json",
     "hasErrors": false
@@ -105,6 +105,24 @@
       "confidence": "verified",
       "declared": true,
       "declaredConfidence": "verified",
+      "dependsOn": [
+        "r4c-web"
+      ],
+      "detail": "modules/r4c-runtime-entry.json",
+      "hasDiscoveredCode": true,
+      "id": "r4c-runtime-entry",
+      "owner": "DevOps",
+      "path": ".",
+      "publicEntryPoints": [
+        "hostinger-web-entry.cjs",
+        "package.json"
+      ],
+      "purpose": "Orchestrate the monorepo and provide the managed-hosting web process entry point."
+    },
+    {
+      "confidence": "verified",
+      "declared": true,
+      "declaredConfidence": "verified",
       "dependsOn": [],
       "detail": "modules/r4c-scripts.json",
       "hasDiscoveredCode": true,
@@ -132,18 +150,6 @@
         "apps/web/package.json"
       ],
       "purpose": "Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards."
-    },
-    {
-      "confidence": "derived",
-      "declared": false,
-      "dependsOn": [],
-      "detail": "modules/root.json",
-      "hasDiscoveredCode": true,
-      "id": "root",
-      "owner": "unknown",
-      "path": ".",
-      "publicEntryPoints": [],
-      "purpose": "Not declared — discovered from source. Add a kaaf.module.json to describe it."
     }
   ],
   "pointers": {

@@ -11,6 +11,8 @@ coverage/
 .DS_Store
 .idea/
 .vscode/
+.codex-audit/
+.codex-remote-attachments/
 __pycache__/
 .pytest_cache/
 .venv/

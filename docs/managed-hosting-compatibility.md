@@ -22,6 +22,6 @@ The browser calls same-origin Next route handlers, which forward allow-listed pa
 
 Committed Prisma migrations are executed separately with `prisma migrate deploy` from a privately configured environment. This task did not run migration tooling against production, mutate Neon/Redis/R2, deploy, restart, or change environment variables.
 
-Current runtime classification: `DEPLOYED BUT VALIDATION-BLOCKED — SPLIT SHA AND UNINITIALIZED DATABASE SCHEMA`.
+Current source classification: `SHARED-HOSTING COMPATIBLE — MANAGED DEPENDENCIES REQUIRE INDEPENDENT RUNTIME EVIDENCE`.
 
-Remaining gate: exact-SHA unification, Prisma migration, readiness, Redis validation, R2 validation, synthetic UAT, then controlled restart/persistence validation. No VPS is required or introduced.
+The repository build and start paths support separate Hostinger Node.js Web Apps and a managed PostgreSQL database. Redis, object storage, SMTP and BIM remain capability-specific external dependencies and must not be reported operational without direct evidence. Migrations are a separate operator action and are never part of the application build command. No VPS is required or introduced.

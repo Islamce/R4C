@@ -7,6 +7,10 @@ import {
   normalizeLocale,
 } from "../lib/i18n";
 import { LOCALE_COOKIE } from "../lib/server-session";
+import "@fontsource/noto-kufi-arabic/400.css";
+import "@fontsource/noto-kufi-arabic/500.css";
+import "@fontsource/noto-kufi-arabic/600.css";
+import "@fontsource/noto-kufi-arabic/700.css";
 import "./styles.css";
 
 export const metadata = {

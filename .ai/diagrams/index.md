@@ -12,9 +12,9 @@ same commit that makes it.
 | [component-r4c-bim-worker.md](component-r4c-bim-worker.md) | Component (L3) |
 | [component-r4c-contracts.md](component-r4c-contracts.md) | Component (L3) |
 | [component-r4c-kaaf-tooling.md](component-r4c-kaaf-tooling.md) | Component (L3) |
+| [component-r4c-runtime-entry.md](component-r4c-runtime-entry.md) | Component (L3) |
 | [component-r4c-scripts.md](component-r4c-scripts.md) | Component (L3) |
 | [component-r4c-web.md](component-r4c-web.md) | Component (L3) |
-| [component-root.md](component-root.md) | Component (L3) |
 | [container.md](container.md) | Container (L2) |
 | [context.md](context.md) | Context (L1) |
 
@@ -27,4 +27,4 @@ never committed.
 - Solid arrow: a dependency declared in a `kaaf.module.json` manifest.
 - Dotted arrow: a real import discovered in the source that no manifest declares — see `.ai/drift.json`.
 - Node outline reflects confidence: solid = `verified`, dashed = `documented` or `derived`.
-<!-- kaaf:bodyDigest=26af51c55a6b1cee370599bd57f16b949569fb382e5652ca0dbffb1a4b44297d -->
+<!-- kaaf:bodyDigest=cefca318451957d3a60af61fccf92607a18a215f5beef6897724e4e7b9b1f3da -->

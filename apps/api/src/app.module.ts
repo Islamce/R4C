@@ -26,6 +26,7 @@ import { StorageModule } from "./storage/storage.module";
 import { TenantsModule } from "./tenants/tenants.module";
 import { TurnoverModule } from "./turnover/turnover.module";
 import { WorkflowModule } from "./workflow/workflow.module";
+import { UsersModule } from "./users/users.module";
 
 function bimEnabledAtStartup() {
   const value = process.env.BIM_ENABLED?.trim().toLowerCase();
@@ -100,6 +101,7 @@ class HealthController {
     QualityModule,
     ScheduleModule,
     WorkflowModule,
+    UsersModule,
   ],
   controllers: [HealthController],
   providers: [

@@ -8,6 +8,54 @@ import { useI18n } from "./I18nProvider";
 import { CommercialInventory } from "./CommercialInventory";
 
 const activityTypes: ActivityType[] = ["CALL", "EMAIL", "WHATSAPP", "MEETING", "SITE_VISIT", "FOLLOW_UP", "NOTE"];
+type BulkMode = "contacts" | "campaign";
+type BulkRow = {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  source: string;
+  projectCode: string;
+  result: string;
+  notes: string;
+  valid: boolean;
+  error: string;
+};
+
+function csvCells(line: string) {
+  const cells: string[] = [];
+  let current = "";
+  let quoted = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index]!;
+    if (char === '"' && quoted && line[index + 1] === '"') { current += '"'; index += 1; }
+    else if (char === '"') quoted = !quoted;
+    else if (char === "," && !quoted) { cells.push(current.trim()); current = ""; }
+    else current += char;
+  }
+  cells.push(current.trim());
+  return cells;
+}
+
+function parseBulkCsv(source: string, projectCodes: Set<string>): BulkRow[] {
+  const lines = source.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim());
+  if (lines.length < 2) return [];
+  const headers = csvCells(lines[0]!).map((value) => value.toLowerCase());
+  const value = (cells: string[], name: string) => cells[headers.indexOf(name)]?.trim() ?? "";
+  return lines.slice(1).map((line) => {
+    const cells = csvCells(line);
+    const row = {
+      firstName: value(cells, "firstname"), lastName: value(cells, "lastname"),
+      phone: value(cells, "phone"), email: value(cells, "email"),
+      source: value(cells, "source"), projectCode: value(cells, "projectcode"),
+      result: value(cells, "result"), notes: value(cells, "notes"),
+    };
+    const missing = ["firstName", "phone", "email", "source"].filter((key) => !row[key as keyof typeof row]);
+    const invalidProject = row.projectCode && !projectCodes.has(row.projectCode.toLowerCase());
+    const error = missing.length ? `Missing: ${missing.join(", ")}` : invalidProject ? `Unknown project: ${row.projectCode}` : "";
+    return { ...row, valid: !error, error };
+  });
+}
 const nextStatus: Partial<Record<LeadStatus, LeadStatus>> = {
   NEW: "CONTACTED",
   CONTACTED: "QUALIFIED",
@@ -46,6 +94,10 @@ export function CommercialOperatorWorkspace() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState<"success" | "error" | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkMode, setBulkMode] = useState<BulkMode>("contacts");
+  const [bulkRows, setBulkRows] = useState<BulkRow[]>([]);
+  const [bulkSummary, setBulkSummary] = useState("");
 
   const canOperate = has(user, "commercial:lead:view-own");
   const canViewAll = has(user, "commercial:lead:view-all");
@@ -96,10 +148,21 @@ export function CommercialOperatorWorkspace() {
   }, [selectedLead?.id]);
 
   useEffect(() => {
-    if (!projectId || !canOperate) { setUnits([]); return; }
+    let active = true;
+    setUnits([]);
+    setPlans([]);
+    setSelectedUnit(null);
+    if (!projectId || !canOperate) return () => { active = false; };
     const params = new URLSearchParams({ projectId, status: "AVAILABLE", page: "1", pageSize: "100", locale });
-    void clientApi<UnitPage>(`/api/backend/commercial/units?${params}`).then(({ items }) => setUnits(items)).catch(() => setNotice("error"));
-    if (canConfirm) void commercialApi.paymentPlans(projectId).then(setPlans).catch(() => setNotice("error"));
+    void clientApi<UnitPage>(`/api/backend/commercial/units?${params}`)
+      .then(({ items }) => { if (active) setUnits(items); })
+      .catch(() => { if (active) setNotice("error"); });
+    if (canConfirm) {
+      void commercialApi.paymentPlans(projectId)
+        .then((items) => { if (active) setPlans(items); })
+        .catch(() => { if (active) setNotice("error"); });
+    }
+    return () => { active = false; };
   }, [projectId, locale, canOperate, canConfirm]);
 
   const groupedLeads = useMemo(() => {
@@ -152,6 +215,40 @@ export function CommercialOperatorWorkspace() {
     });
   }
 
+  async function importBulkRows() {
+    const validRows = bulkRows.filter((row) => row.valid);
+    setBusy(true);
+    setNotice(null);
+    let imported = 0;
+    let failed = 0;
+    for (const row of validRows) {
+      try {
+        const customerResult = await commercialApi.createCustomer({ firstName: row.firstName, lastName: row.lastName || undefined, phone: row.phone, email: row.email });
+        if (!customerResult.customer) throw new Error("Customer response is unavailable");
+        const project = projects.find((item) => item.code.toLowerCase() === row.projectCode.toLowerCase());
+        const now = new Date().toISOString();
+        const lead = await commercialApi.createLead({
+          customerId: customerResult.customer.id,
+          projectId: project?.id,
+          source: row.source,
+          isExternalEnquiry: bulkMode === "campaign",
+          ...(bulkMode === "campaign" ? {
+            enquiryConsentGranted: true, enquiryConsentAt: now,
+            enquiryConsentChannel: "campaign-import", enquiryConsentPurpose: "Respond to submitted campaign enquiry",
+          } : {}),
+        });
+        if (bulkMode === "campaign" && (row.result || row.notes)) {
+          await commercialApi.logActivity(lead.id, { type: "NOTE", notes: [row.result && `Campaign result: ${row.result}`, row.notes].filter(Boolean).join(" — ") });
+        }
+        imported += 1;
+      } catch { failed += 1; }
+    }
+    setBusy(false);
+    setBulkSummary(t("commercial.bulkSummary").replace("{imported}", String(imported)).replace("{failed}", String(failed)));
+    setNotice(failed ? "error" : "success");
+    await reloadLeadList();
+  }
+
   async function chooseUnit(id: string) {
     if (!id) { setSelectedUnit(null); setPrices([]); return; }
     await action(async () => {
@@ -176,7 +273,18 @@ export function CommercialOperatorWorkspace() {
 
         {!canOperate ? <section className="create-panel"><p>{t("commercial.restricted")}</p></section> : (
           <>
-            <section className="commercial-journey-grid">
+            <section className="bulk-import-panel" id="commercial-operations">
+              <div><h2>{t("commercial.bulkTitle")}</h2><p>{t("commercial.bulkHint")}</p></div>
+              <button className="button button-secondary" type="button" onClick={() => setBulkOpen((open) => !open)}>{bulkOpen ? t("commercial.bulkClose") : t("commercial.bulkOpen")}</button>
+              {bulkOpen ? <div className="bulk-import-body">
+                <div className="segmented bulk-mode"><button type="button" aria-pressed={bulkMode === "contacts"} onClick={() => setBulkMode("contacts")}>{t("commercial.bulkContacts")}</button><button type="button" aria-pressed={bulkMode === "campaign"} onClick={() => setBulkMode("campaign")}>{t("commercial.bulkCampaign")}</button></div>
+                <label className="bulk-file"><span>{t("commercial.bulkFile")}</span><input type="file" accept=".csv,text/csv" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; void file.text().then((contents) => { setBulkRows(parseBulkCsv(contents, new Set(projects.map((item) => item.code.toLowerCase())))); setBulkSummary(""); }); }} /></label>
+                <p className="bulk-columns">{t("commercial.bulkColumns")}</p>
+                {bulkRows.length ? <><div className="bulk-preview" role="table" aria-label={t("commercial.bulkPreview")}><div role="row"><b>{t("commercial.firstName")}</b><b>{t("commercial.phone")}</b><b>{t("commercial.source")}</b><b>{t("commercial.project")}</b><b>{t("commercial.status")}</b></div>{bulkRows.slice(0, 20).map((row, index) => <div role="row" key={`${row.email}-${index}`} className={row.valid ? "" : "invalid"}><span>{row.firstName} {row.lastName}</span><span dir="ltr">{row.phone}</span><span>{row.source}</span><span>{row.projectCode || "—"}</span><span>{row.valid ? t("commercial.bulkValid") : row.error}</span></div>)}</div><footer><span>{t("commercial.bulkReady").replace("{valid}", String(bulkRows.filter((row) => row.valid).length)).replace("{total}", String(bulkRows.length))}</span><button className="button button-primary" type="button" disabled={busy || !bulkRows.some((row) => row.valid)} onClick={() => void importBulkRows()}>{busy ? t("commercial.creating") : t("commercial.bulkImport")}</button></footer></> : null}
+                {bulkSummary ? <p className="bulk-summary" role="status">{bulkSummary}</p> : null}
+              </div> : null}
+            </section>
+            <section className="commercial-journey-grid" id="commercial-customers">
               <form className="create-panel commercial-capture" onSubmit={captureLead}>
                 <h2>{t("commercial.newLead")}</h2>
                 <fieldset><legend>{t("commercial.customer")}</legend>
@@ -210,10 +318,11 @@ export function CommercialOperatorWorkspace() {
               </div>
             </section> : null}
 
+            <span className="commercial-anchor" id="commercial-transfer" aria-hidden="true" />
             {selectedLead ? <section className="commercial-work-grid">
               <section className="create-panel"><h2>{t("commercial.activities")}</h2><form className="activity-form" onSubmit={(event) => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); void action(async () => { const created = await commercialApi.logActivity(selectedLead.id, { type: data.get("type"), notes: data.get("notes") }); setActivities((rows) => [...rows, created]); form.reset(); }); }}><label><span>{t("commercial.activityType")}</span><select name="type">{activityTypes.map((type) => <option key={type} value={type}>{t(`commercial.activity.${type}` as "commercial.activity.CALL")}</option>)}</select></label><label><span>{t("commercial.notes")}</span><textarea name="notes" required maxLength={4000} /></label><button className="button button-primary" disabled={busy}>{t("commercial.logActivity")}</button></form><ol className="activity-list">{activities.map((item) => <li key={item.id}><strong>{t(`commercial.activity.${item.type}` as "commercial.activity.CALL")} · {item.actor.displayName}</strong><p>{item.notes}</p><time>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></li>)}</ol>{activities.length === 0 ? <p>{t("commercial.noActivities")}</p> : null}</section>
 
-              <section className="create-panel"><h2>{t("commercial.units")}</h2><label><span>{t("commercial.project")}</span><select value={projectId} onChange={(event) => { setProjectId(event.target.value); setSelectedUnit(null); }}><option value="">{t("commercial.selectProject")}</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.code} — {project.name}</option>)}</select></label><label><span>{t("commercial.availableOnly")}</span><select value={selectedUnit?.id ?? ""} onChange={(event) => void chooseUnit(event.target.value)}><option value="">{t("commercial.selectUnit")}</option>{units.map((unit) => <option key={unit.id} value={unit.id}>{unit.code} — {unit.number} · {unit.grossArea} m²</option>)}</select></label>{projectId && units.length === 0 ? <p>{t("commercial.noUnits")}</p> : null}
+              <section className="create-panel" id="commercial-units"><h2>{t("commercial.units")}</h2><label><span>{t("commercial.project")}</span><select value={projectId} onChange={(event) => { setProjectId(event.target.value); setSelectedUnit(null); }}><option value="">{t("commercial.selectProject")}</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.code} — {project.name}</option>)}</select></label><label><span>{t("commercial.availableOnly")}</span><select value={selectedUnit?.id ?? ""} onChange={(event) => void chooseUnit(event.target.value)}><option value="">{t("commercial.selectUnit")}</option>{units.map((unit) => <option key={unit.id} value={unit.id}>{unit.code} — {unit.number} · {unit.grossArea} m²</option>)}</select></label>{projectId && units.length === 0 ? <p>{t("commercial.noUnits")}</p> : null}
                 {selectedUnit ? <div className="unit-review"><h3>{selectedUnit.code} · {selectedUnit.unitType.name}</h3><p>{selectedUnit.building.name} / {selectedUnit.floor.name} · {selectedUnit.bedrooms} / {selectedUnit.bathrooms}</p><dl><div><dt>{t("commercial.publishedPrice")}</dt><dd>{activePrice ? formatMoney(activePrice.listPriceMinor, activePrice.currency, locale) : "—"}</dd></div><div><dt>{t("commercial.description")}</dt><dd>{selectedUnit.descriptions.unitType.value ?? "—"}{selectedUnit.descriptions.unitType.fallbackUsed ? <small> · {t("commercial.fallback")}</small> : null}</dd></div></dl>
                   {has(user, "commercial:hold:create") && selectedUnit.status === "AVAILABLE" ? <form className="hold-form" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); void action(async () => setHold(await commercialApi.createHold({ leadId: selectedLead.id, unitId: selectedUnit.id, holdExpiresAt: new Date(String(data.get("holdExpiresAt"))).toISOString() }))); }}><label><span>{t("commercial.holdExpiry")}</span><input name="holdExpiresAt" type="datetime-local" defaultValue={localDateTime()} min={localDateTime(0.1)} required /></label><button className="button button-primary" disabled={busy}>{t("commercial.hold")}</button></form> : null}
                 </div> : null}
@@ -225,7 +334,7 @@ export function CommercialOperatorWorkspace() {
           </>
         )}
       </main>
-      {canManage ? <section className="commercial-admin-boundary"><header><h2>{t("commercial.admin")}</h2><p>{t("commercial.adminHint")}</p></header><CommercialInventory /></section> : null}
+      {canManage ? <section className="commercial-admin-boundary" id="commercial-inventory-admin"><header><h2>{t("commercial.admin")}</h2><p>{t("commercial.adminHint")}</p></header><CommercialInventory /></section> : null}
     </>
   );
 }

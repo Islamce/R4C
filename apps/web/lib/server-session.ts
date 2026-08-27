@@ -16,11 +16,14 @@ const LEGACY_TENANT_COOKIE = "r4c_tenant_id";
 const USER_COOKIE = "r4c_session_user";
 export const LOCALE_COOKIE = "r4c_locale";
 
-const API_BASE_URL = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4000/api/v1"
-).replace(/\/$/, "");
+function apiBaseUrl() {
+  const configured = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL;
+  if (configured) return configured.replace(/\/$/, "");
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("API_URL is required in production");
+  }
+  return "http://localhost:4000/api/v1";
+}
 
 const refreshFlights = new Map<
   string,
@@ -134,7 +137,7 @@ export async function publicApiRequest<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${apiBaseUrl()}${path}`, {
     ...init,
     cache: "no-store",
   });

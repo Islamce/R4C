@@ -1,4 +1,4 @@
-name: Phase 7 production deployment verification
+name: Phase 7 isolated deployment rehearsal
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ on:
       - ".dockerignore"
       - ".env.production.example"
       - "scripts/generate-production-env.sh"
-      - "docs/deploy-hostinger-vps.md"
+      - "docs/shared-hosting-deployment-contract.md"
       - ".github/workflows/phase7-production-deployment.yml"
   push:
     branches:
@@ -25,7 +25,7 @@ permissions:
 
 jobs:
   verify:
-    name: production-deployment
+    name: isolated-deployment-rehearsal
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -47,7 +47,7 @@ jobs:
           pnpm typecheck
           pnpm build
 
-      - name: Generate isolated production test configuration
+      - name: Generate isolated Compose rehearsal configuration
         run: |
           chmod +x scripts/generate-production-env.sh
           ./scripts/generate-production-env.sh .env.production.example .env.production
@@ -65,7 +65,6 @@ jobs:
               'CADDYFILE=Caddyfile': 'CADDYFILE=Caddyfile.local',
               'NEXT_PUBLIC_API_URL=https://api.r4c.example.com/api/v1': 'NEXT_PUBLIC_API_URL=https://api.r4c.local/api/v1',
               'CORS_ORIGINS=https://r4c.example.com,https://alomran.r4c.example.com': 'CORS_ORIGINS=https://r4c.local,https://alomran.r4c.local',
-              'SEED_ADMIN_EMAIL=platform.admin@example.com': 'SEED_ADMIN_EMAIL=platform.admin@r4c.local',
               'SEED_UAT_ADMIN_EMAIL=uat.admin@alomran.example.com': 'SEED_UAT_ADMIN_EMAIL=uat.admin@alomran.local',
               'SEED_UAT_SUBMIT_EMAIL=uat.submit@alomran.example.com': 'SEED_UAT_SUBMIT_EMAIL=uat.submit@alomran.local',
           }
@@ -97,7 +96,7 @@ jobs:
           ! git grep -F "$JWT_ACCESS_SECRET"
           ! git grep -F "$POSTGRES_PASSWORD"
 
-      - name: Build every production image
+      - name: Build every release image for the isolated rehearsal
         run: |
           # Build the frozen BIM image for reproducibility, but do not start it.
           docker compose --env-file .env.production -f docker-compose.prod.yml --profile tools --profile bim build --pull

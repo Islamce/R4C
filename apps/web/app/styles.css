@@ -1,4 +1,5 @@
 @import "./foundation.css";
+@import "./kynox-brand.css";
 @import "./tenant-login.css";
 @import "./shell.css";
 @import "./projects.css";
@@ -6,3 +7,6 @@
 @import "./cost-control.css";
 @import "./progress.css";
 @import "./commercial.css";
+@import "./sales-pipeline.css";
+@import "./access-admin.css";
+@import "./shell-modern.css";

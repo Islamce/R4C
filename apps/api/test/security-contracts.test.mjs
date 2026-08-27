@@ -107,3 +107,10 @@ test("sensitive controllers protect every route with permissions", async () => {
     );
   }
 });
+
+test("production configuration fails closed instead of using development origins or seed identities", async () => {
+  const main = await readFile(new URL("../src/main.ts", import.meta.url), "utf8");
+  const seed = await readFile(new URL("../prisma/seed.ts", import.meta.url), "utf8");
+  assert.match(main, /CORS_ORIGINS is required in production/);
+  assert.match(seed, /SEED_TENANT_CODE, SEED_TENANT_NAME, and SEED_ADMIN_EMAIL are required in production/);
+});

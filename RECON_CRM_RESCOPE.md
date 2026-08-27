@@ -29,7 +29,7 @@ The commercial module does not directly import or reference BIM, IFC, WBS, or pr
 | BIM runtime dependencies | `ifcopenshell`, `trimesh`, FastAPI/Uvicorn worker; `three` in the web package; BullMQ/Redis and S3 path in the API. | `apps/bim-worker/pyproject.toml`; package manifests. |
 | Development Intelligence domains | WBS, progress, schedule/4D, cost/5D, materials/procurement, quality, HSE, commissioning, and handover modules/schema. | `apps/api/src/`; Prisma schema; product blueprint §3. |
 | User interface and verification | `BimViewer`, `ProgressWorkspace`, WBS/progress styling and BIM/progress browser journeys. | `apps/web/components/`, `apps/web/test/`. |
-| Documentation and deployment | BIM processing/viewer documentation, the current VPS-oriented deployment runbook, and construction-domain test/runbook material. | `docs/`. |
+| Documentation and deployment | Historical BIM/Compose/VPS reconnaissance plus current shared-hosting documentation and construction-domain test/runbook material. | `docs/`. |
 
 The repository worktree is approximately **3.6 MiB**. Its packed reachable Git object store is approximately **950 KiB**. The largest reachable historical blob is **189,050 bytes** (`pnpm-lock.yaml`); the largest BIM-related source blob is approximately **44 KiB**. No significant committed binary, IFC, or generated-tile history bloat was found. **A history rewrite is not proposed.**
 
@@ -37,7 +37,7 @@ The repository worktree is approximately **3.6 MiB**. Its packed reachable Git o
 
 GitHub reports **no deployment records** for the repository. Recent workflow runs on `main` at the checked commit succeeded, including CI, seed, security, authentication/session, and production-deployment verification workflows. Those runs are repository/CI evidence only; they do not prove a live runtime, deployment location, cost, or production readiness.
 
-The checked-in runbook targets a self-managed VPS for the former multi-service construction stack. It is not evidence of a current live deployment or of current spend. No approved host access or current billing/runtime configuration was available during this reconnaissance.
+At the time of this historical reconnaissance, the checked-in runbook targeted a self-managed VPS for the former multi-service construction stack. That obsolete runbook was later removed; the current authoritative contract is `docs/shared-hosting-deployment-contract.md` and does not require a VPS.
 
 ## 4. GAPS and vault findings
 
@@ -59,5 +59,5 @@ The authority-checked Obsidian vault already uses project-scoped records such as
 - `apps/api/src/commercial/`
 - `apps/bim-worker/pyproject.toml`
 - `apps/api/src/app.module.ts`
-- `docs/deploy-hostinger-vps.md`
+- `docs/shared-hosting-deployment-contract.md` (successor to the removed historical VPS runbook)
 - `GAPS/w2-r4c/G2_VIABILITY.md`

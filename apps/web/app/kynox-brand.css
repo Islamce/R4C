@@ -1,0 +1,29 @@
+:root {
+  --blueprint-navy: #102f43;
+  --survey-blue: #2b759b;
+  --concrete-mist: #edf3f5;
+  --steel: #607887;
+  --permit-green: #16795c;
+  --signal-amber: #c47b22;
+  --kynox-cyan: #5cc5d1;
+  --kynox-night: #071f2d;
+  font-family: "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+.brand-lockup strong {
+  font-family: "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+[dir="rtl"] {
+  font-family: "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+  letter-spacing: 0;
+}
+
+.nav-icon {
+  flex: 0 0 auto;
+  color: var(--kynox-cyan);
+}
+

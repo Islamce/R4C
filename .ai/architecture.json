@@ -1,18 +1,22 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "51e55c176e199fb780587ba15ba9746f1ac28e9426958553e923d5a0660347e4",
+    "bodyDigest": "5b1c04d2ba08052fd57c8086a99ac5c14aa76bf407ecd8c04fcc5f5f57aedbd3",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "c32f3819ec2d3b55434f02f53918f86032e8dd287887658cdcf42904c3b6da05",
+    "inputDigest": "909eb793b70024397d0abe3c96f16d332d892fdc1049077fc7fbefd4bf5a1e66",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "dependencies": {
     "declaredEdges": [
+      {
+        "from": "r4c-runtime-entry",
+        "to": "r4c-web"
+      },
       {
         "from": "r4c-web",
         "to": "r4c-contracts"
@@ -30,6 +34,10 @@
     ],
     "edges": [
       {
+        "from": "r4c-runtime-entry",
+        "to": "r4c-web"
+      },
+      {
         "from": "r4c-web",
         "to": "r4c-contracts"
       }
@@ -41,13 +49,13 @@
     "environments": [
       "production"
     ],
-    "note": "Caddy reverse proxy configuration lives in deploy/caddy. Deployment is described in the phase7-production-deployment workflow."
+    "note": "Caddy reverse proxy configuration is retained for the isolated Compose rehearsal. The authoritative hosted contract is docs/shared-hosting-deployment-contract.md."
   },
   "drift": {
     "counts": {
       "error": 0,
-      "info": 0,
-      "warning": 1
+      "info": 1,
+      "warning": 0
     },
     "detail": ".ai/drift.json",
     "hasErrors": false
@@ -84,13 +92,13 @@
   "modules": [
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 95 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 99 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
       "dependsOn": [],
       "discovery": {
-        "codeFileCount": 95,
+        "codeFileCount": 99,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -100,7 +108,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 99
+        "sourceFileCount": 103
       },
       "id": "r4c-api",
       "ownedEntities": [
@@ -248,25 +256,60 @@
     },
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 2 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 1 discovered code file(s).",
+      "declared": true,
+      "declaredConfidence": "verified",
+      "dependedOnBy": [],
+      "dependsOn": [
+        "r4c-web"
+      ],
+      "discovery": {
+        "codeFileCount": 1,
+        "discovered": true,
+        "entryPoints": [],
+        "languages": [
+          "javascript",
+          "json",
+          "markdown",
+          "yaml"
+        ],
+        "parseErrors": [],
+        "publicSymbols": [],
+        "sourceFileCount": 83
+      },
+      "id": "r4c-runtime-entry",
+      "ownedEntities": [],
+      "owner": "DevOps",
+      "path": ".",
+      "publicEntryPoints": [
+        "hostinger-web-entry.cjs",
+        "package.json"
+      ],
+      "purpose": "Orchestrate the monorepo and provide the managed-hosting web process entry point.",
+      "sourceManifest": "kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "confidenceReason": "Declared and corroborated by 3 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
       "dependsOn": [],
       "discovery": {
-        "codeFileCount": 2,
+        "codeFileCount": 3,
         "discovered": true,
         "entryPoints": [
           "scripts/generate-production-env.sh",
           "scripts/local-setup.sh"
         ],
         "languages": [
+          "javascript",
           "json",
           "shell"
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 3
+        "sourceFileCount": 4
       },
       "id": "r4c-scripts",
       "ownedEntities": [],
@@ -280,15 +323,17 @@
     },
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 60 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 62 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
-      "dependedOnBy": [],
+      "dependedOnBy": [
+        "r4c-runtime-entry"
+      ],
       "dependsOn": [
         "r4c-contracts"
       ],
       "discovery": {
-        "codeFileCount": 60,
+        "codeFileCount": 62,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -298,7 +343,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 63
+        "sourceFileCount": 65
       },
       "id": "r4c-web",
       "ownedEntities": [],
@@ -309,31 +354,6 @@
       ],
       "purpose": "Present the R4C platform to users, including commercial inventory, the IFC model viewer and executive dashboards.",
       "sourceManifest": "apps/web/kaaf.module.json"
-    },
-    {
-      "confidence": "derived",
-      "confidenceReason": "Discovered from source; no manifest declares this module.",
-      "declared": false,
-      "dependedOnBy": [],
-      "dependsOn": [],
-      "discovery": {
-        "codeFileCount": 1,
-        "discovered": true,
-        "entryPoints": [],
-        "languages": [
-          "javascript"
-        ],
-        "parseErrors": [],
-        "publicSymbols": [],
-        "sourceFileCount": 1
-      },
-      "id": "root",
-      "ownedEntities": [],
-      "owner": "unknown",
-      "path": ".",
-      "publicEntryPoints": [],
-      "purpose": "Not declared — discovered from source. Add a kaaf.module.json to describe it.",
-      "sourceManifest": null
     }
   ],
   "permissions": [

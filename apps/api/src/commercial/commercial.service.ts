@@ -32,6 +32,7 @@ import {
   UpdatePhaseDto,
   UpdateUnitDto,
   UpdateUnitTypeDto,
+  WithdrawLeadConsentDto,
 } from "./commercial.dto";
 
 @Injectable()
@@ -778,12 +779,41 @@ export class CommercialService {
     const current = await this.requireLead(user.tenantId, id);
     this.assertLeadOwnerOrManager(user, current.assignedToId);
     this.assertLeadTransition(current.status, next);
+    // R4C-R17: WON/LOST are terminal Lead outcomes reached only from RESERVED, which is the
+    // one Lead status that always carries a live Unit hold/reservation. Advancing a Lead out of
+    // RESERVED must resolve that Unit's state in the same transaction, or a LOST deal permanently
+    // strands the Unit at RESERVED (never released to sell again) and a WON deal never confirms
+    // the Unit as sold. This does not implement general Lead<->Unit synchronization (still an
+    // open C04 decision for earlier statuses) -- it only closes the concrete Unit-stranding defect
+    // on the two terminal transitions that already have a concrete, unambiguous target state.
+    const unitResolution =
+      current.status === LeadStatus.RESERVED && next === LeadStatus.WON
+        ? { from: UnitStatus.RESERVED, to: UnitStatus.SOLD }
+        : current.status === LeadStatus.RESERVED && next === LeadStatus.LOST
+        ? { from: UnitStatus.RESERVED, to: UnitStatus.AVAILABLE }
+        : null;
+    if (unitResolution && !current.unitId) {
+      throw new ConflictException("Reserved Lead has no linked Unit");
+    }
     return this.prisma.$transaction(async (tx) => {
       const changed = await tx.lead.updateMany({
         where: { id, tenantId: user.tenantId, status: current.status },
         data: { status: next },
       });
       if (changed.count !== 1) throw new ConflictException("Lead state changed concurrently");
+      if (unitResolution && current.unitId) {
+        const unitChanged = await tx.unit.updateMany({
+          where: { id: current.unitId, tenantId: user.tenantId, status: unitResolution.from },
+          data: { status: unitResolution.to },
+        });
+        if (unitChanged.count !== 1) throw new ConflictException("Unit state changed concurrently");
+        await this.audit(tx, user, "COMMERCIAL_UNIT_STATUS_RESOLVED_BY_LEAD_OUTCOME", "Unit", current.unitId, {
+          leadId: id,
+          leadOutcome: next,
+          from: unitResolution.from,
+          to: unitResolution.to,
+        });
+      }
       const lead = await tx.lead.findUniqueOrThrow({ where: { id }, include: this.leadInclude() });
       await this.audit(tx, user, "COMMERCIAL_LEAD_STATUS_ADVANCED", "Lead", id, { from: current.status, to: next });
       return this.leadView(lead);
@@ -803,6 +833,39 @@ export class CommercialService {
       if (changed.count !== 1) throw new ConflictException("Lead state changed concurrently");
       const lead = await tx.lead.findUniqueOrThrow({ where: { id }, include: this.leadInclude() });
       await this.audit(tx, user, "COMMERCIAL_LEAD_DISQUALIFIED", "Lead", id, { from: current.status, to: LeadStatus.DISQUALIFIED });
+      return this.leadView(lead);
+    });
+  }
+
+  // R4C-R16: consent capture had no withdrawal path, but Saudi PDPL-aligned handling requires
+  // a data subject to be able to withdraw consent at any time and have that withdrawal recorded
+  // as auditable fact, not a silent field flip. This clears the granted flag and the now-invalid
+  // metadata while keeping the original grant's audit trail (the audit log itself is append-only
+  // and unaffected) and recording who withdrew it, when, and why.
+  async withdrawLeadConsent(user: AuthContext, id: string, command: WithdrawLeadConsentDto) {
+    const current = await this.requireLead(user.tenantId, id);
+    this.assertLeadOwnerOrManager(user, current.assignedToId);
+    const isMarketing = command.consentType === "marketing";
+    const grantedNow = isMarketing ? current.marketingConsentGranted : current.enquiryConsentGranted;
+    if (!grantedNow) throw new ConflictException(`${command.consentType} consent is not currently granted for this Lead`);
+    const data = isMarketing
+      ? { marketingConsentGranted: false, marketingConsentAt: null, marketingConsentChannel: null, marketingConsentPurpose: null }
+      : { enquiryConsentGranted: false, enquiryConsentAt: null, enquiryConsentChannel: null, enquiryConsentPurpose: null };
+    return this.prisma.$transaction(async (tx) => {
+      const changed = await tx.lead.updateMany({
+        where: {
+          id,
+          tenantId: user.tenantId,
+          ...(isMarketing ? { marketingConsentGranted: true } : { enquiryConsentGranted: true }),
+        },
+        data,
+      });
+      if (changed.count !== 1) throw new ConflictException("Lead state changed concurrently");
+      const lead = await tx.lead.findUniqueOrThrow({ where: { id }, include: this.leadInclude() });
+      await this.audit(tx, user, "COMMERCIAL_LEAD_CONSENT_WITHDRAWN", "Lead", id, {
+        consentType: command.consentType,
+        reason: command.reason ?? null,
+      });
       return this.leadView(lead);
     });
   }

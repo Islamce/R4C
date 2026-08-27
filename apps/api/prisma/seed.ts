@@ -118,6 +118,10 @@ function isReadOnlyPermission(code: string) {
 }
 
 async function main() {
+  const production = process.env.NODE_ENV === "production";
+  if (production && (!process.env.SEED_TENANT_CODE || !process.env.SEED_TENANT_NAME || !process.env.SEED_ADMIN_EMAIL)) {
+    throw new Error("SEED_TENANT_CODE, SEED_TENANT_NAME, and SEED_ADMIN_EMAIL are required in production");
+  }
   const tenantCode = (process.env.SEED_TENANT_CODE ?? "R4C").trim();
   const tenantName = (process.env.SEED_TENANT_NAME ?? "R4C Bootstrap Tenant").trim();
   const adminEmail = (process.env.SEED_ADMIN_EMAIL ?? "admin@r4c.local")
@@ -256,7 +260,7 @@ async function main() {
       addedRolePermissionLinks,
       removedRolePermissionLinks,
     };
-  });
+  }, { timeout: 60_000 });
 
   const permissionUpdates = derived.codes.filter((code) => {
     const existing = existingPermissionByCode.get(code);
