@@ -59,6 +59,9 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
 
   const suffix = Date.now().toString(36);
   const fixture = await createFixture(prisma, suffix, { withUnit: true });
+  const publicTenantCode = fixture.tenant.code.toUpperCase();
+  await prisma.tenant.update({ where: { id: fixture.tenant.id }, data: { code: publicTenantCode } });
+  await prisma.project.update({ where: { id: fixture.project.id }, data: { status: "ACTIVE" } });
   const [managerRole, agentRole] = await Promise.all([
     prisma.role.findFirstOrThrow({ where: { tenantId: fixture.tenant.id, code: "MANAGER" } }),
     prisma.role.findFirstOrThrow({ where: { tenantId: fixture.tenant.id, code: "AGENT" } }),
@@ -76,6 +79,7 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
     "commercial:transfer:view",
     "commercial:transfer:review",
     "commercial:dispatch:create",
+    "commercial:lead:view-own",
   ];
   await prisma.permission.createMany({ data: c04Permissions.map((code) => ({ code, name: code })), skipDuplicates: true });
   const permissionRows = await prisma.permission.findMany({ where: { code: { in: c04Permissions } } });
@@ -85,7 +89,7 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
   });
   await prisma.rolePermission.createMany({
     data: permissionRows
-      .filter((permission) => ["commercial:read", "commercial:price:view-published", "commercial:payment-plan:view", "commercial:hold:create", "commercial:hold:release", "commercial:task:view", "commercial:transfer:view", "commercial:dispatch:create"].includes(permission.code))
+      .filter((permission) => ["commercial:read", "commercial:price:view-published", "commercial:payment-plan:view", "commercial:hold:create", "commercial:hold:release", "commercial:task:view", "commercial:transfer:view", "commercial:dispatch:create", "commercial:lead:view-own"].includes(permission.code))
       .map((permission) => ({ roleId: agentRole.id, permissionId: permission.id })),
     skipDuplicates: true,
   });
@@ -135,6 +139,28 @@ test("C04 real HTTP and integration boundaries enforce authorized i18n, Hold, Re
   const managerToken = managerLogin.body.accessToken;
   const agentToken = agentLogin.body.accessToken;
   const readerToken = readerLogin.body.accessToken;
+
+  const publicPortfolio = await api.request(`/public/commercial/portfolio?tenantCode=${publicTenantCode}`);
+  expectStatus(publicPortfolio, 200, api);
+  assert.ok(publicPortfolio.body.projects.some((project) => project.id === fixture.project.id));
+  const invalidPublicPhone = await api.request("/public/commercial/phone/request", { method: "POST", body: { tenantCode: publicTenantCode, phone: "123" } });
+  assert.equal(invalidPublicPhone.response.status, 400);
+  const publicPhone = `+96655${String(Date.now()).slice(-7)}`;
+  const requestedVerification = await api.request("/public/commercial/phone/request", { method: "POST", body: { tenantCode: publicTenantCode, phone: publicPhone } });
+  expectStatus(requestedVerification, 202, api);
+  assert.match(requestedVerification.body.uatCode, /^\d{6}$/);
+  const incorrectVerification = await api.request("/public/commercial/phone/verify", { method: "POST", body: { tenantCode: publicTenantCode, verificationId: requestedVerification.body.verificationId, code: requestedVerification.body.uatCode === "000000" ? "000001" : "000000" } });
+  assert.equal(incorrectVerification.response.status, 401);
+  const verifiedPhone = await api.request("/public/commercial/phone/verify", { method: "POST", body: { tenantCode: publicTenantCode, verificationId: requestedVerification.body.verificationId, code: requestedVerification.body.uatCode } });
+  expectStatus(verifiedPhone, 201, api);
+  const publicInterest = await api.request("/public/commercial/interests", { method: "POST", body: { tenantCode: publicTenantCode, verificationId: requestedVerification.body.verificationId, firstName: "عميل", lastName: "البوابة", phone: publicPhone, email: `portal-${suffix}@example.sa`, projectId: fixture.project.id, unitId: fixture.unit.id, enquiryConsentGranted: true, marketingConsentGranted: true } });
+  expectStatus(publicInterest, 201, api);
+  const storedPublicLead = await prisma.lead.findUniqueOrThrow({ where: { id: publicInterest.body.reference }, include: { customer: true } });
+  assert.equal(storedPublicLead.isExternalEnquiry, true);
+  assert.equal(storedPublicLead.enquiryConsentGranted, true);
+  assert.equal(storedPublicLead.customer.phoneNormalized, publicPhone);
+  const reusedVerification = await api.request("/public/commercial/interests", { method: "POST", body: { tenantCode: publicTenantCode, verificationId: requestedVerification.body.verificationId, firstName: "عميل", phone: publicPhone, email: `portal-${suffix}@example.sa`, projectId: fixture.project.id, enquiryConsentGranted: true } });
+  assert.equal(reusedVerification.response.status, 401);
 
   const assignedTask = await api.request("/commercial/tasks", {
     token: managerToken,

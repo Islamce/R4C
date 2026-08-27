@@ -42,7 +42,8 @@
     "sales-task",
     "transfer-case",
     "transfer-document",
-    "commercial-dispatch"
+    "commercial-dispatch",
+    "phone-verification"
   ],
   "owner": "Backend",
   "permissions": [

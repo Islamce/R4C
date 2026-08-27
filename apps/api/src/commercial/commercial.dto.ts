@@ -354,3 +354,31 @@ export class CreateCommercialDispatchDto {
   @IsString() @Length(2, 10000) message!: string;
   @IsArray() @ArrayMinSize(1) @IsUUID("4", { each: true }) assetIds!: string[];
 }
+
+export class PublicPortfolioQueryDto {
+  @IsString() @Length(2, 40) tenantCode!: string;
+}
+
+export class RequestPhoneVerificationDto {
+  @IsString() @Length(2, 40) tenantCode!: string;
+  @IsString() @Length(9, 32) phone!: string;
+}
+
+export class VerifyPhoneDto {
+  @IsString() @Length(2, 40) tenantCode!: string;
+  @IsUUID() verificationId!: string;
+  @Matches(/^\d{6}$/) code!: string;
+}
+
+export class SubmitPublicInterestDto {
+  @IsString() @Length(2, 40) tenantCode!: string;
+  @IsUUID() verificationId!: string;
+  @IsString() @Length(1, 160) firstName!: string;
+  @IsOptional() @IsString() @Length(1, 160) lastName?: string;
+  @IsString() @Length(9, 32) phone!: string;
+  @IsEmail() @Length(3, 320) email!: string;
+  @IsUUID() projectId!: string;
+  @IsOptional() @IsUUID() unitId?: string;
+  @IsBoolean() enquiryConsentGranted!: boolean;
+  @IsOptional() @IsBoolean() marketingConsentGranted?: boolean;
+}

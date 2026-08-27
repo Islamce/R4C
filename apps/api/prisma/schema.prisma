@@ -439,7 +439,25 @@ model Tenant {
   transferCases      TransferCase[]
   transferDocuments  TransferDocument[]
   commercialDispatches CommercialDispatch[]
+  phoneVerifications PhoneVerification[]
   passwordResetTokens PasswordResetToken[]
+}
+
+model PhoneVerification {
+  id              String   @id @default(uuid())
+  tenantId        String
+  phoneNormalized String   @db.VarChar(32)
+  codeHash        String   @db.VarChar(128)
+  expiresAt       DateTime
+  attempts        Int      @default(0)
+  verifiedAt      DateTime?
+  consumedAt      DateTime?
+  createdAt       DateTime @default(now())
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([id, tenantId])
+  @@index([tenantId, phoneNormalized, createdAt])
+  @@index([expiresAt])
 }
 
 model User {

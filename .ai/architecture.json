@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "6001be8a07c26b53a1f6830468bd88b58238c6749d53564588ca1e3a12020091",
+    "bodyDigest": "b14bb11dfc79bd19fd4db306f7be49c1e1f3e9548e25d1c1d94548513dd5b4a3",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "96dc439626aa01975907e63a36c63916ff015083cb6405e0609f89680bbc8fa7",
+    "inputDigest": "4b98a1351e863ce9c3b9576d4d1f52be05ef29f1be4a68bd4559ce6d72940f31",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -92,13 +92,13 @@
   "modules": [
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 99 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 101 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
       "dependsOn": [],
       "discovery": {
-        "codeFileCount": 99,
+        "codeFileCount": 101,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -108,7 +108,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 103
+        "sourceFileCount": 105
       },
       "id": "r4c-api",
       "ownedEntities": [
@@ -122,6 +122,7 @@
         "lead",
         "password-reset-token",
         "payment-plan",
+        "phone-verification",
         "progress-record",
         "project",
         "reservation",
@@ -327,7 +328,7 @@
     },
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 62 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 66 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [
@@ -337,7 +338,7 @@
         "r4c-contracts"
       ],
       "discovery": {
-        "codeFileCount": 62,
+        "codeFileCount": 66,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -347,7 +348,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 65
+        "sourceFileCount": 69
       },
       "id": "r4c-web",
       "ownedEntities": [],

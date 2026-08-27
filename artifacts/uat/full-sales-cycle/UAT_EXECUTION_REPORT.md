@@ -20,6 +20,7 @@ Release branch: `codex/restore-approved-product`
 - Confirmed reservation followed by a won sale and sold-unit status.
 - Persisted manager-assigned sales task with role-scoped agent visibility.
 - Persisted title-transfer case with nine governed document requirements.
+- Public customer-portal enquiry with a verified Saudi mobile number, selected project and optional available unit.
 
 ## Real role and authorization checks
 
@@ -58,6 +59,7 @@ Release branch: `codex/restore-approved-product`
 - Arabic translations and English fallback behavior are verified.
 - Task assignee visibility is separated from manager-only team enumeration.
 - Transfer readiness is calculated from persisted document states and cannot be bypassed.
+- Invalid Saudi numbers and incorrect OTP codes are rejected; a verified code is single-use and the resulting external lead retains enquiry and marketing consent separately.
 
 ## Browser/UI evidence
 
@@ -72,6 +74,7 @@ Release branch: `codex/restore-approved-product`
 - CRM/customer/tenant real HTTP suite: 2/2 PASS.
 - Full sale, task assignment and transfer approval real HTTP suite: 1/1 PASS.
 - Commercial web workflow contracts: 10/10 PASS.
+- Customer portal UI/security contracts: 3/3 PASS.
 - Repository TypeScript checks: PASS.
 - API and Next.js optimized production build: PASS.
 - KAAF generated context and all architecture validators: PASS (one informational documented dependency, no warnings or errors).
