@@ -8,7 +8,7 @@ import { clientApi, ClientApiError } from "../lib/client-api";
 import type { BrowserSessionUser } from "../lib/types";
 import { useI18n } from "./I18nProvider";
 
-export function AppShell({ children, preview = false }: { children: ReactNode; preview?: boolean }) {
+export function AppShell({ children, preview = false, initialUser = null }: { children: ReactNode; preview?: boolean; initialUser?: BrowserSessionUser | null }) {
   const { t, locale } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
@@ -19,7 +19,7 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
     role: "ADMIN",
     permissions: ["commercial:manage", "commercial:read"],
     tenant: { code: "KYNOX", name: "Kynox Real Estate" },
-  } : null);
+  } : initialUser);
   const [sessionError, setSessionError] = useState(false);
   const [working, setWorking] = useState(false);
 
