@@ -71,6 +71,15 @@ export function AppShell({ children, preview = false }: { children: ReactNode; p
   const projectsActive = pathname.startsWith("/projects");
   const commercialActive = pathname.startsWith("/commercial");
 
+  if (!preview && !user && !sessionError) {
+    return (
+      <main className="session-gate" dir={locale === "ar" ? "rtl" : "ltr"} aria-busy="true" aria-live="polite">
+        <Buildings size={36} weight="duotone" aria-hidden="true" />
+        <strong>{t("shell.sessionLoading")}</strong>
+      </main>
+    );
+  }
+
   return (
     <div className="app-shell" dir={locale === "ar" ? "rtl" : "ltr"}>
       <aside className="app-sidebar">

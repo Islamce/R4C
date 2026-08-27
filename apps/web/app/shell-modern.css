@@ -24,6 +24,8 @@
 .workspace-context > div { min-width: 0; display: grid; gap: .12rem; }
 .workspace-context strong { overflow: hidden; color: #fff; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
 .modern-session-card { display: flex; align-items: center; gap: .55rem; border-inline-start: 1px solid #315569; padding-inline-start: 1rem; color: #5dd5e1; }
+.session-gate { min-height: 100dvh; display: grid; place-content: center; justify-items: center; gap: .75rem; color: #dcebf0; background: #071f2d; }
+.session-gate svg { color: #5dd5e1; }
 .role-chip { display: inline-flex; align-items: center; gap: .25rem; border: 1px solid #315569; border-radius: 999px; padding: .28rem .45rem; color: #bfeaf0; background: #12384b; font-size: .55rem; font-weight: 800; }
 .app-header .session-identity strong,
 .app-header .header-kicker { color: #fff; }

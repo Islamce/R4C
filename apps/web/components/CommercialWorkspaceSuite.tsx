@@ -30,6 +30,12 @@ const unitStatusLabel = (ar: boolean, status: string) => ({
   Interest: localize(ar, "Interest", "مسجل عليها اهتمام"),
   Held: localize(ar, "Held", "حجز مؤقت"),
 }[status] ?? status);
+const unitTypeLabel = (ar: boolean, type: string) => ({
+  Studio: localize(ar, "Studio", "استوديو"),
+  "1BR": localize(ar, "1 bedroom", "غرفة واحدة"),
+  "2BR": localize(ar, "2 bedrooms", "غرفتان"),
+  "3BR": localize(ar, "3 bedrooms", "ثلاث غرف"),
+}[type] ?? type);
 const buyerDisplayName = (ar: boolean, name: string) => ({
   "Ahmed Al Harbi": localize(ar, "Ahmed Al Harbi", "أحمد الحربي"),
   "Noura Al Qahtani": localize(ar, "Noura Al Qahtani", "نورة القحطاني"),
@@ -948,7 +954,7 @@ function UnitDashboard({
                         : ""
                     }
                   >
-                    {i === 6 ? unitStatusLabel(ar, status) : x}
+                    {i === 6 ? unitStatusLabel(ar, status) : i === 1 ? unitTypeLabel(ar, x) : x}
                   </span>
                 ))}
               </button>
@@ -984,7 +990,7 @@ function UnitDashboard({
           </div>
           <div
             className="floor-map"
-            aria-label={`${building} floor ${floor} unit status controls`}
+            aria-label={localize(ar, `${building} floor ${floor} unit status controls`, `حالات وحدات ${building === "Building A" ? "المبنى أ" : "المبنى ب"} في الدور ${floor}`)}
           >
             {floorUnits.map(({ row: u, status }) => (
               <button
@@ -1186,9 +1192,10 @@ function UnitDashboard({
               {localize(ar, "Notes", "الملاحظات")}
               <textarea defaultValue={localize(ar, "Interested in park-view units on high floors.", "مهتم بوحدات الأدوار العليا المطلة على الحديقة.")} />
             </label>
-            <label>
+            <label className="localized-file-control">
               {localize(ar, "Evidence attachment", "مرفق الإثبات")}
-              <input type="file" />
+              <span>{localize(ar, "Choose evidence file", "اختيار ملف الإثبات")}</span>
+              <input type="file" aria-label={localize(ar, "Choose evidence file", "اختيار ملف الإثبات")} />
             </label>
             <label className="check-row">
               <input type="checkbox" required defaultChecked />

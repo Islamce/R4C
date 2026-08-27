@@ -89,3 +89,18 @@ Verdict: **CONDITIONAL FAIL — production is healthy, but operational and visua
 ## Evidence files
 
 Screenshots `01`–`16` are stored beside this report. Production screenshots cover session handling, login/recovery and preview isolation. Local exact-SHA screenshots cover the detailed operational UI states.
+
+## Local remediation rerun — 2026-08-27
+
+The release-blocking visual defects identified above were corrected locally and the same high-risk states were rerun against `/design-preview` in Arabic.
+
+| Area | Before | Rerun result |
+| --- | --- | --- |
+| Interest dialog, 390×844 after deep scroll | Opened above the viewport; title was clipped/low contrast | PASS — bounding box `top 8`, `bottom 836`, viewport `844`; internal scrolling retained and Arabic title uses `rgb(16, 47, 67)` on white. |
+| Reservation and transfer-review overlays | Fixed overlays inherited the page position from animated/perspective ancestors | PASS — overlay now anchors to viewport; transfer review measured `top 16`, `bottom 884` in a 900px viewport. |
+| Customer full-file dialog | Header clipped after opening from scrolled ledger | PASS — measured `top 16`, `bottom 560.75` in a 900px viewport. |
+| Sales Operations hierarchy | Hero dominated the first viewport | PASS — compact hero is 136px, 15% of a 900px viewport. |
+| Missing/expired session | Protected shell could render before session verification | FIXED IN SOURCE — authenticated children are gated behind the session check; production verification remains pending deployment. |
+| Arabic unit/file controls | Raw bedroom codes, English floor ARIA name and native chooser chrome | PASS IN PREVIEW — localized bedroom display, Arabic floor-control name and localized file-selection control. |
+
+Automated rerun: TypeScript PASS, commercial UI contracts 9/9 PASS, production build PASS. Remaining release gates are unchanged: authenticated production mutations, API-backed persistence for preview-only capabilities, focus trap/return automation, and role-specific production UAT.
