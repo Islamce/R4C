@@ -82,7 +82,7 @@ test("production web configuration cannot fall back to localhost or a .local ten
 });
 
 test("authenticated routes share the KYNOX shell and commercial tools use real navigation targets", () => {
-  for (const target of ["/projects", "/commercial?view=customers#commercial-customers", "/commercial?view=units#commercial-units", "/commercial?view=transfer#commercial-transfer", "/commercial?view=operations#commercial-operations"]) {
+  for (const target of ["/projects", "/commercial?view=customers#commercial-customers", "/commercial?view=units#commercial-units", "/commercial?view=transfer#commercial-transfer", "/commercial?view=operations#commercial-operations", "/progress", "/cost-control"]) {
     assert.match(shell, new RegExp(target.replace(/[?]/g, "\\?")));
   }
   assert.match(shell, /className="kynox-tool-link" href=\{href\}/);
@@ -104,4 +104,9 @@ test("commercial UAT safeguards localization, dialogs, contrast, and mobile cont
   assert.match(salesPipelineCss, /\.commercial-suite \.commercial-operator \.page-heading h1 \{ color: #fff; \}/);
   assert.match(shellModern, /\.app-shell \{ width: 100%; max-width: 100%; grid-template-columns: minmax\(0, 1fr\); overflow-x: clip; \}/);
   assert.match(shellModern, /\.app-nav \{ min-width: 0;[^}]+overflow-x: auto;/);
+  assert.match(suite, /floor-12-layout-8-units\.png/);
+  for (const unit of ["A-1201", "A-1202", "A-1203", "A-1204", "A-1205", "A-1206", "A-1207", "A-1208"]) assert.match(suite, new RegExp(unit));
+  assert.match(suite, /8 وحدات/);
+  assert.match(pipeline, /canonicalProjectName\(externalReservation\.project\)/);
+  assert.doesNotMatch(pipeline, /PERFORMANCE & ALERTING|SALES TEAM CONTROL|PROJECT CONTENT HUB|78\.0M ر\.س/);
 });

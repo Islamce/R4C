@@ -55,6 +55,7 @@ const transferBlockerLabel = (ar: boolean, blocker: string) => ({
   "Buyer IBAN": localize(ar, "Buyer IBAN", "رقم آيبان المشتري"),
   "—": "—",
 }[blocker] ?? blocker);
+const inventoryValueLabel = (ar: boolean, value: string) => localize(ar, `SAR ${value}`, `${value.replace(/M$/, " مليون")} ر.س`);
 
 type Tab = "pipeline" | "portfolio" | "units" | "transfer" | "operations";
 type ProjectAssets = {
@@ -155,6 +156,8 @@ const units: UnitDashboardRow[] = [
   ["A-1204", "3BR", "12", "162.3", "142.1", "1,980,000", "Interest"],
   ["A-1205", "Studio", "12", "45.6", "40.1", "620,000", "Available"],
   ["A-1206", "2BR", "12", "123.1", "108.7", "1,470,000", "Held"],
+  ["A-1207", "1BR", "12", "92.4", "81.2", "1,090,000", "Available"],
+  ["A-1208", "3BR", "12", "171.2", "149.8", "2,120,000", "Reserved"],
 ];
 
 function unitsFor(building: string, floor: number): UnitDashboardRow[] {
@@ -166,6 +169,8 @@ function unitsFor(building: string, floor: number): UnitDashboardRow[] {
     "Interest",
     "Available",
     "Held",
+    "Available",
+    "Reserved",
   ];
   return units.map((unit, index) => {
     const price =
@@ -185,12 +190,14 @@ function unitsFor(building: string, floor: number): UnitDashboardRow[] {
 }
 
 const floorHotspots = [
-  { left: "23%", top: "29%" },
-  { left: "44%", top: "30%" },
-  { left: "77%", top: "30%" },
-  { left: "23%", top: "70%" },
-  { left: "47%", top: "72%" },
-  { left: "77%", top: "70%" },
+  { left: "19%", top: "31%" },
+  { left: "39%", top: "32%" },
+  { left: "60%", top: "31%" },
+  { left: "80%", top: "31%" },
+  { left: "20%", top: "70%" },
+  { left: "39%", top: "70%" },
+  { left: "60%", top: "70%" },
+  { left: "80%", top: "70%" },
 ];
 
 const transferTemplates = [
@@ -476,6 +483,7 @@ function PortfolioDashboard({
           project={focusedProject.name}
           progress={focusedProject.progress}
           modelUrl={assets?.modelUrl}
+          label={localize(ar, `Interactive 3D construction model for ${focusedProject.name}`, `نموذج إنشائي ثلاثي الأبعاد تفاعلي لمشروع ${projectDisplayName(ar, focusedProject.name)}`)}
         />
         <div className="executive-hero-copy">
           <p className="eyebrow">{localize(ar, "Live development digital twin", "التوأم الرقمي المباشر للمشروع")}</p>
@@ -507,7 +515,7 @@ function PortfolioDashboard({
         <Metric value="684" label={localize(ar, "Sold", "المباع")} tone="good" caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
         <Metric value="92" label={localize(ar, "Pending / reserved", "قيد الانتظار / محجوز")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
         <Metric value="147" label={localize(ar, "Active leads", "العملاء المحتملون النشطون")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
-        <Metric value="SAR 1.84B" label={localize(ar, "Contracted value", "القيمة التعاقدية")} tone="good" caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
+        <Metric value={localize(ar, "SAR 1.84B", "1.84 مليار ر.س")} label={localize(ar, "Contracted value", "القيمة التعاقدية")} tone="good" caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
       </section>
       <section className="portfolio-layout">
         <div className="suite-panel">
@@ -517,15 +525,15 @@ function PortfolioDashboard({
               <p>{localize(ar, "Construction delivery, inventory and commercial performance", "التنفيذ الإنشائي والمخزون والأداء التجاري")}</p>
             </div>
             <div className="suite-filter-row">
-              <select aria-label="City">
+              <select aria-label={localize(ar, "City", "المدينة")}>
                 <option>{localize(ar, "All cities", "كل المدن")}</option>
-                <option>Riyadh</option>
-                <option>Jeddah</option>
+                <option>{localize(ar, "Riyadh", "الرياض")}</option>
+                <option>{localize(ar, "Jeddah", "جدة")}</option>
               </select>
-              <select aria-label="Phase">
+              <select aria-label={localize(ar, "Phase", "المرحلة")}>
                 <option>{localize(ar, "All phases", "كل المراحل")}</option>
-                <option>Structure</option>
-                <option>Finishing</option>
+                <option>{localize(ar, "Structure", "الهيكل الإنشائي")}</option>
+                <option>{localize(ar, "Finishing", "التشطيبات")}</option>
               </select>
             </div>
           </div>
@@ -565,7 +573,7 @@ function PortfolioDashboard({
                 <span>{p.pending}</span>
                 <span className="good">{p.sold}</span>
                 <span>{p.leads}</span>
-                <strong>SAR {p.value}</strong>
+                <strong>{inventoryValueLabel(ar, p.value)}</strong>
               </button>
             ))}
           </div>
@@ -575,7 +583,7 @@ function PortfolioDashboard({
             <img
               className="project-visual"
               src={assets?.galleryUrl ?? "/assets/commercial/riyadh-heights.png"}
-              alt={`${focusedProject.name} residential development`}
+              alt={localize(ar, `${focusedProject.name} residential development`, `مشروع ${projectDisplayName(ar, focusedProject.name)} السكني`)}
             />
             {isAdmin ? (
               <label className="admin-asset-upload admin-gallery-upload">
@@ -629,7 +637,7 @@ function PortfolioDashboard({
             </div>
             <div>
               <dt>{localize(ar, "Inventory value", "قيمة المخزون")}</dt>
-              <dd>SAR {focusedProject.value}</dd>
+              <dd>{inventoryValueLabel(ar, focusedProject.value)}</dd>
             </div>
           </dl>
           <button
@@ -643,22 +651,24 @@ function PortfolioDashboard({
       </section>
       <section className="suite-analytics">
         <Chart
-          title="Sales vs construction progress"
+          title={localize(ar, "Sales vs construction progress", "تقدم المبيعات مقابل الإنشاء")}
           values={[38, 46, 52, 59, 66, 71]}
           second={[24, 31, 39, 47, 54, 62]}
+          ar={ar}
         />
         <Chart
-          title="Quarterly reservation value (SAR M)"
+          title={localize(ar, "Quarterly reservation value (SAR M)", "قيمة الحجوزات الفصلية (مليون ر.س)")}
           values={[31, 46, 52, 48, 67, 82]}
+          ar={ar}
         />
         <article className="suite-panel suite-funnel">
-          <h2>Lead conversion</h2>
+          <h2>{localize(ar, "Lead conversion", "تحويل العملاء المحتملين")}</h2>
           {[
-            ["New leads", 147, 100],
-            ["Contacted", 98, 67],
-            ["Qualified", 62, 42],
-            ["Site visit", 34, 23],
-            ["Reserved", 16, 11],
+            [localize(ar, "New leads", "عملاء جدد"), 147, 100],
+            [localize(ar, "Contacted", "تم التواصل"), 98, 67],
+            [localize(ar, "Qualified", "مؤهلون"), 62, 42],
+            [localize(ar, "Site visit", "زيارة الموقع"), 34, 23],
+            [localize(ar, "Reserved", "حجوزات"), 16, 11],
           ].map(([n, v, w]) => (
             <div key={String(n)}>
               <span>{n}</span>
@@ -668,22 +678,22 @@ function PortfolioDashboard({
           ))}
         </article>
         <article className="suite-panel financial-card">
-          <h2>Executive financial analysis</h2>
+          <h2>{localize(ar, "Executive financial analysis", "التحليل المالي التنفيذي")}</h2>
           <dl>
             <div>
-              <dt>Gross sales value</dt>
-              <dd>SAR 1.84B</dd>
+              <dt>{localize(ar, "Gross sales value", "إجمالي قيمة المبيعات")}</dt>
+              <dd>{localize(ar, "SAR 1.84B", "1.84 مليار ر.س")}</dd>
             </div>
             <div>
-              <dt>Weighted forecast</dt>
-              <dd>SAR 2.63B</dd>
+              <dt>{localize(ar, "Weighted forecast", "التوقع المرجّح")}</dt>
+              <dd>{localize(ar, "SAR 2.63B", "2.63 مليار ر.س")}</dd>
             </div>
             <div>
-              <dt>Average price / m²</dt>
-              <dd>SAR 7,512</dd>
+              <dt>{localize(ar, "Average price / m²", "متوسط السعر / م²")}</dt>
+              <dd>{localize(ar, "SAR 7,512", "7,512 ر.س")}</dd>
             </div>
             <div>
-              <dt>Variance to target</dt>
+              <dt>{localize(ar, "Variance to target", "الانحراف عن المستهدف")}</dt>
               <dd className="good">+8.9%</dd>
             </div>
           </dl>
@@ -696,34 +706,33 @@ function PortfolioDashboard({
       >
         <div className="suite-panel-heading">
           <div>
-            <h2>Executive closing summary</h2>
+            <h2>{localize(ar, "Executive closing summary", "ملخص الإغلاق التنفيذي")}</h2>
             <p>
-              Portfolio-level ownership-transfer readiness; detailed files
-              remain in their dedicated tab.
+              {localize(ar, "Portfolio-level ownership-transfer readiness; detailed files remain in their dedicated tab.", "جاهزية الإفراغ العقاري على مستوى المحفظة؛ وتبقى الملفات التفصيلية في التبويب المخصص.")}
             </p>
           </div>
-          <strong>34 transfers in progress</strong>
+          <strong>{localize(ar, "34 transfers in progress", "34 عملية إفراغ جارية")}</strong>
         </div>
         <div className="closing-summary-grid">
           <div>
             <strong>18</strong>
-            <span>Ready for handoff</span>
+            <span>{localize(ar, "Ready for handoff", "جاهز للتسليم")}</span>
           </div>
           <div>
             <strong>9</strong>
-            <span>Awaiting documents</span>
+            <span>{localize(ar, "Awaiting documents", "بانتظار المستندات")}</span>
           </div>
           <div>
             <strong>5</strong>
-            <span>Government review</span>
+            <span>{localize(ar, "Government review", "المراجعة الحكومية")}</span>
           </div>
           <div>
             <strong>2</strong>
-            <span>Blocked</span>
+            <span>{localize(ar, "Blocked", "متعثر")}</span>
           </div>
           <div>
-            <strong>SAR 84.6M</strong>
-            <span>Value in closing</span>
+            <strong>{localize(ar, "SAR 84.6M", "84.6 مليون ر.س")}</strong>
+            <span>{localize(ar, "Value in closing", "القيمة قيد الإغلاق")}</span>
           </div>
         </div>
       </button>
@@ -735,10 +744,12 @@ function Chart({
   title,
   values,
   second,
+  ar,
 }: {
   title: string;
   values: number[];
   second?: number[];
+  ar: boolean;
 }) {
   return (
     <article className="suite-panel chart-card">
@@ -751,12 +762,12 @@ function Chart({
         ))}
       </div>
       <div className="chart-labels">
-        <span>Dec</span>
-        <span>Jan</span>
-        <span>Feb</span>
-        <span>Mar</span>
-        <span>Apr</span>
-        <span>May</span>
+        <span>{localize(ar, "Dec", "ديسمبر")}</span>
+        <span>{localize(ar, "Jan", "يناير")}</span>
+        <span>{localize(ar, "Feb", "فبراير")}</span>
+        <span>{localize(ar, "Mar", "مارس")}</span>
+        <span>{localize(ar, "Apr", "أبريل")}</span>
+        <span>{localize(ar, "May", "مايو")}</span>
       </div>
     </article>
   );
@@ -864,7 +875,7 @@ function UnitDashboard({
                 >
                   <span>{localize(ar, "Floor", "الدور")} {item}</span>
                   <small>
-                    6 {localize(ar, "units", "وحدات")} ·{" "}
+                    8 {localize(ar, "units", "وحدات")} ·{" "}
                     {
                       unitsFor(building, item).filter(
                         (row) => row[6] === "Available",
@@ -965,14 +976,14 @@ function UnitDashboard({
               <strong>
                 {localize(ar, `${building} · Floor ${floor} layout`, `${building === "Building A" ? "المبنى أ" : "المبنى ب"} · مخطط الدور ${floor}`)}
               </strong>
-              <span>{localize(ar, "6 units · 1,004.9 m² gross floor area", "6 وحدات · 1,004.9 م² إجمالي مساحة الدور")}</span>
+              <span>{localize(ar, "8 units · 949.1 m² gross floor area", "8 وحدات · 949.1 م² إجمالي مساحة الدور")}</span>
             </div>
             <span>{localize(ar, "North ↑", "الشمال ↑")}</span>
           </div>
           <div className="floor-plan-wrap">
             <img
               className="floor-plan-image"
-              src="/assets/commercial/floor-12-layout.png"
+              src="/assets/commercial/floor-12-layout-8-units.png"
               alt={localize(ar, `${building} floor ${floor} architectural unit layout`, `المخطط المعماري للدور ${floor} في ${building === "Building A" ? "المبنى أ" : "المبنى ب"}`)}
             />
             {floorUnits.map(({ row, status }, index) => (

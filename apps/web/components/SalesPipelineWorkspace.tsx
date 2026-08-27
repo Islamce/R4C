@@ -67,6 +67,13 @@ const englishValues: Record<string, string> = {
   "غير محددة": "Not specified", "عميل جديد": "New customer",
 };
 const displayValue = (ar: boolean, value: string) => ar ? value : (englishValues[value] ?? value.replace("ر.س", "SAR"));
+const arabicProjectNames: Record<string, string> = {
+  "Riyadh Heights": "مرتفعات الرياض",
+  "Jeddah Marina": "مارينا جدة",
+  "Qurtubah Gardens": "حدائق قرطبة",
+  "Dammam Waterfront": "واجهة الدمام",
+};
+const canonicalProjectName = (value: string) => arabicProjectNames[value] ?? value;
 const stageMeta = (ar: boolean): Record<Stage, { label: string; shortLabel: string }> => ({
   lead: { label: text(ar, "Leads", "العملاء المحتملون"), shortLabel: text(ar, "Lead", "عميل محتمل") },
   interest: { label: text(ar, "Interests", "الاهتمامات"), shortLabel: text(ar, "Interest", "اهتمام") },
@@ -106,7 +113,7 @@ export function SalesPipelineWorkspace({ externalReservation, ar }: { externalRe
       id: externalReservation.reference,
       name: externalReservation.customer,
       phone: externalReservation.phone,
-      project: externalReservation.project,
+      project: canonicalProjectName(externalReservation.project),
       unit: externalReservation.unit,
       owner: "فريق المبيعات",
       source: "حجز من مخطط الوحدات",
@@ -314,7 +321,7 @@ function ProjectMediaRepository({ project, setProject, onNotice, notice }: { pro
   const selected = mediaAssets.find((asset) => asset.id === selectedAsset) ?? visibleAssets[0]!;
   return <section className="workspace-module media-repository" aria-label="مكتبة المواد الدعائية للمشروع">
     <WorkspaceNotice notice={notice} onClose={() => onNotice("")} />
-    <header className="module-heading"><div><p>PROJECT CONTENT HUB</p><h2>مكتبة المواد الدعائية</h2><span>مستودع مركزي للصور والكتيبات والمخططات والتصاميم المرتبطة بكل مشروع.</span></div><label><span>المشروع</span><select value={activeProject} onChange={(event) => setProject(event.target.value)}>{projects.slice(1).map((item) => <option key={item}>{item}</option>)}</select></label></header>
+    <header className="module-heading"><div><p>مركز محتوى المشروع</p><h2>مكتبة المواد الدعائية</h2><span>مستودع مركزي للصور والكتيبات والمخططات والتصاميم المرتبطة بكل مشروع.</span></div><label><span>المشروع</span><select value={activeProject} onChange={(event) => setProject(event.target.value)}>{projects.slice(1).map((item) => <option key={item}>{item}</option>)}</select></label></header>
     <div className="media-layout">
       <div className="media-grid">{visibleAssets.map((asset) => <button type="button" className={selected?.id === asset.id ? "media-card selected" : "media-card"} key={asset.id} onClick={() => setSelectedAsset(asset.id)}><span className="media-card-icon">{asset.type === "معرض صور" ? <FileImage size={27} weight="duotone" /> : asset.type === "عرض تقديمي" ? <PresentationChart size={27} weight="duotone" /> : <SelectionAll size={27} weight="duotone" />}</span><small>{asset.id} · {asset.type}</small><strong>{asset.name}</strong><span>{asset.channel}</span><time>تحديث {asset.updated}</time></button>)}</div>
       <aside className="media-detail"><span className="media-preview"><Sparkle size={38} weight="duotone" /></span><small>{selected?.type}</small><h3>{selected?.name}</h3><p>{selected?.project}</p><dl><div><dt>قنوات الاستخدام</dt><dd>{selected?.channel}</dd></div><div><dt>آخر تحديث</dt><dd>{selected?.updated}</dd></div><div><dt>حالة الاعتماد</dt><dd className="good">معتمد للنشر</dd></div></dl><button className="button button-primary" type="button" onClick={() => setEmailOpen(true)}><EnvelopeSimple size={18} />إرسال للعميل</button><button className="button button-secondary" type="button" onClick={() => onNotice(`تم فتح معاينة «${selected?.name}».`)}>معاينة المادة</button></aside>
@@ -334,7 +341,7 @@ function SalesTeamTasks({ onNotice, notice }: { onNotice: (notice: string) => vo
   const [tasks, setTasks] = useState(initialTasks);
   return <section className="workspace-module team-tasks" aria-label="توزيع مهام فريق المبيعات">
     <WorkspaceNotice notice={notice} onClose={() => onNotice("")} />
-    <header className="module-heading"><div><p>SALES TEAM CONTROL</p><h2>المهام والأدوار</h2><span>توزيع العمل وإسناده لأعضاء الفريق التابعين لكل مسؤول مبيعات.</span></div><div className="module-kpis"><span><b>3</b> فرق</span><span><b>{tasks.length}</b> مهام نشطة</span><span className="warn"><b>{tasks.filter((task) => task.status === "متأخرة").length}</b> متأخرة</span></div></header>
+    <header className="module-heading"><div><p>إدارة فريق المبيعات</p><h2>المهام والأدوار</h2><span>توزيع العمل وإسناده لأعضاء الفريق التابعين لكل مسؤول مبيعات.</span></div><div className="module-kpis"><span><b>3</b> فرق</span><span><b>{tasks.length}</b> مهام نشطة</span><span className="warn"><b>{tasks.filter((task) => task.status === "متأخرة").length}</b> متأخرة</span></div></header>
     <div className="task-layout"><form className="task-assignment" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); const assignee = String(data.get("assignee")); setTasks((current) => [{ id: `T-${222 + current.length}`, title: String(data.get("title")), assignee, manager: assignee === "ناصر المطيري" || assignee === "ريم الحربي" ? "سارة الدوسري" : "خالد الشهري", due: String(data.get("due")), priority: String(data.get("priority")), status: "جديدة" }, ...current]); onNotice(`تم إسناد المهمة إلى ${assignee} وإرسال تنبيه له.`); event.currentTarget.reset(); }}><h3><UserSwitch size={21} weight="duotone" />إسناد مهمة جديدة</h3><label><span>عنوان المهمة</span><input name="title" placeholder="مثال: متابعة عرض السعر" required /></label><label><span>عضو الفريق</span><select name="assignee"><option>ريم الحربي</option><option>ناصر المطيري</option><option>أحمد العتيبي</option><option>مها القحطاني</option></select></label><div><label><span>موعد الاستحقاق</span><input name="due" type="date" required /></label><label><span>الأولوية</span><select name="priority"><option>عاجلة</option><option>عالية</option><option>متوسطة</option><option>منخفضة</option></select></label></div><button className="button button-primary" type="submit"><Plus size={18} />إسناد وإرسال تنبيه</button></form>
       <div className="task-board"><header><span>المهمة</span><span>المسند إليه</span><span>المسؤول</span><span>الاستحقاق</span><span>الأولوية</span><span>الحالة</span></header>{tasks.map((task) => <article key={task.id}><span><b>{task.title}</b><small>{task.id}</small></span><strong>{task.assignee}</strong><span>{task.manager}</span><time>{task.due}</time><i className={`priority-${task.priority}`}>{task.priority}</i><button type="button" onClick={() => { setTasks((current) => current.map((item) => item.id === task.id ? { ...item, status: "مكتملة" } : item)); onNotice(`تم إغلاق المهمة ${task.id} وتحديث تقييم ${task.assignee}.`); }}>{task.status}</button></article>)}</div></div>
   </section>;
@@ -349,9 +356,9 @@ const salesPerformance = [
 
 function SalesPerformanceDashboard() {
   return <section className="workspace-module performance-dashboard" aria-label="تقييم مسؤولي المبيعات والتنبيهات">
-    <header className="module-heading"><div><p>PERFORMANCE & ALERTING</p><h2>تقييم مسؤولي المبيعات</h2><span>قياس الاستجابة والتحويل والحجوزات والقيمة المحققة مع تنبيهات تشغيلية مباشرة.</span></div><label><span>الفترة</span><select defaultValue="هذا الشهر"><option>هذا الشهر</option><option>الربع الحالي</option><option>هذا العام</option></select></label></header>
+    <header className="module-heading"><div><p>الأداء والتنبيهات</p><h2>تقييم مسؤولي المبيعات</h2><span>قياس الاستجابة والتحويل والحجوزات والقيمة المحققة مع تنبيهات تشغيلية مباشرة.</span></div><label><span>الفترة</span><select defaultValue="هذا الشهر"><option>هذا الشهر</option><option>الربع الحالي</option><option>هذا العام</option></select></label></header>
     <section className="alert-strip"><article><Notification size={23} weight="duotone" /><div><strong>5 عملاء دون متابعة لأكثر من 48 ساعة</strong><span>تحتاج إلى إعادة توزيع أو تدخل مسؤول الفريق.</span></div><b>عاجل</b></article><article><ClockCountdown size={23} weight="duotone" /><div><strong>3 مهام تجاوزت موعد الاستحقاق</strong><span>مرتبطة بفريقي سارة الدوسري وخالد الشهري.</span></div><b>متابعة</b></article><article><Target size={23} weight="duotone" /><div><strong>ريم الحربي تجاوزت هدف التحويل</strong><span>31% مقابل هدف شهري 25%.</span></div><b className="good">إيجابي</b></article></section>
-    <section className="performance-kpis"><article><UsersThree size={22} /><span>متوسط العملاء لكل مسؤول</span><strong>45</strong></article><article><ClockCountdown size={22} /><span>متوسط زمن الاستجابة</span><strong>18 دقيقة</strong></article><article><Target size={22} /><span>معدل التحويل</span><strong>25.5%</strong></article><article><Money size={22} /><span>قيمة الحجوزات</span><strong>78.0M ر.س</strong></article></section>
-    <div className="performance-table"><header><span>مسؤول المبيعات</span><span>العملاء</span><span>الاستجابة</span><span>التحويل</span><span>الحجوزات</span><span>القيمة</span><span>التقييم</span></header>{salesPerformance.map((rep, index) => <article key={rep.name}><span><b>{index + 1}</b><span><strong>{rep.name}</strong><small>{rep.team}</small></span></span><span>{rep.leads}</span><span>{rep.response}</span><span>{rep.conversion}%</span><span>{rep.bookings}</span><span>{rep.value} ر.س</span><span className="score-cell"><i style={{ width: `${rep.score}%` }} /><strong>{rep.score}</strong></span></article>)}</div>
+    <section className="performance-kpis"><article><UsersThree size={22} /><span>متوسط العملاء لكل مسؤول</span><strong>45</strong></article><article><ClockCountdown size={22} /><span>متوسط زمن الاستجابة</span><strong>18 دقيقة</strong></article><article><Target size={22} /><span>معدل التحويل</span><strong>25.5%</strong></article><article><Money size={22} /><span>قيمة الحجوزات</span><strong>78.0 مليون ر.س</strong></article></section>
+    <div className="performance-table"><header><span>مسؤول المبيعات</span><span>العملاء</span><span>الاستجابة</span><span>التحويل</span><span>الحجوزات</span><span>القيمة</span><span>التقييم</span></header>{salesPerformance.map((rep, index) => <article key={rep.name}><span><b>{index + 1}</b><span><strong>{rep.name}</strong><small>{rep.team}</small></span></span><span>{rep.leads}</span><span>{rep.response}</span><span>{rep.conversion}%</span><span>{rep.bookings}</span><span>{rep.value.replace("M", " مليون")} ر.س</span><span className="score-cell"><i style={{ width: `${rep.score}%` }} /><strong>{rep.score}</strong></span></article>)}</div>
   </section>;
 }
