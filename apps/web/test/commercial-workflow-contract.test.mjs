@@ -20,8 +20,8 @@ const salesPipelineCss = await readFile(new URL("../app/sales-pipeline.css", imp
 test("production entry routes users into the commercial journey", () => {
   assert.match(home, /redirect\("\/login"\)/);
   assert.match(login, /router\.replace\("\/commercial"\)/);
-  assert.match(commercialPage, /CommercialOperatorWorkspace/);
-  assert.doesNotMatch(commercialPage, /CommercialWorkspaceSuite/);
+  assert.match(commercialPage, /CommercialWorkspaceSuite/);
+  assert.doesNotMatch(commercialPage, /CommercialOperatorWorkspace/);
   assert.match(designPreviewPage, /process\.env\.NODE_ENV !== "development"/);
   assert.match(designPreviewPage, /CommercialWorkspaceSuite preview/);
 });

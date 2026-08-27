@@ -115,6 +115,14 @@ export function AppShell({ children, preview = false, initialUser = null }: { ch
                 {locale === "ar" ? "المستخدمون والصلاحيات" : "Users & access"}
               </Link>
             ) : null}
+            <Link className={pathname.startsWith("/progress") ? "nav-link nav-link-active" : "nav-link"} href="/progress">
+              <Gauge className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
+              {locale === "ar" ? "تقارير التقدم" : "Progress reports"}
+            </Link>
+            <Link className={pathname.startsWith("/cost-control") ? "nav-link nav-link-active" : "nav-link"} href="/cost-control">
+              <ChartLineUp className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
+              {locale === "ar" ? "تقارير التكاليف" : "Cost reports"}
+            </Link>
           </section>
           <section className="kynox-sidebar-tools" aria-label={locale === "ar" ? "أدوات العمل التجاري" : "Commercial tools"}>
             {([
