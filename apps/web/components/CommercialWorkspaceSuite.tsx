@@ -241,6 +241,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
   const [saved, setSaved] = useState(false);
   const [unitReservation, setUnitReservation] = useState<UnitReservationHandoff | null>(null);
   const [isAdmin, setIsAdmin] = useState(preview);
+  const [canViewAllLeads, setCanViewAllLeads] = useState(preview);
   const [projectAssets, setProjectAssets] = useState<Record<string, ProjectAssets>>({});
   const selected = useMemo(
     () => projects.find((item) => item.name === project) ?? projects[0]!,
@@ -250,8 +251,11 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
   useEffect(() => {
     if (preview) return;
     clientApi<{ user: BrowserSessionUser }>("/api/session")
-      .then(({ user }) => setIsAdmin(user.role === "ADMIN" || user.permissions.includes("commercial:manage")))
-      .catch(() => setIsAdmin(false));
+      .then(({ user }) => {
+        setIsAdmin(user.role === "ADMIN" || user.permissions.includes("commercial:manage"));
+        setCanViewAllLeads(user.permissions.includes("commercial:lead:view-all"));
+      })
+      .catch(() => { setIsAdmin(false); setCanViewAllLeads(false); });
   }, [preview]);
 
   useEffect(() => {
@@ -336,7 +340,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           </div>
         </section>
       ) : null}
-      {tab === "pipeline" ? <SalesPipelineWorkspace externalReservation={unitReservation} ar={ar} persistent={!preview} canManageMedia={isAdmin} /> : null}
+      {tab === "pipeline" ? <SalesPipelineWorkspace externalReservation={unitReservation} ar={ar} persistent={!preview} canManageMedia={isAdmin} canViewAllLeads={canViewAllLeads} /> : null}
       {tab === "portfolio" ? (
         <PortfolioDashboard
           selectedProject={project}

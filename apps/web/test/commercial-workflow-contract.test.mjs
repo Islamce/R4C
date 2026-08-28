@@ -66,6 +66,9 @@ test("production commercial operations persist tasks, transfer reviews, and disp
   assert.match(pipeline, /commercialApi\.tasks\(\)/);
   assert.match(pipeline, /commercialApi\.createTask/);
   assert.match(pipeline, /commercialApi\.updateTask/);
+  assert.match(pipeline, /commercialApi\.leads\(canViewAllLeads\)/);
+  assert.match(pipeline, /commercialApi\.advanceLead/);
+  assert.match(pipeline, /setCustomers\(loaded\)/);
   assert.match(commercialApi, /transferCases:/);
   assert.match(commercialApi, /reviewTransferDocument:/);
   assert.match(commercialApi, /reviewTransferCase:/);

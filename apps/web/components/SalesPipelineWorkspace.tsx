@@ -46,6 +46,7 @@ type WorkspaceView = "pipeline" | "media" | "tasks" | "performance";
 
 type Customer = {
   id: string;
+  customerId?: string;
   name: string;
   phone: string;
   project: string;
@@ -99,7 +100,7 @@ const projects = ["جميع المشروعات", "مرتفعات الرياض", 
 const stageOrder: Stage[] = ["lead", "interest", "hold", "booking"];
 const stageIcons = { lead: UserPlus, interest: HandHeart, hold: CalendarCheck, booking: CheckCircle };
 
-export function SalesPipelineWorkspace({ externalReservation, ar, persistent = false, canManageMedia = false }: { externalReservation?: UnitReservationHandoff | null; ar: boolean; persistent?: boolean; canManageMedia?: boolean }) {
+export function SalesPipelineWorkspace({ externalReservation, ar, persistent = false, canManageMedia = false, canViewAllLeads = false }: { externalReservation?: UnitReservationHandoff | null; ar: boolean; persistent?: boolean; canManageMedia?: boolean; canViewAllLeads?: boolean }) {
   const [customers, setCustomers] = useState(seedCustomers);
   const [project, setProject] = useState("جميع المشروعات");
   const [stage, setStage] = useState<Stage | "all">("all");
@@ -108,6 +109,35 @@ export function SalesPipelineWorkspace({ externalReservation, ar, persistent = f
   const [notice, setNotice] = useState("");
   const [fullRecordOpen, setFullRecordOpen] = useState(false);
   const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("pipeline");
+
+  useEffect(() => {
+    if (!persistent) return;
+    void commercialApi.leads(canViewAllLeads).then((page) => {
+      const stageFor = (status: CommercialLead["status"]): Stage => status === "RESERVED" || status === "WON" ? "booking" : status === "NEGOTIATION" || status === "APPOINTMENT" ? "hold" : status === "QUALIFIED" || status === "CONTACTED" ? "interest" : "lead";
+      const loaded = page.items.filter((lead) => lead.customer).map((lead) => ({
+        id: lead.id,
+        customerId: lead.customer!.id,
+        name: `${lead.customer!.firstName}${lead.customer!.lastName ? ` ${lead.customer!.lastName}` : ""}`,
+        phone: lead.customer!.phone,
+        project: lead.project ? (arabicProjectNames[lead.project.name] ?? lead.project.name) : "غير محددة",
+        unit: lead.unit?.code ?? "غير محددة",
+        owner: lead.assignedTo.displayName,
+        source: lead.source,
+        stage: stageFor(lead.status),
+        lastContact: new Date(lead.createdAt).toLocaleDateString(ar ? "ar-SA" : "en-GB"),
+        nextAction: lead.status === "NEW" ? "اتصال تأهيلي" : lead.status === "QUALIFIED" ? "زيارة الموقع" : lead.status === "RESERVED" ? "إعداد العقد" : "متابعة الإجراء",
+        value: "—",
+      }));
+      setCustomers(loaded);
+      setSelectedId(loaded[0]?.id ?? "");
+      setNotice("");
+    }).catch((error) => onPersistentError(error));
+  }, [persistent, ar, canViewAllLeads]);
+
+  function onPersistentError(error: unknown) {
+    setCustomers([]);
+    setNotice(error instanceof Error ? error.message : text(ar, "Could not load the governed customer pipeline.", "تعذر تحميل مسار العملاء المحكوم."));
+  }
 
   useEffect(() => {
     if (!externalReservation) return;
@@ -136,9 +166,14 @@ export function SalesPipelineWorkspace({ externalReservation, ar, persistent = f
     return projectMatches && stageMatches && queryMatches;
   }), [customers, project, query, stage]);
 
-  const selected = customers.find((item) => item.id === selectedId) ?? customers[0]!;
+  const selected = customers.find((item) => item.id === selectedId) ?? customers[0] ?? { id: "", name: text(ar, "No customer selected", "لا يوجد عميل محدد"), phone: "—", project: "—", unit: "—", owner: "—", source: "—", stage: "lead" as Stage, lastContact: "—", nextAction: "—", value: "—" };
 
   function addLead() {
+    if (persistent) {
+      window.dispatchEvent(new CustomEvent("r4c:commercial-tab", { detail: "operations" }));
+      setNotice(text(ar, "Opened governed sales operations to create the customer and lead.", "تم فتح عمليات المبيعات المحكومة لإنشاء العميل والفرصة."));
+      return;
+    }
     const newLead: Customer = {
       id: `C-${1040 + customers.length}`,
       name: "عميل جديد",
@@ -158,14 +193,21 @@ export function SalesPipelineWorkspace({ externalReservation, ar, persistent = f
   }
 
   function advanceSelected() {
+    if (!selected) return;
     const currentIndex = stageOrder.indexOf(selected.stage);
     if (currentIndex === stageOrder.length - 1) {
       setNotice("الحجز مؤكد بالفعل ولا توجد مرحلة لاحقة.");
       return;
     }
     const nextStage = stageOrder[currentIndex + 1]!;
-    setCustomers((current) => current.map((customer) => customer.id === selected.id ? { ...customer, stage: nextStage, lastContact: "الآن", nextAction: nextStage === "booking" ? "إعداد العقد" : "متابعة الإجراء" } : customer));
+    const apply = () => {
+      setCustomers((current) => current.map((customer) => customer.id === selected.id ? { ...customer, stage: nextStage, lastContact: "الآن", nextAction: nextStage === "booking" ? "إعداد العقد" : "متابعة الإجراء" } : customer));
       setNotice(text(ar, `${selected.name} moved to “${stageMeta(ar)[nextStage].label}” and the latest status was updated.`, `تم نقل ${selected.name} إلى مرحلة «${stageMeta(ar)[nextStage].label}» وتحديث آخر حالة.`));
+    };
+    if (persistent) {
+      const status = ({ interest: "QUALIFIED", hold: "NEGOTIATION", booking: "RESERVED" } as const)[nextStage as Exclude<Stage, "lead">];
+      void commercialApi.advanceLead(selected.id, status).then(apply).catch((error) => setNotice(error instanceof Error ? error.message : text(ar, "Could not update the lead stage.", "تعذر تحديث مرحلة العميل.")));
+    } else apply();
   }
 
   return (
@@ -198,11 +240,11 @@ export function SalesPipelineWorkspace({ externalReservation, ar, persistent = f
       {notice ? <div className="pipeline-notice" role="status"><CheckCircle size={20} weight="fill" />{notice}<button type="button" onClick={() => setNotice("")}>{text(ar, "Close", "إغلاق")}</button></div> : null}
 
       <section className="portfolio-strip" aria-label={text(ar, "Portfolio metrics", "مؤشرات المحفظة")}>
-        <div><UsersThree size={22} /><span>{text(ar, "Customers in pipeline", "عملاء في المسار")}</span><strong>320</strong></div>
-        <div><HandHeart size={22} /><span>{text(ar, "Active interests", "اهتمامات نشطة")}</span><strong>182</strong></div>
-        <div><CalendarCheck size={22} /><span>{text(ar, "Temporary reservations", "حجوزات مؤقتة")}</span><strong>46</strong></div>
-        <div><CheckCircle size={22} /><span>{text(ar, "Confirmed bookings", "حجوزات مؤكدة")}</span><strong>78</strong></div>
-        <div><ClockCountdown size={22} /><span>{text(ar, "Overdue actions", "إجراءات متأخرة")}</span><strong className="warn">12</strong></div>
+        <div><UsersThree size={22} /><span>{text(ar, "Customers in pipeline", "عملاء في المسار")}</span><strong>{customers.length}</strong></div>
+        <div><HandHeart size={22} /><span>{text(ar, "Active interests", "اهتمامات نشطة")}</span><strong>{customers.filter((item) => item.stage === "interest").length}</strong></div>
+        <div><CalendarCheck size={22} /><span>{text(ar, "Temporary reservations", "حجوزات مؤقتة")}</span><strong>{customers.filter((item) => item.stage === "hold").length}</strong></div>
+        <div><CheckCircle size={22} /><span>{text(ar, "Confirmed bookings", "حجوزات مؤكدة")}</span><strong>{customers.filter((item) => item.stage === "booking").length}</strong></div>
+        <div><ClockCountdown size={22} /><span>{text(ar, "Overdue actions", "إجراءات متأخرة")}</span><strong className="warn">{persistent ? 0 : 12}</strong></div>
       </section>
 
       <section className="project-context-bar">

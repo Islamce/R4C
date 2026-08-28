@@ -47,3 +47,7 @@ PASS for build and contract gates. The transfer workspace no longer treats uploa
 
 - Execute authenticated browser UAT for the new object-storage upload using the target deployment environment.
 - Execute role-specific production UAT with sales-agent, sales-manager, and administrator accounts.
+
+## Live-UAT correction
+
+The first live-browser pass identified that the main sales-pipeline cards and customer ledger still used preview fixtures in the authenticated production page. This was corrected immediately: production now loads permission-scoped leads from the API, calculates the visible KPIs from those records, advances stages through the governed lead-status endpoint, and routes new-customer creation to the persisted sales-operations form. Preview fixtures remain available only in preview mode.
