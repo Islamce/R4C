@@ -75,6 +75,7 @@ Release branch: `codex/restore-approved-product`
 - Full sale, task assignment and transfer approval real HTTP suite: 1/1 PASS.
 - Commercial web workflow contracts: 10/10 PASS.
 - Customer portal UI/security contracts: 3/3 PASS.
+- Customer portal live browser review: PASS at desktop and 390 × 844 mobile viewport; project selection, available-unit list, OTP controls, consent separation and disabled-until-verified submission state were visually confirmed.
 - Repository TypeScript checks: PASS.
 - API and Next.js optimized production build: PASS.
 - KAAF generated context and all architecture validators: PASS (one informational documented dependency, no warnings or errors).
