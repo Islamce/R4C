@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "b14bb11dfc79bd19fd4db306f7be49c1e1f3e9548e25d1c1d94548513dd5b4a3",
+    "bodyDigest": "65a6beda98316b0d8fa716068eb519325e8d202c882331466b2e5df7fd497daf",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "4b98a1351e863ce9c3b9576d4d1f52be05ef29f1be4a68bd4559ce6d72940f31",
+    "inputDigest": "05b029b8d5c612427766bdda429ee9abccfe87648e5aaa29a0e8a7e4d6e09517",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -637,6 +637,17 @@
       "module": "r4c-api",
       "roles": [
         "ADMIN",
+        "SALES_MANAGER"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:transfer:upload",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
         "SALES_MANAGER"
       ],
       "sourceManifest": "apps/api/kaaf.module.json"

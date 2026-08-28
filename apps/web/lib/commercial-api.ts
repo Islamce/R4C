@@ -49,7 +49,7 @@ export interface UnitContext {
 export interface UnitHold { id: string; unitId: string; leadId: string; status: string; holdExpiresAt: string }
 export interface Reservation { id: string; status: string; currency: string; basePriceSnapshotMinor: string; listPriceSnapshotMinor: string; reservationAmountMinor: string; sourcePriceRevisionId: string; paymentPlanId: string; confirmedAt: string }
 export interface SalesTask { id: string; title: string; description: string | null; priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT"; status: "OPEN" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"; dueAt: string; assignee: { id: string; displayName: string }; createdBy: { id: string; displayName: string } }
-export interface TransferDocument { id: string; documentType: string; status: "MISSING" | "UPLOADED" | "VERIFIED" | "REJECTED" | "NOT_APPLICABLE"; storageKey: string | null; notes: string | null }
+export interface TransferDocument { id: string; documentType: string; status: "MISSING" | "UPLOADED" | "VERIFIED" | "REJECTED" | "NOT_APPLICABLE"; storageKey: string | null; fileName: string | null; mimeType: string | null; sizeBytes: string | null; notes: string | null }
 export interface TransferCase {
   id: string;
   status: "DOCUMENTS_PENDING" | "UNDER_REVIEW" | "APPROVED" | "READY_FOR_AUTHORITY" | "COMPLETED" | "RETURNED";
@@ -90,6 +90,8 @@ export const commercialApi = {
   transferCases: () => clientApi<TransferCase[]>(commercialPath("transfer-cases")),
   createTransferCase: (reservationId: string) => clientApi<TransferCase>(commercialPath("transfer-cases"), json("POST", { reservationId })),
   reviewTransferDocument: (id: string, body: Record<string, unknown>) => clientApi<TransferDocument>(commercialPath(`transfer-documents/${id}`), json("PATCH", body)),
+  requestTransferDocumentUpload: (id: string, body: Record<string, unknown>) => clientApi<{ uploadUrl: string; storageKey: string; expiresInSeconds: number }>(commercialPath(`transfer-documents/${id}/upload-request`), json("POST", body)),
+  confirmTransferDocumentUpload: (id: string) => clientApi<TransferDocument>(commercialPath(`transfer-documents/${id}/confirm-upload`), { method: "POST" }),
   reviewTransferCase: (id: string, status: string) => clientApi<TransferCase>(commercialPath(`transfer-cases/${id}/status`), json("PATCH", { status })),
   createDispatch: (body: Record<string, unknown>) => clientApi<CommercialDispatch>(commercialPath("dispatches"), json("POST", body)),
 };

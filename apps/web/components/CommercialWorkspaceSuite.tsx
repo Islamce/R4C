@@ -7,6 +7,7 @@ import { CommercialHero3D } from "./CommercialHero3D";
 import { useI18n } from "./I18nProvider";
 import { SalesPipelineWorkspace, type UnitReservationHandoff } from "./SalesPipelineWorkspace";
 import { clientApi } from "../lib/client-api";
+import { commercialApi, type TransferCase, type TransferDocument } from "../lib/commercial-api";
 import type { BrowserSessionUser } from "../lib/types";
 
 const localize = (ar: boolean, en: string, arabic: string) => ar ? arabic : en;
@@ -48,11 +49,25 @@ const transferStatusLabel = (ar: boolean, status: string) => ({
   Approved: localize(ar, "Approved", "معتمد"),
   "In review": localize(ar, "In review", "قيد المراجعة"),
   Ready: localize(ar, "Ready", "جاهز"),
+  DOCUMENTS_PENDING: localize(ar, "Documents pending", "بانتظار المستندات"),
+  UNDER_REVIEW: localize(ar, "Under review", "قيد المراجعة"),
+  APPROVED: localize(ar, "Approved", "معتمد"),
+  READY_FOR_AUTHORITY: localize(ar, "Ready for authority", "جاهز للجهة المعتمدة"),
+  COMPLETED: localize(ar, "Completed", "مكتمل"),
+  RETURNED: localize(ar, "Returned for correction", "معاد للتصحيح"),
 }[status] ?? status);
 const transferBlockerLabel = (ar: boolean, blocker: string) => ({
   "Mortgagee approval": localize(ar, "Mortgagee approval", "موافقة الجهة المرتهنة"),
   "RETT tax reference": localize(ar, "RETT tax reference", "مرجع ضريبة التصرفات العقارية"),
   "Buyer IBAN": localize(ar, "Buyer IBAN", "رقم آيبان المشتري"),
+  SELLER_ID: localize(ar, "Seller identity", "هوية البائع"),
+  BUYER_ID: localize(ar, "Buyer identity", "هوية المشتري"),
+  TITLE_DEED: localize(ar, "Title deed", "الصك العقاري"),
+  BENEFICIARY_IBAN: localize(ar, "Beneficiary IBAN", "آيبان المستفيد"),
+  RETT_REFERENCE: localize(ar, "RETT reference", "مرجع ضريبة التصرفات العقارية"),
+  MORTGAGEE_APPROVAL: localize(ar, "Mortgagee approval", "موافقة الجهة المرتهنة"),
+  SIGNED_CONTRACT: localize(ar, "Signed contract", "عقد البيع الموقّع"),
+  EVIDENCE: localize(ar, "Evidence attachments", "مرفقات الإثبات"),
   "—": "—",
 }[blocker] ?? blocker);
 const inventoryValueLabel = (ar: boolean, value: string) => localize(ar, `SAR ${value}`, `${value.replace(/M$/, " مليون")} ر.س`);
@@ -348,7 +363,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
         />
       ) : null}
       {tab === "transfer" ? (
-        <TransferDashboard project={project} onProjectChange={setProject} ar={ar} />
+        <TransferDashboard project={project} onProjectChange={setProject} ar={ar} persistent={!preview} />
       ) : null}
       {tab === "operations" ? (
         preview ? <PreviewSalesOperations project={project} ar={ar} /> : <CommercialOperatorWorkspace />
@@ -1229,12 +1244,17 @@ function TransferDashboard({
   project,
   onProjectChange,
   ar,
+  persistent,
 }: {
   project: string;
   onProjectChange: (project: string) => void;
   ar: boolean;
+  persistent: boolean;
 }) {
   const [rows, setRows] = useState<UnitDashboardRow[]>(transfers);
+  const [transferCases, setTransferCases] = useState<TransferCase[]>([]);
+  const [transferNotice, setTransferNotice] = useState("");
+  const [transferBusy, setTransferBusy] = useState(false);
   const [selectedId, setSelectedId] = useState(
     transfers.find((row) => row[1] === project)?.[0] ?? transfers[0]![0],
   );
@@ -1246,17 +1266,41 @@ function TransferDashboard({
   const [reviewDecisions, setReviewDecisions] = useState<Record<string, Record<string, "approved" | "changes">>>({});
   const projectRows = rows.filter((row) => row[1] === project);
   const selectedTransfer =
-    rows.find((row) => row[0] === selectedId) ?? projectRows[0] ?? rows[0]!;
+    rows.find((row) => row[0] === selectedId) ?? projectRows[0] ?? rows[0] ?? (["—", project, "—", "—", "0%", "—", "DOCUMENTS_PENDING"] as UnitDashboardRow);
   const approved = selectedTransfer[4] === "100%";
   const currentUploads = uploadedDocuments[selectedTransfer[0]] ?? {};
   const currentDecisions = reviewDecisions[selectedTransfer[0]] ?? {};
+  const selectedCase = transferCases.find((item) => item.reservation.unit.code === selectedTransfer[0]);
+
+  async function refreshTransferCases() {
+    if (!persistent) return;
+    try {
+      const cases = await commercialApi.transferCases();
+      setTransferCases(cases);
+      setRows(cases.map((item) => {
+        const customer = item.reservation.customer;
+        const buyer = customer ? `${customer.firstName}${customer.lastName ? ` ${customer.lastName}` : ""}` : "—";
+        const blocker = item.documents.find((document) => !["VERIFIED", "NOT_APPLICABLE"].includes(document.status));
+        return [item.reservation.unit.code, item.project.name, buyer, "—", `${item.readiness}%`, blocker?.documentType ?? "—", item.status] as UnitDashboardRow;
+      }));
+      if (cases.length) {
+        setSelectedId((current) => cases.some((item) => item.reservation.unit.code === current) ? current : cases[0]!.reservation.unit.code);
+        if (!cases.some((item) => item.project.name === project)) onProjectChange(cases[0]!.project.name);
+      }
+      setTransferNotice("");
+    } catch (error) {
+      setTransferNotice(error instanceof Error ? error.message : localize(ar, "Could not load transfer files", "تعذر تحميل ملفات الإفراغ"));
+    }
+  }
+
+  useEffect(() => { void refreshTransferCases(); }, [persistent]);
 
   useEffect(() => {
     const next = rows.find((row) => row[1] === project);
     if (next) setSelectedId(next[0]);
   }, [project, rows]);
 
-  const checks: [string, string, string, string][] = [
+  const previewChecks: [string, string, string, string][] = [
     ["seller-id", localize(ar, "Seller identity / representative", "هوية البائع / الممثل النظامي"), "Verified", localize(ar, "Verified", "متحقق")],
     ["buyer-id", localize(ar, "Buyer identity", "هوية المشتري"), "Verified", localize(ar, "Verified", "متحقق")],
     ["title-deed", localize(ar, "Electronic title deed / property sheet", "الصك الإلكتروني / صحيفة العقار"), "Verified", localize(ar, "Verified", "متحقق")],
@@ -1276,6 +1320,53 @@ function TransferDashboard({
     ["sales-contract", localize(ar, "Signed sales contract", "عقد البيع الموقّع"), "Verified", localize(ar, "Verified", "متحقق")],
     ["evidence", localize(ar, "Evidence attachments", "مرفقات الإثبات"), "Verified", localize(ar, "Verified", "متحقق")],
   ];
+  const documentLabels: Record<string, string> = {
+    SELLER_ID: localize(ar, "Seller identity / representative", "هوية البائع / الممثل النظامي"),
+    BUYER_ID: localize(ar, "Buyer identity", "هوية المشتري"),
+    TITLE_DEED: localize(ar, "Electronic title deed / property sheet", "الصك الإلكتروني / صحيفة العقار"),
+    BENEFICIARY_IBAN: localize(ar, "Active beneficiary IBAN", "آيبان المستفيد النشط"),
+    RETT_REFERENCE: localize(ar, "Real estate transaction tax reference", "مرجع ضريبة التصرفات العقارية"),
+    UNIT_SUBDIVISION: localize(ar, "Unit subdivision document", "مستند فرز الوحدة"),
+    MORTGAGEE_APPROVAL: localize(ar, "Mortgagee approval", "موافقة الجهة المرتهنة"),
+    SIGNED_CONTRACT: localize(ar, "Signed sales contract", "عقد البيع الموقّع"),
+    EVIDENCE: localize(ar, "Evidence attachments", "مرفقات الإثبات"),
+  };
+  const statusLabels: Record<string, string> = {
+    MISSING: localize(ar, "Missing", "ناقص"), UPLOADED: localize(ar, "Uploaded for review", "مرفوع للمراجعة"),
+    VERIFIED: localize(ar, "Verified", "متحقق"), REJECTED: localize(ar, "Correction required", "مطلوب تصحيح"),
+    NOT_APPLICABLE: localize(ar, "Not applicable", "لا ينطبق"),
+  };
+  const checks: [string, string, string, string][] = selectedCase
+    ? selectedCase.documents.map((document) => [document.id, documentLabels[document.documentType] ?? document.documentType, document.status, statusLabels[document.status] ?? document.status])
+    : previewChecks;
+
+  async function uploadTransferDocument(document: TransferDocument, file: File) {
+    setTransferBusy(true);
+    setTransferNotice(localize(ar, "Uploading document…", "جاري رفع المستند…"));
+    try {
+      const request = await commercialApi.requestTransferDocumentUpload(document.id, { fileName: file.name, mimeType: file.type, sizeBytes: file.size });
+      const uploaded = await fetch(request.uploadUrl, { method: "PUT", headers: { "content-type": file.type }, body: file });
+      if (!uploaded.ok) throw new Error(localize(ar, "Object storage rejected the upload", "رفض مستودع الملفات عملية الرفع"));
+      await commercialApi.confirmTransferDocumentUpload(document.id);
+      await refreshTransferCases();
+      setTransferNotice(localize(ar, "Document uploaded and queued for manager review.", "تم رفع المستند وإرساله لمراجعة المدير."));
+    } catch (error) {
+      setTransferNotice(error instanceof Error ? error.message : localize(ar, "Upload failed", "فشل رفع المستند"));
+    } finally { setTransferBusy(false); }
+  }
+
+  async function reviewDocument(id: string, status: "VERIFIED" | "REJECTED") {
+    if (!persistent) {
+      setReviewDecisions((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: status === "VERIFIED" ? "approved" : "changes" } }));
+      return;
+    }
+    setTransferBusy(true);
+    try {
+      await commercialApi.reviewTransferDocument(id, { status, ...(reviewNote.trim() ? { notes: reviewNote.trim() } : {}) });
+      await refreshTransferCases();
+    } catch (error) { setTransferNotice(error instanceof Error ? error.message : localize(ar, "Review failed", "فشلت المراجعة")); }
+    finally { setTransferBusy(false); }
+  }
   function approveReadiness() {
     setRows((current) =>
       current.map((row) =>
@@ -1318,7 +1409,7 @@ function TransferDashboard({
               value={project}
               onChange={(event) => onProjectChange(event.target.value)}
             >
-              {projects.map((item) => (
+              {(persistent ? Array.from(new Set(transferCases.map((item) => item.project.name))).map((name) => ({ name })) : projects).map((item) => (
                 <option key={item.name} value={item.name}>{projectDisplayName(ar, item.name)}</option>
               ))}
             </select>
@@ -1335,6 +1426,7 @@ function TransferDashboard({
             <span>{localize(ar, "Blocking item", "العنصر المعيق")}</span>
             <span>{localize(ar, "Handoff status", "حالة التسليم")}</span>
           </div>
+          {transferNotice ? <div className="transfer-notice" role="status">{transferNotice}</div> : null}
           {projectRows.map((r) => (
             <button
               type="button"
@@ -1372,17 +1464,19 @@ function TransferDashboard({
             <strong>{selectedTransfer[4]} {localize(ar, "ready", "جاهز")}</strong>
           </div>
           <div className="checklist">
-            {checks.map(([id, label, status, statusLabel]) => (
+            {checks.map(([id, label, status, statusLabel]) => {
+              const persistentDocument = selectedCase?.documents.find((document) => document.id === id);
+              return (
               <div key={id} className="transfer-document-row">
-                <span><b>{label}</b>{currentUploads[id] ? <small>{currentUploads[id]}</small> : null}</span>
+                <span><b>{label}</b>{persistentDocument?.fileName || currentUploads[id] ? <small>{persistentDocument?.fileName ?? currentUploads[id]}</small> : null}</span>
                 <strong
                   className={`check-${status.toLowerCase().replaceAll(" ", "-")}`}
                 >
                   {statusLabel}
                 </strong>
-                <label className="transfer-upload-control"><FileArrowUp size={16} /><span>{localize(ar, "Upload / replace", "رفع / استبدال")}</span><input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(event) => { const file = event.target.files?.[0]; if (file) setUploadedDocuments((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: file.name } })); }} /></label>
+                <label className="transfer-upload-control" aria-disabled={transferBusy}><FileArrowUp size={16} /><span>{localize(ar, "Upload / replace", "رفع / استبدال")}</span><input disabled={transferBusy || status === "NOT_APPLICABLE"} type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; if (persistentDocument) void uploadTransferDocument(persistentDocument, file); else setUploadedDocuments((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: file.name } })); event.currentTarget.value = ""; }} /></label>
               </div>
-            ))}
+            );})}
           </div>
         </article>
         <aside className="suite-panel transfer-actions">
@@ -1412,7 +1506,7 @@ function TransferDashboard({
           </p>
         </aside>
       </section>
-      {reviewOpen ? <div className="suite-modal-backdrop" role="presentation" onMouseDown={() => setReviewOpen(false)}><section className="suite-modal transfer-review-modal" role="dialog" aria-modal="true" aria-labelledby="transfer-review-title" onMouseDown={(event) => event.stopPropagation()}><header><div><p className="eyebrow">{localize(ar, "Supervisor gate", "بوابة اعتماد المشرف")}</p><h2 id="transfer-review-title">{localize(ar, "Review every customer document", "مراجعة جميع ملفات العميل")}</h2><span>{selectedTransfer[0]} · {buyerDisplayName(ar, selectedTransfer[2])}</span></div><button type="button" aria-label={localize(ar, "Close", "إغلاق")} onClick={() => setReviewOpen(false)}><X size={21} /></button></header><div className="review-role-banner"><ShieldCheck size={22} weight="duotone" /><div><strong>{localize(ar, "Sales manager / supervisor approval", "اعتماد مدير / مشرف المبيعات")}</strong><span>{localize(ar, "Final readiness cannot be approved by the sales agent who prepared the file.", "لا يمكن لمندوب المبيعات مُعدّ الملف اعتماد الجاهزية النهائية.")}</span></div><b>{localize(ar, "Authorized reviewer", "مراجع مخوّل")}</b></div><div className="review-document-list">{checks.map(([id, label, status, statusLabel]) => <article key={id}><div><strong>{label}</strong><span>{currentUploads[id] ?? localize(ar, "Existing governed document", "مستند محكوم قائم")}</span></div><i className={`check-${status.toLowerCase().replaceAll(" ", "-")}`}>{statusLabel}</i><button type="button" onClick={() => setReviewDecisions((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: "approved" } }))}><Eye size={16} />{currentDecisions[id] === "approved" ? localize(ar, "Reviewed", "تمت المراجعة") : localize(ar, "Review & approve", "مراجعة واعتماد")}</button><button type="button" className="review-change" onClick={() => setReviewDecisions((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: "changes" } }))}>{localize(ar, "Request correction", "طلب تصحيح")}</button></article>)}</div><label className="review-note"><span>{localize(ar, "Supervisor review note", "ملاحظة المراجع")}</span><textarea value={reviewNote} onChange={(event) => setReviewNote(event.target.value)} placeholder={localize(ar, "Record the approval basis or required action", "سجّل أساس الاعتماد أو الإجراء المطلوب")} /></label><footer><button className="button button-secondary" type="button" onClick={() => setReviewOpen(false)}>{localize(ar, "Save review draft", "حفظ مسودة المراجعة")}</button><button className="button button-primary" type="button" disabled={Object.values(currentDecisions).includes("changes")} onClick={() => { approveReadiness(); setReviewOpen(false); }}>{localize(ar, "Approve file readiness", "اعتماد جاهزية الملف")}</button></footer></section></div> : null}
+      {reviewOpen ? <div className="suite-modal-backdrop" role="presentation" onMouseDown={() => setReviewOpen(false)}><section className="suite-modal transfer-review-modal" role="dialog" aria-modal="true" aria-labelledby="transfer-review-title" onMouseDown={(event) => event.stopPropagation()}><header><div><p className="eyebrow">{localize(ar, "Supervisor gate", "بوابة اعتماد المشرف")}</p><h2 id="transfer-review-title">{localize(ar, "Review every customer document", "مراجعة جميع ملفات العميل")}</h2><span>{selectedTransfer[0]} · {buyerDisplayName(ar, selectedTransfer[2])}</span></div><button type="button" aria-label={localize(ar, "Close", "إغلاق")} onClick={() => setReviewOpen(false)}><X size={21} /></button></header><div className="review-role-banner"><ShieldCheck size={22} weight="duotone" /><div><strong>{localize(ar, "Sales manager / supervisor approval", "اعتماد مدير / مشرف المبيعات")}</strong><span>{localize(ar, "Final readiness cannot be approved by the sales agent who prepared the file.", "لا يمكن لمندوب المبيعات مُعدّ الملف اعتماد الجاهزية النهائية.")}</span></div><b>{localize(ar, "Authorized reviewer", "مراجع مخوّل")}</b></div><div className="review-document-list">{checks.map(([id, label, status, statusLabel]) => <article key={id}><div><strong>{label}</strong><span>{selectedCase?.documents.find((document) => document.id === id)?.fileName ?? currentUploads[id] ?? localize(ar, "No uploaded file", "لا يوجد ملف مرفوع")}</span></div><i className={`check-${status.toLowerCase().replaceAll(" ", "-")}`}>{statusLabel}</i><button disabled={transferBusy || status === "MISSING" || status === "NOT_APPLICABLE"} type="button" onClick={() => void reviewDocument(id, "VERIFIED")}><Eye size={16} />{status === "VERIFIED" || currentDecisions[id] === "approved" ? localize(ar, "Reviewed", "تمت المراجعة") : localize(ar, "Review & approve", "مراجعة واعتماد")}</button><button disabled={transferBusy || status === "MISSING" || status === "NOT_APPLICABLE"} type="button" className="review-change" onClick={() => void reviewDocument(id, "REJECTED")}>{localize(ar, "Request correction", "طلب تصحيح")}</button></article>)}</div><label className="review-note"><span>{localize(ar, "Supervisor review note", "ملاحظة المراجع")}</span><textarea value={reviewNote} onChange={(event) => setReviewNote(event.target.value)} placeholder={localize(ar, "Record the approval basis or required action", "سجّل أساس الاعتماد أو الإجراء المطلوب")} /></label><footer><button className="button button-secondary" type="button" onClick={() => setReviewOpen(false)}>{localize(ar, "Save review draft", "حفظ مسودة المراجعة")}</button><button className="button button-primary" type="button" disabled={transferBusy || (persistent ? selectedCase?.readiness !== 100 : Object.values(currentDecisions).includes("changes"))} onClick={() => { if (persistent && selectedCase) { setTransferBusy(true); void commercialApi.reviewTransferCase(selectedCase.id, "APPROVED").then(refreshTransferCases).then(() => setReviewOpen(false)).catch((error) => setTransferNotice(error instanceof Error ? error.message : localize(ar, "Approval failed", "فشل الاعتماد"))).finally(() => setTransferBusy(false)); } else { approveReadiness(); setReviewOpen(false); } }}>{localize(ar, "Approve file readiness", "اعتماد جاهزية الملف")}</button></footer></section></div> : null}
       {integrationOpen ? <div className="suite-modal-backdrop" role="presentation" onMouseDown={() => setIntegrationOpen(false)}><section className="suite-modal government-integration-modal" role="dialog" aria-modal="true" aria-labelledby="integration-title" onMouseDown={(event) => event.stopPropagation()}><header><div><p className="eyebrow">{localize(ar, "Integration blueprint", "مخطط الربط")}</p><h2 id="integration-title">{localize(ar, "Authorized government channel", "القناة الحكومية المعتمدة")}</h2></div><button type="button" aria-label={localize(ar, "Close", "إغلاق")} onClick={() => setIntegrationOpen(false)}><X size={21} /></button></header><div className="integration-status"><PlugsConnected size={26} weight="duotone" /><div><strong>{localize(ar, "Integration deferred pending authority agreement", "الربط مؤجل لحين الاتفاق مع الجهة")}</strong><span>{localize(ar, "The operational contract is prepared without activating external transmission.", "تم إعداد عقد التشغيل دون تفعيل الإرسال الخارجي.")}</span></div><b>{localize(ar, "Not connected", "غير متصل")}</b></div><div className="integration-contract"><label><span>{localize(ar, "Authority / service", "الجهة / الخدمة")}</span><input value={localize(ar, "To be agreed", "تحدد بعد الاتفاق")} readOnly /></label><label><span>{localize(ar, "Exchange method", "طريقة التبادل")}</span><select defaultValue="api"><option value="api">API</option><option value="file">{localize(ar, "Secure file exchange", "تبادل ملفات آمن")}</option></select></label><label><span>{localize(ar, "Authentication", "المصادقة")}</span><input value={localize(ar, "Authority-issued credentials — pending", "بيانات اعتماد تصدرها الجهة — معلقة")} readOnly /></label><label><span>{localize(ar, "Endpoint", "نقطة الربط")}</span><input value="https://authority.example/api/transfer" readOnly dir="ltr" /></label></div><section><h3>{localize(ar, "Prepared payload", "البيانات المجهزة للإرسال")}</h3><ul><li>{localize(ar, "Transfer reference and unit", "مرجع الإفراغ والوحدة")}</li><li>{localize(ar, "Buyer and seller verified identities", "هويتا البائع والمشتري المتحقق منهما")}</li><li>{localize(ar, "Approved document manifest and hashes", "بيان المستندات المعتمدة وبصماتها")}</li><li>{localize(ar, "Manager approval and audit trail", "اعتماد المدير وسجل التدقيق")}</li></ul></section><footer><button className="button button-secondary" type="button" disabled>{localize(ar, "Test connection after agreement", "اختبار الاتصال بعد الاتفاق")}</button><button className="button button-primary" type="button" onClick={() => setIntegrationOpen(false)}>{localize(ar, "Save deferred integration draft", "حفظ مسودة الربط المؤجل")}</button></footer></section></div> : null}
     </main>
   );

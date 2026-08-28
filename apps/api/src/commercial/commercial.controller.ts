@@ -18,6 +18,7 @@ import {
   UpdateSalesTaskDto,
   CreateTransferCaseDto,
   ReviewTransferDocumentDto,
+  RequestTransferDocumentUploadDto,
   ReviewTransferCaseDto,
   CreateCommercialDispatchDto,
   CreatePaymentPlanDto,
@@ -336,6 +337,12 @@ export class CommercialController {
 
   @Patch("transfer-documents/:id") @RequirePermissions("commercial:transfer:review")
   reviewTransferDocument(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: ReviewTransferDocumentDto) { return this.commercial.reviewTransferDocument(user, id, body); }
+
+  @Post("transfer-documents/:id/upload-request") @RequirePermissions("commercial:transfer:upload")
+  requestTransferDocumentUpload(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: RequestTransferDocumentUploadDto) { return this.commercial.requestTransferDocumentUpload(user, id, body); }
+
+  @Post("transfer-documents/:id/confirm-upload") @RequirePermissions("commercial:transfer:upload")
+  confirmTransferDocumentUpload(@CurrentUser() user: AuthContext, @Param("id") id: string) { return this.commercial.confirmTransferDocumentUpload(user, id); }
 
   @Patch("transfer-cases/:id/status") @RequirePermissions("commercial:transfer:review")
   reviewTransferCase(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: ReviewTransferCaseDto) { return this.commercial.reviewTransferCase(user, id, body); }

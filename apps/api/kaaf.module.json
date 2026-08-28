@@ -73,6 +73,7 @@
     { "key": "commercial:task:view", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
     { "key": "commercial:task:manage", "roles": ["ADMIN", "SALES_MANAGER"] },
     { "key": "commercial:transfer:view", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
+    { "key": "commercial:transfer:upload", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
     { "key": "commercial:transfer:review", "roles": ["ADMIN", "SALES_MANAGER"] },
     { "key": "commercial:dispatch:create", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] }
   ],

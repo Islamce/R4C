@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-api.json",
-    "bodyDigest": "27e5558339282946ff0c6c4e20e36dbaf546ed45828513a45a1277bbaa0fdb99",
+    "bodyDigest": "71abc41863ff11607162363bb7e8b9528e9f82ebf9ce811e7ddea12c60efeac5",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "4b98a1351e863ce9c3b9576d4d1f52be05ef29f1be4a68bd4559ce6d72940f31",
+    "inputDigest": "05b029b8d5c612427766bdda429ee9abccfe87648e5aaa29a0e8a7e4d6e09517",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -478,6 +478,14 @@
       "key": "commercial:transfer:review",
       "roles": [
         "ADMIN",
+        "SALES_MANAGER"
+      ]
+    },
+    {
+      "key": "commercial:transfer:upload",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
         "SALES_MANAGER"
       ]
     },

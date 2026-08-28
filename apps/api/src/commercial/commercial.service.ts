@@ -8,6 +8,9 @@ import {
 import { LeadStatus, Prisma, SalesActivityType, TranslationLocale, UnitHoldStatus, UnitPriceRevisionStatus, UnitStatus } from "@prisma/client";
 import { AuthContext } from "../common/auth-context";
 import { PrismaService } from "../prisma/prisma.service";
+import { ObjectStorageService } from "../storage/object-storage.service";
+import { randomUUID } from "node:crypto";
+import { extname } from "node:path";
 import {
   AttachCommercialMediaDto,
   BuildingQueryDto,
@@ -23,6 +26,7 @@ import {
   CreateTransferCaseDto,
   ReviewTransferDocumentDto,
   ReviewTransferCaseDto,
+  RequestTransferDocumentUploadDto,
   CreateCommercialDispatchDto,
   CreatePaymentPlanDto,
   CreateUnitPriceRevisionDto,
@@ -43,7 +47,10 @@ import {
 
 @Injectable()
 export class CommercialService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: ObjectStorageService,
+  ) {}
 
   async phases(tenantId: string, projectId: string) {
     await this.requireProject(tenantId, projectId);
@@ -979,6 +986,37 @@ export class CommercialService {
       const transferCase = await tx.transferCase.create({ data: { tenantId: user.tenantId, projectId: reservation.unit.projectId, reservationId: reservation.id, documents: { create: documentTypes.map((documentType) => ({ documentType, status: documentType === "UNIT_SUBDIVISION" ? "NOT_APPLICABLE" : "MISSING" })) } }, include: { documents: true } });
       await this.audit(tx, user, "COMMERCIAL_TRANSFER_CASE_CREATED", "TransferCase", transferCase.id, { reservationId: reservation.id });
       return transferCase;
+    });
+  }
+
+  async requestTransferDocumentUpload(user: AuthContext, id: string, command: RequestTransferDocumentUploadDto) {
+    const document = await this.prisma.transferDocument.findFirst({ where: { id, tenantId: user.tenantId } });
+    if (!document) throw new NotFoundException("Transfer document not found");
+    const extension = extname(command.fileName).toLowerCase();
+    const mimeType = command.mimeType.toLowerCase();
+    const allowedExtensions = new Set([".pdf", ".png", ".jpg", ".jpeg"]);
+    const allowedMimeTypes = new Set(["application/pdf", "image/png", "image/jpeg"]);
+    if (!allowedExtensions.has(extension) || !allowedMimeTypes.has(mimeType)) {
+      throw new BadRequestException("Transfer documents must be PDF, PNG, JPG, or JPEG files");
+    }
+    const cleanName = command.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const storageKey = ["tenants", user.tenantId, "commercial", "transfers", document.transferCaseId, id, randomUUID(), cleanName].join("/");
+    await this.prisma.$transaction(async (tx) => {
+      await tx.transferDocument.update({ where: { id }, data: { storageKey, fileName: cleanName, mimeType, sizeBytes: BigInt(command.sizeBytes), status: "MISSING", reviewedById: null, reviewedAt: null, notes: null } });
+      await this.audit(tx, user, "COMMERCIAL_TRANSFER_DOCUMENT_UPLOAD_REQUESTED", "TransferDocument", id, { transferCaseId: document.transferCaseId, fileName: cleanName, sizeBytes: command.sizeBytes });
+    });
+    return { uploadUrl: await this.storage.createUploadUrl(storageKey, mimeType), storageKey, expiresInSeconds: 900 };
+  }
+
+  async confirmTransferDocumentUpload(user: AuthContext, id: string) {
+    const document = await this.prisma.transferDocument.findFirst({ where: { id, tenantId: user.tenantId } });
+    if (!document?.storageKey || !document.sizeBytes) throw new ConflictException("No pending upload exists for this transfer document");
+    const stored = await this.storage.head(document.storageKey);
+    if (stored.sizeBytes === undefined || BigInt(stored.sizeBytes) !== document.sizeBytes) throw new ConflictException("Uploaded file size does not match the declared size");
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.transferDocument.update({ where: { id }, data: { status: "UPLOADED" } });
+      await this.audit(tx, user, "COMMERCIAL_TRANSFER_DOCUMENT_UPLOAD_CONFIRMED", "TransferDocument", id, { transferCaseId: document.transferCaseId, storageKey: document.storageKey });
+      return { ...updated, sizeBytes: updated.sizeBytes?.toString() ?? null };
     });
   }
 

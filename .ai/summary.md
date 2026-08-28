@@ -10,7 +10,7 @@ R4C — a BIM-centered platform for governed real-estate development delivery, c
 - Modules: 7 declared, 0 discovered only
 - Drift: 0 error, 0 warning, 1 info
 - Generator: `kaaf` v0.7.0
-- Input digest: `4b98a1351e863ce9…`
+- Input digest: `05b029b8d5c61242…`
 
 ## Modules
 
@@ -81,6 +81,7 @@ No declared public contracts.
 | `commercial:task:manage` | `r4c-api` | ADMIN, SALES_MANAGER | — |
 | `commercial:task:view` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
 | `commercial:transfer:review` | `r4c-api` | ADMIN, SALES_MANAGER | — |
+| `commercial:transfer:upload` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
 | `commercial:transfer:view` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
 
 ## External integrations
@@ -112,4 +113,4 @@ Full detail, with evidence and recommendations, in `.ai/drift.json`.
 Declarations come from `kaaf.repo.json` and `kaaf.module.json`. Discovery is a static
 read of the source: dynamic imports and runtime wiring are invisible to it, so the
 absence of a drift finding is not proof that none exists.
-<!-- kaaf:bodyDigest=e17a2b1da7fe0035048b2e6a2f1e9e5a0129f70d04510420327f946f3b6a1eba -->
+<!-- kaaf:bodyDigest=56b817e0095e9fc0ad3c57d1c395f880692a7195ad8ce8d4f60b024ef5d147b1 -->

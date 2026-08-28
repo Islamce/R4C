@@ -961,6 +961,9 @@ model TransferDocument {
   documentType   String
   status         TransferDocumentStatus @default(MISSING)
   storageKey     String?
+  fileName       String?
+  mimeType       String?
+  sizeBytes      BigInt?
   reviewedById   String?
   reviewedAt     DateTime?
   notes          String?

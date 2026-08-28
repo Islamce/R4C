@@ -336,6 +336,12 @@ export class CreateTransferCaseDto {
   @IsUUID() reservationId!: string;
 }
 
+export class RequestTransferDocumentUploadDto {
+  @IsString() @Length(1, 255) fileName!: string;
+  @IsString() @Length(3, 120) mimeType!: string;
+  @Type(() => Number) @IsInt() @Min(1) @Max(26214400) sizeBytes!: number;
+}
+
 export class ReviewTransferDocumentDto {
   @IsEnum(TransferDocumentStatus) status!: TransferDocumentStatus;
   @IsOptional() @IsString() @Length(1, 1024) storageKey?: string;

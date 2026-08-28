@@ -28,6 +28,7 @@ const COMMERCIAL_ROLE_DEFINITIONS = [
       "commercial:task:view",
       "commercial:dispatch:create",
       "commercial:transfer:view",
+      "commercial:transfer:upload",
     ],
   },
   {
@@ -38,6 +39,7 @@ const COMMERCIAL_ROLE_DEFINITIONS = [
       "commercial:lead:reassign",
       "commercial:reservation:confirm",
       "commercial:task:manage",
+      "commercial:transfer:upload",
       "commercial:transfer:review",
     ],
   },

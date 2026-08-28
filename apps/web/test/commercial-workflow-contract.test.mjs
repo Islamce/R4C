@@ -69,7 +69,13 @@ test("production commercial operations persist tasks, transfer reviews, and disp
   assert.match(commercialApi, /transferCases:/);
   assert.match(commercialApi, /reviewTransferDocument:/);
   assert.match(commercialApi, /reviewTransferCase:/);
+  assert.match(commercialApi, /requestTransferDocumentUpload:/);
+  assert.match(commercialApi, /confirmTransferDocumentUpload:/);
   assert.match(commercialApi, /createDispatch:/);
+  assert.match(suite, /commercialApi\.transferCases\(\)/);
+  assert.match(suite, /fetch\(request\.uploadUrl/);
+  assert.match(suite, /commercialApi\.confirmTransferDocumentUpload/);
+  assert.match(suite, /selectedCase\?\.readiness !== 100/);
 });
 
 test("mass import validates contacts and campaign results before governed creation", () => {
