@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "ai-context.json",
-    "bodyDigest": "c52dcdd6ab2b39967d150fd3eed1621c335eaee64d5ddadf7ace1a57fdbec9eb",
+    "bodyDigest": "b145dc70f41e9afa806f6ce2d2f89202b589347373109a6ce3199f37a1279b95",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "05b029b8d5c612427766bdda429ee9abccfe87648e5aaa29a0e8a7e4d6e09517",
+    "inputDigest": "9766819a50dfabe0fe79873b875df008c39573c4357dc9b63712e1c47c59a21a",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -26,7 +26,7 @@
     "modules": 7,
     "modulesDeclared": 7,
     "modulesUndeclared": 0,
-    "permissions": 29
+    "permissions": 30
   },
   "drift": {
     "counts": {

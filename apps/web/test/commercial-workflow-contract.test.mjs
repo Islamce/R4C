@@ -72,6 +72,11 @@ test("production commercial operations persist tasks, transfer reviews, and disp
   assert.match(commercialApi, /requestTransferDocumentUpload:/);
   assert.match(commercialApi, /confirmTransferDocumentUpload:/);
   assert.match(commercialApi, /createDispatch:/);
+  assert.match(commercialApi, /projectMedia:/);
+  assert.match(commercialApi, /requestProjectMediaUpload:/);
+  assert.match(commercialApi, /confirmProjectMediaUpload:/);
+  assert.match(pipeline, /commercialApi\.createDispatch/);
+  assert.match(pipeline, /commercialApi\.requestProjectMediaUpload/);
   assert.match(suite, /commercialApi\.transferCases\(\)/);
   assert.match(suite, /fetch\(request\.uploadUrl/);
   assert.match(suite, /commercialApi\.confirmTransferDocumentUpload/);

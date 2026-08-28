@@ -36,8 +36,14 @@ PASS for build and contract gates. The transfer workspace no longer treats uploa
 - Production SMS-provider integration.
 - Government title-transfer submission.
 
+## Follow-on completed in the same hardening cycle
+
+- The production promotional project library now lists tenant/project-scoped stored assets.
+- Administrators can upload PDF, PNG, JPG, JPEG, and PPTX assets up to 100 MB through presigned object-storage URLs.
+- Object existence and size are confirmed before publication; sales users receive short-lived download links.
+- Customer dispatches now use persisted project, customer, and media identifiers and create governed dispatch records.
+
 ## Remaining product work
 
-- Replace the promotional project library's demonstration assets with a fully API-backed upload/list/download experience.
 - Execute authenticated browser UAT for the new object-storage upload using the target deployment environment.
 - Execute role-specific production UAT with sales-agent, sales-manager, and administrator accounts.

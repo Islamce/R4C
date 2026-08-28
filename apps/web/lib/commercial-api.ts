@@ -62,6 +62,7 @@ export interface TransferCase {
   documents: TransferDocument[];
 }
 export interface CommercialDispatch { id: string; status: "QUEUED" | "SENT" | "FAILED"; recipientEmail: string; subject: string; assetIds: string[]; createdAt: string }
+export interface ProjectMediaAsset { id: string; projectId: string; title: string; documentType: string; fileName: string; mimeType: string; sizeBytes: string; createdAt: string; downloadUrl: string }
 
 function commercialPath(path: string) {
   return `/api/backend/commercial/${path}`;
@@ -94,6 +95,9 @@ export const commercialApi = {
   confirmTransferDocumentUpload: (id: string) => clientApi<TransferDocument>(commercialPath(`transfer-documents/${id}/confirm-upload`), { method: "POST" }),
   reviewTransferCase: (id: string, status: string) => clientApi<TransferCase>(commercialPath(`transfer-cases/${id}/status`), json("PATCH", { status })),
   createDispatch: (body: Record<string, unknown>) => clientApi<CommercialDispatch>(commercialPath("dispatches"), json("POST", body)),
+  projectMedia: (projectId: string) => clientApi<ProjectMediaAsset[]>(commercialPath(`projects/${projectId}/media`)),
+  requestProjectMediaUpload: (projectId: string, body: Record<string, unknown>) => clientApi<{ mediaId: string; versionId: string; uploadUrl: string; expiresInSeconds: number }>(commercialPath(`projects/${projectId}/media/upload-request`), json("POST", body)),
+  confirmProjectMediaUpload: (mediaId: string) => clientApi<{ id: string; status: string }>(commercialPath(`project-media/${mediaId}/confirm-upload`), { method: "POST" }),
 };
 
 function json(method: "POST" | "PATCH", body: Record<string, unknown>): RequestInit {

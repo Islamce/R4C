@@ -19,6 +19,7 @@ import {
   CreateTransferCaseDto,
   ReviewTransferDocumentDto,
   RequestTransferDocumentUploadDto,
+  RequestProjectMediaUploadDto,
   ReviewTransferCaseDto,
   CreateCommercialDispatchDto,
   CreatePaymentPlanDto,
@@ -319,6 +320,15 @@ export class CommercialController {
   logActivity(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: CreateSalesActivityDto) {
     return this.commercial.logActivity(user, id, body);
   }
+
+  @Get("projects/:id/media") @RequirePermissions("commercial:media:view")
+  projectMedia(@CurrentUser() user: AuthContext, @Param("id") id: string) { return this.commercial.projectMedia(user.tenantId, id); }
+
+  @Post("projects/:id/media/upload-request") @RequirePermissions("commercial:media:manage")
+  requestProjectMediaUpload(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: RequestProjectMediaUploadDto) { return this.commercial.requestProjectMediaUpload(user, id, body); }
+
+  @Post("project-media/:id/confirm-upload") @RequirePermissions("commercial:media:manage")
+  confirmProjectMediaUpload(@CurrentUser() user: AuthContext, @Param("id") id: string) { return this.commercial.confirmProjectMediaUpload(user, id); }
 
   @Get("tasks") @RequirePermissions("commercial:task:view")
   tasks(@CurrentUser() user: AuthContext) { return this.commercial.tasks(user); }

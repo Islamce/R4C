@@ -342,6 +342,13 @@ export class RequestTransferDocumentUploadDto {
   @Type(() => Number) @IsInt() @Min(1) @Max(26214400) sizeBytes!: number;
 }
 
+export class RequestProjectMediaUploadDto {
+  @IsString() @Length(2, 200) title!: string;
+  @IsString() @Length(3, 240) fileName!: string;
+  @IsString() @Length(3, 120) mimeType!: string;
+  @Type(() => Number) @IsInt() @Min(1) @Max(104857600) sizeBytes!: number;
+}
+
 export class ReviewTransferDocumentDto {
   @IsEnum(TransferDocumentStatus) status!: TransferDocumentStatus;
   @IsOptional() @IsString() @Length(1, 1024) storageKey?: string;

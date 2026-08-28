@@ -57,6 +57,7 @@
     { "key": "commercial:payment-plan:view", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
     { "key": "commercial:payment-plan:manage", "roles": ["ADMIN"] },
     { "key": "commercial:media:manage", "roles": ["ADMIN"] },
+    { "key": "commercial:media:view", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
     { "key": "commercial:customer:create", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
     { "key": "commercial:customer:view", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
     { "key": "commercial:lead:create", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },

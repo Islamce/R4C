@@ -30,7 +30,8 @@ import {
   UsersThree,
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
-import { commercialApi, type SalesAssignee } from "../lib/commercial-api";
+import { commercialApi, type CommercialLead, type ProjectMediaAsset, type SalesAssignee } from "../lib/commercial-api";
+import { clientApi } from "../lib/client-api";
 
 export type UnitReservationHandoff = {
   reference: string;
@@ -98,7 +99,7 @@ const projects = ["جميع المشروعات", "مرتفعات الرياض", 
 const stageOrder: Stage[] = ["lead", "interest", "hold", "booking"];
 const stageIcons = { lead: UserPlus, interest: HandHeart, hold: CalendarCheck, booking: CheckCircle };
 
-export function SalesPipelineWorkspace({ externalReservation, ar, persistent = false }: { externalReservation?: UnitReservationHandoff | null; ar: boolean; persistent?: boolean }) {
+export function SalesPipelineWorkspace({ externalReservation, ar, persistent = false, canManageMedia = false }: { externalReservation?: UnitReservationHandoff | null; ar: boolean; persistent?: boolean; canManageMedia?: boolean }) {
   const [customers, setCustomers] = useState(seedCustomers);
   const [project, setProject] = useState("جميع المشروعات");
   const [stage, setStage] = useState<Stage | "all">("all");
@@ -256,7 +257,7 @@ export function SalesPipelineWorkspace({ externalReservation, ar, persistent = f
         </aside>
       </section>
       </> : null}
-      {workspaceView === "media" ? <ProjectMediaRepository project={project} setProject={setProject} onNotice={setNotice} notice={notice} /> : null}
+      {workspaceView === "media" ? <ProjectMediaRepository project={project} setProject={setProject} onNotice={setNotice} notice={notice} persistent={persistent} canManage={canManageMedia} ar={ar} /> : null}
       {workspaceView === "tasks" ? <SalesTeamTasks onNotice={setNotice} notice={notice} persistent={persistent} /> : null}
       {workspaceView === "performance" ? <SalesPerformanceDashboard /> : null}
       {fullRecordOpen ? (
@@ -314,20 +315,59 @@ function WorkspaceNotice({ notice, onClose }: { notice: string; onClose: () => v
   return notice ? <div className="pipeline-notice" role="status"><CheckCircle size={20} weight="fill" />{notice}<button type="button" onClick={onClose}>إغلاق</button></div> : null;
 }
 
-function ProjectMediaRepository({ project, setProject, onNotice, notice }: { project: string; setProject: (project: string) => void; onNotice: (notice: string) => void; notice: string }) {
+type MediaProject = { id: string; code: string; name: string };
+
+function ProjectMediaRepository({ project, setProject, onNotice, notice, persistent, canManage, ar }: { project: string; setProject: (project: string) => void; onNotice: (notice: string) => void; notice: string; persistent: boolean; canManage: boolean; ar: boolean }) {
   const [selectedAsset, setSelectedAsset] = useState(mediaAssets[0]!.id);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [storedAssets, setStoredAssets] = useState<ProjectMediaAsset[]>([]);
+  const [mediaProjects, setMediaProjects] = useState<MediaProject[]>([]);
+  const [dispatchCustomers, setDispatchCustomers] = useState<CommercialLead[]>([]);
+  const [uploading, setUploading] = useState(false);
   const activeProject = project === "جميع المشروعات" ? "مرتفعات الرياض" : project;
-  const visibleAssets = mediaAssets.filter((asset) => asset.project === activeProject);
-  const selected = mediaAssets.find((asset) => asset.id === selectedAsset) ?? visibleAssets[0]!;
+  const activeProjectRecord = mediaProjects.find((item) => item.name === activeProject || arabicProjectNames[item.name] === activeProject);
+  const visibleAssets = persistent ? storedAssets.map((asset) => ({ id: asset.id, project: activeProject, name: asset.title, type: asset.mimeType.includes("pdf") ? "كتيب PDF" : asset.mimeType.includes("presentation") ? "عرض تقديمي" : "معرض صور", channel: "البريد والحملات", updated: new Date(asset.createdAt).toLocaleDateString(ar ? "ar-SA" : "en-GB"), downloadUrl: asset.downloadUrl })) : mediaAssets.filter((asset) => asset.project === activeProject);
+  const selected = visibleAssets.find((asset) => asset.id === selectedAsset) ?? visibleAssets[0];
+
+  async function loadMedia(projectId: string) {
+    try { const assets = await commercialApi.projectMedia(projectId); setStoredAssets(assets); setSelectedAsset(assets[0]?.id ?? ""); }
+    catch (error) { onNotice(error instanceof Error ? error.message : text(ar, "Could not load project media.", "تعذر تحميل مواد المشروع.")); }
+  }
+
+  useEffect(() => {
+    if (!persistent) return;
+    void Promise.all([clientApi<MediaProject[]>("/api/projects"), commercialApi.leads(true)]).then(([projectRows, leads]) => {
+      setMediaProjects(projectRows);
+      setDispatchCustomers(leads.items.filter((lead) => lead.customer));
+      const chosen = projectRows.find((item) => item.name === activeProject || arabicProjectNames[item.name] === activeProject) ?? projectRows[0];
+      if (chosen) { setProject(arabicProjectNames[chosen.name] ?? chosen.name); void loadMedia(chosen.id); }
+    }).catch(() => onNotice(text(ar, "Could not initialize the governed project library.", "تعذر تهيئة مكتبة المشروع المحكومة.")));
+  }, [persistent]);
+
+  useEffect(() => { if (persistent && activeProjectRecord) void loadMedia(activeProjectRecord.id); }, [activeProjectRecord?.id]);
+
+  async function uploadMedia(file: File, title: string) {
+    if (!activeProjectRecord) return;
+    setUploading(true);
+    try {
+      const request = await commercialApi.requestProjectMediaUpload(activeProjectRecord.id, { title, fileName: file.name, mimeType: file.type, sizeBytes: file.size });
+      const result = await fetch(request.uploadUrl, { method: "PUT", headers: { "content-type": file.type }, body: file });
+      if (!result.ok) throw new Error(text(ar, "Storage rejected the upload.", "رفض مستودع الملفات عملية الرفع."));
+      await commercialApi.confirmProjectMediaUpload(request.mediaId);
+      await loadMedia(activeProjectRecord.id);
+      onNotice(text(ar, "Project material uploaded and published to the governed library.", "تم رفع مادة المشروع ونشرها في المكتبة المحكومة."));
+    } catch (error) { onNotice(error instanceof Error ? error.message : text(ar, "Upload failed.", "فشل الرفع.")); }
+    finally { setUploading(false); }
+  }
   return <section className="workspace-module media-repository" aria-label="مكتبة المواد الدعائية للمشروع">
     <WorkspaceNotice notice={notice} onClose={() => onNotice("")} />
-    <header className="module-heading"><div><p>مركز محتوى المشروع</p><h2>مكتبة المواد الدعائية</h2><span>مستودع مركزي للصور والكتيبات والمخططات والتصاميم المرتبطة بكل مشروع.</span></div><label><span>المشروع</span><select value={activeProject} onChange={(event) => setProject(event.target.value)}>{projects.slice(1).map((item) => <option key={item}>{item}</option>)}</select></label></header>
+    <header className="module-heading"><div><p>{text(ar, "Project content center", "مركز محتوى المشروع")}</p><h2>{text(ar, "Promotional materials library", "مكتبة المواد الدعائية")}</h2><span>{text(ar, "A central repository for each project's images, brochures, plans, and designs.", "مستودع مركزي للصور والكتيبات والمخططات والتصاميم المرتبطة بكل مشروع.")}</span></div><label><span>{text(ar, "Project", "المشروع")}</span><select value={activeProject} onChange={(event) => setProject(event.target.value)}>{(persistent ? mediaProjects.map((item) => arabicProjectNames[item.name] ?? item.name) : projects.slice(1)).map((item) => <option key={item}>{item}</option>)}</select></label></header>
+    {persistent && canManage ? <form className="media-upload-form" onSubmit={(event) => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); const file = (form.elements.namedItem("mediaFile") as HTMLInputElement).files?.[0]; if (file) void uploadMedia(file, String(data.get("mediaTitle"))); }}><input name="mediaTitle" placeholder={text(ar, "Material title", "عنوان المادة")} required /><input name="mediaFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.pptx" required /><button className="button button-primary" disabled={uploading}>{uploading ? text(ar, "Uploading…", "جاري الرفع…") : text(ar, "Upload material", "رفع المادة")}</button></form> : null}
     <div className="media-layout">
       <div className="media-grid">{visibleAssets.map((asset) => <button type="button" className={selected?.id === asset.id ? "media-card selected" : "media-card"} key={asset.id} onClick={() => setSelectedAsset(asset.id)}><span className="media-card-icon">{asset.type === "معرض صور" ? <FileImage size={27} weight="duotone" /> : asset.type === "عرض تقديمي" ? <PresentationChart size={27} weight="duotone" /> : <SelectionAll size={27} weight="duotone" />}</span><small>{asset.id} · {asset.type}</small><strong>{asset.name}</strong><span>{asset.channel}</span><time>تحديث {asset.updated}</time></button>)}</div>
-      <aside className="media-detail"><span className="media-preview"><Sparkle size={38} weight="duotone" /></span><small>{selected?.type}</small><h3>{selected?.name}</h3><p>{selected?.project}</p><dl><div><dt>قنوات الاستخدام</dt><dd>{selected?.channel}</dd></div><div><dt>آخر تحديث</dt><dd>{selected?.updated}</dd></div><div><dt>حالة الاعتماد</dt><dd className="good">معتمد للنشر</dd></div></dl><button className="button button-primary" type="button" onClick={() => setEmailOpen(true)}><EnvelopeSimple size={18} />إرسال للعميل</button><button className="button button-secondary" type="button" onClick={() => onNotice(`تم فتح معاينة «${selected?.name}».`)}>معاينة المادة</button></aside>
+      <aside className="media-detail"><span className="media-preview"><Sparkle size={38} weight="duotone" /></span><small>{selected?.type}</small><h3>{selected?.name ?? text(ar, "No published materials", "لا توجد مواد منشورة")}</h3><p>{selected?.project}</p><dl><div><dt>{text(ar, "Usage channels", "قنوات الاستخدام")}</dt><dd>{selected?.channel}</dd></div><div><dt>{text(ar, "Last update", "آخر تحديث")}</dt><dd>{selected?.updated}</dd></div><div><dt>{text(ar, "Approval status", "حالة الاعتماد")}</dt><dd className="good">{text(ar, "Published", "معتمد للنشر")}</dd></div></dl><button disabled={!selected} className="button button-primary" type="button" onClick={() => setEmailOpen(true)}><EnvelopeSimple size={18} />{text(ar, "Send to customer", "إرسال للعميل")}</button><a className="button button-secondary" href={(selected as typeof selected & { downloadUrl?: string })?.downloadUrl ?? "#"} target="_blank" rel="noreferrer">{text(ar, "Preview / download", "معاينة / تنزيل")}</a></aside>
     </div>
-    {emailOpen ? <form className="media-email-composer" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); onNotice(`تمت إضافة «${selected?.name}» إلى رسالة ${String(data.get("recipient"))} ووضعها في قائمة الإرسال.`); setEmailOpen(false); }}><header><div><PaperPlaneTilt size={22} weight="duotone" /><h3>إرسال مادة دعائية</h3></div><button type="button" aria-label="إغلاق" onClick={() => setEmailOpen(false)}><X size={20} /></button></header><label><span>بريد العميل</span><input name="recipient" type="email" defaultValue="client@example.com" required /></label><label><span>عنوان الرسالة</span><input name="subject" defaultValue={`مواد مشروع ${selected?.project}`} required /></label><label><span>الرسالة</span><textarea name="message" defaultValue={`مرحباً، نرفق لكم ${selected?.name} للاطلاع. يسعدنا الإجابة عن استفساراتكم.`} required /></label><div><span className="email-attachment"><FileImage size={17} />{selected?.name}</span><button className="button button-primary" type="submit">إضافة إلى قائمة الإرسال</button></div></form> : null}
+    {emailOpen ? <form className="media-email-composer" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); const customer = dispatchCustomers.find((lead) => lead.customerId === String(data.get("customerId"))); if (persistent && selected && activeProjectRecord && customer?.customer) { void commercialApi.createDispatch({ projectId: activeProjectRecord.id, customerId: customer.customer.id, recipientEmail: customer.customer.email, subject: String(data.get("subject")), message: String(data.get("message")), assetIds: [selected.id] }).then(() => { onNotice(text(ar, "The governed customer dispatch was queued.", "تمت إضافة الإرسال المحكوم للعميل إلى قائمة التنفيذ.")); setEmailOpen(false); }).catch((error) => onNotice(error instanceof Error ? error.message : text(ar, "Dispatch failed.", "فشل الإرسال."))); } else { onNotice(`تمت إضافة «${selected?.name}» إلى قائمة الإرسال.`); setEmailOpen(false); } }}><header><div><PaperPlaneTilt size={22} weight="duotone" /><h3>{text(ar, "Send promotional material", "إرسال مادة دعائية")}</h3></div><button type="button" aria-label={text(ar, "Close", "إغلاق")} onClick={() => setEmailOpen(false)}><X size={20} /></button></header>{persistent ? <label><span>{text(ar, "Customer", "العميل")}</span><select name="customerId" required>{dispatchCustomers.map((lead) => <option key={lead.id} value={lead.customerId ?? ""}>{lead.customer?.firstName} {lead.customer?.lastName} — {lead.customer?.email}</option>)}</select></label> : <label><span>{text(ar, "Customer email", "بريد العميل")}</span><input name="recipient" type="email" defaultValue="client@example.com" required /></label>}<label><span>{text(ar, "Subject", "عنوان الرسالة")}</span><input name="subject" defaultValue={`${text(ar, "Project materials", "مواد مشروع")} ${selected?.project}`} required /></label><label><span>{text(ar, "Message", "الرسالة")}</span><textarea name="message" defaultValue={text(ar, `Hello, please find ${selected?.name} attached for your review.`, `مرحباً، نرفق لكم ${selected?.name} للاطلاع. يسعدنا الإجابة عن استفساراتكم.`)} required /></label><div><span className="email-attachment"><FileImage size={17} />{selected?.name}</span><button className="button button-primary" type="submit">{text(ar, "Queue dispatch", "إضافة إلى قائمة الإرسال")}</button></div></form> : null}
   </section>;
 }
 

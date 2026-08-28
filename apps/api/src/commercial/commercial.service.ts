@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { LeadStatus, Prisma, SalesActivityType, TranslationLocale, UnitHoldStatus, UnitPriceRevisionStatus, UnitStatus } from "@prisma/client";
+import { LeadStatus, Prisma, SalesActivityType, TranslationLocale, UnitHoldStatus, UnitPriceRevisionStatus, UnitStatus, UploadStatus } from "@prisma/client";
 import { AuthContext } from "../common/auth-context";
 import { PrismaService } from "../prisma/prisma.service";
 import { ObjectStorageService } from "../storage/object-storage.service";
@@ -27,6 +27,7 @@ import {
   ReviewTransferDocumentDto,
   ReviewTransferCaseDto,
   RequestTransferDocumentUploadDto,
+  RequestProjectMediaUploadDto,
   CreateCommercialDispatchDto,
   CreatePaymentPlanDto,
   CreateUnitPriceRevisionDto,
@@ -940,6 +941,59 @@ export class CommercialService {
       });
       await this.audit(tx, user, "COMMERCIAL_SALES_ACTIVITY_LOGGED", "SalesActivity", activity.id, { leadId, type: activity.type });
       return this.activityView(activity);
+    });
+  }
+
+  async projectMedia(tenantId: string, projectId: string) {
+    await this.requireProject(tenantId, projectId);
+    const media = await this.prisma.projectMedia.findMany({
+      where: { tenantId, projectId, documentVersion: { uploadStatus: UploadStatus.UPLOADED } },
+      include: { documentVersion: { include: { document: { select: { title: true, documentType: true } } } } },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    });
+    return Promise.all(media.map(async (item) => ({
+      id: item.id,
+      projectId: item.projectId,
+      title: item.documentVersion.document.title,
+      documentType: item.documentVersion.document.documentType,
+      fileName: item.documentVersion.fileName,
+      mimeType: item.documentVersion.mimeType,
+      sizeBytes: item.documentVersion.sizeBytes.toString(),
+      createdAt: item.createdAt,
+      downloadUrl: await this.storage.createDownloadUrl(item.documentVersion.storageKey, item.documentVersion.fileName),
+    })));
+  }
+
+  async requestProjectMediaUpload(user: AuthContext, projectId: string, command: RequestProjectMediaUploadDto) {
+    await this.requireProject(user.tenantId, projectId);
+    const extension = extname(command.fileName).toLowerCase();
+    const mimeType = command.mimeType.toLowerCase();
+    const allowed = new Map([[".pdf", "application/pdf"], [".png", "image/png"], [".jpg", "image/jpeg"], [".jpeg", "image/jpeg"], [".pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"]]);
+    if (allowed.get(extension) !== mimeType) throw new BadRequestException("Project media must be PDF, PNG, JPG, JPEG, or PPTX");
+    const cleanName = command.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const documentId = randomUUID();
+    const versionId = randomUUID();
+    const mediaId = randomUUID();
+    const storageKey = ["tenants", user.tenantId, "projects", projectId, "commercial-media", mediaId, randomUUID(), cleanName].join("/");
+    await this.prisma.$transaction(async (tx) => {
+      await tx.document.create({ data: { id: documentId, tenantId: user.tenantId, projectId, code: `MEDIA-${mediaId.slice(0, 8).toUpperCase()}`, title: command.title.trim(), documentType: "COMMERCIAL_MEDIA" } });
+      await tx.documentVersion.create({ data: { id: versionId, tenantId: user.tenantId, documentId, versionNumber: 1, revision: "01", fileName: cleanName, mimeType, sizeBytes: BigInt(command.sizeBytes), storageKey, uploadedById: user.userId } });
+      await tx.projectMedia.create({ data: { id: mediaId, tenantId: user.tenantId, projectId, documentVersionId: versionId } });
+      await this.audit(tx, user, "COMMERCIAL_PROJECT_MEDIA_UPLOAD_REQUESTED", "ProjectMedia", mediaId, { projectId, fileName: cleanName, sizeBytes: command.sizeBytes });
+    });
+    return { mediaId, versionId, uploadUrl: await this.storage.createUploadUrl(storageKey, mimeType), expiresInSeconds: 900 };
+  }
+
+  async confirmProjectMediaUpload(user: AuthContext, mediaId: string) {
+    const media = await this.prisma.projectMedia.findFirst({ where: { id: mediaId, tenantId: user.tenantId }, include: { documentVersion: true } });
+    if (!media || media.documentVersion.uploadStatus !== UploadStatus.PENDING) throw new ConflictException("No pending project-media upload exists");
+    const stored = await this.storage.head(media.documentVersion.storageKey);
+    if (stored.sizeBytes !== Number(media.documentVersion.sizeBytes)) throw new ConflictException("Uploaded file size does not match the declared size");
+    return this.prisma.$transaction(async (tx) => {
+      await tx.documentVersion.update({ where: { id: media.documentVersionId }, data: { uploadStatus: UploadStatus.UPLOADED, uploadedAt: new Date(), storageChecksum: stored.checksumSha256 ?? stored.etag } });
+      await tx.document.update({ where: { id: media.documentVersion.documentId }, data: { currentVersionId: media.documentVersionId } });
+      await this.audit(tx, user, "COMMERCIAL_PROJECT_MEDIA_UPLOAD_CONFIRMED", "ProjectMedia", mediaId, { projectId: media.projectId });
+      return { id: mediaId, status: "UPLOADED" };
     });
   }
 
