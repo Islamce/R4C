@@ -68,3 +68,23 @@ Authenticated browser verification was executed against `https://r4c.kynox.io` w
 | Persisted transfer-document upload/review/approval UI | NOT PRESENT in the deployed UI |
 
 Release decision: **NO-GO for final acceptance of the current deployment.** The verified branch must be deployed as one atomic Web/API/migration release before the remaining role-specific and object-storage UAT can be completed. Existing production data must be preserved; no seed or reset operation is authorized as part of that deployment.
+
+## Production release verification — 2026-08-31 (post-deployment)
+
+Release PR #79 was approved, all required checks passed, and merge commit `f2605c0227ebfa1f38ba9b0b8c0e1f17cae179e8` was deployed. Hostinger Web auto-deployed from `main`. The API application was still connected to `codex/kynox-users-access-release`; that branch was safely fast-forwarded to the same merge commit so the existing API environment and database configuration were preserved.
+
+| Live check | Result |
+| --- | --- |
+| Web deployment commit/branch | PASS — `f2605c02`, `main` |
+| API health | PASS |
+| Public portfolio API route | PASS — deployed and tenant-scoped |
+| Customer portal `/explore` | PARTIAL — route and API work, but no project is visible because the only persisted project remains `DRAFT` |
+| Authenticated administrator login | PASS |
+| Persisted Lead/customer ledger | PASS |
+| Project library, task/team, performance/alert views | PASS for loading and access |
+| Project/unit, transfer-file, sales-operations views | PASS for loading and access |
+| Project media upload | FAIL — browser upload reaches the storage step then returns `Failed to fetch`; production has S3 credentials and bucket but lacks `S3_ENDPOINT`, `S3_PRESIGN_ENDPOINT`, and `S3_REGION` variables |
+| Project publication workflow | FAIL — administrator UI/API has no governed transition from `DRAFT` to `ACTIVE`, so the customer portal cannot publish an otherwise valid project |
+| Hosting capacity | RISK — Hostinger reports that hosting resource limits have been reached |
+
+Post-deployment decision: **NO-GO for customer-portal launch and document/media acceptance.** Internal authenticated read workflows are available, but final acceptance requires a governed project publication transition, a configured browser-reachable object-storage endpoint with CORS, a successful media/transfer upload retest, and resolution or measured acceptance of the Hostinger resource-limit warning.
