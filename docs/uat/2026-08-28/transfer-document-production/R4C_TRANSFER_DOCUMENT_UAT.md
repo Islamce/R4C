@@ -51,3 +51,20 @@ PASS for build and contract gates. The transfer workspace no longer treats uploa
 ## Live-UAT correction
 
 The first live-browser pass identified that the main sales-pipeline cards and customer ledger still used preview fixtures in the authenticated production page. This was corrected immediately: production now loads permission-scoped leads from the API, calculates the visible KPIs from those records, advances stages through the governed lead-status endpoint, and routes new-customer creation to the persisted sales-operations form. Preview fixtures remain available only in preview mode.
+
+## Production verification — 2026-08-31
+
+Authenticated browser verification was executed against `https://r4c.kynox.io` with the administrator identity. The deployed runtime is healthy enough to authenticate and read tenant-scoped projects, users, inventory, and the persisted Lead pipeline, but it does **not** match the release candidate on `codex/restore-approved-product`.
+
+| Check | Production result |
+| --- | --- |
+| Administrator authentication | PASS |
+| Projects and user-directory routes | PASS |
+| Persisted Lead and activity retrieval | PASS |
+| English/Arabic locale switch | PASS with residual mixed-language record and role labels |
+| Customer portal `/explore` | FAIL — production returns 404 |
+| Dedicated customer/unit/transfer/operations workspace views | FAIL — navigation query changes, but the deployed page renders the same legacy combined workspace |
+| Persisted project media library | NOT PRESENT in the deployed UI |
+| Persisted transfer-document upload/review/approval UI | NOT PRESENT in the deployed UI |
+
+Release decision: **NO-GO for final acceptance of the current deployment.** The verified branch must be deployed as one atomic Web/API/migration release before the remaining role-specific and object-storage UAT can be completed. Existing production data must be preserved; no seed or reset operation is authorized as part of that deployment.
