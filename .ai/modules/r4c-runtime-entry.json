@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-runtime-entry.json",
-    "bodyDigest": "c1a1bc848c356d9b9ca5bc4b662c8d5b5bb992e13a47998c850898105a9d1d3d",
+    "bodyDigest": "dc27787506ed8c4b78e0825e5bd7f4172434eb71b8a2890c6f404ffb09641e3f",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "909eb793b70024397d0abe3c96f16d332d892fdc1049077fc7fbefd4bf5a1e66",
+    "inputDigest": "50b4795b8474d7670d5198851fd487ae581bd5f6d63819dc56e6740e41e5d662",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -51,6 +51,8 @@
       "README.md",
       "RECON_CRM_RESCOPE.md",
       "UAT_FULL_TEST_RUN_2026-08-24.md",
+      "artifacts/uat/approved-product-final/UAT_REPORT.md",
+      "artifacts/uat/full-sales-cycle/UAT_EXECUTION_REPORT.md",
       "deploy/hostinger-external/nonproduction-web-apps.manifest.yaml",
       "design-qa.md",
       "docker-compose.prod.yml",
@@ -108,6 +110,7 @@
       "docs/uat/2026-08-26/R4C_UAT_RERUN.md",
       "docs/uat/2026-08-27/R4C_UAT_REMEDIATION.md",
       "docs/uat/2026-08-27/production-full/R4C_FULL_UAT_REPORT.md",
+      "docs/uat/2026-08-28/transfer-document-production/R4C_TRANSFER_DOCUMENT_UAT.md",
       "docs/wafi-readiness.md",
       "docs/zatca-architecture.md",
       "hostinger-web-entry.cjs",

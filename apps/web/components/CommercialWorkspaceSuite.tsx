@@ -7,6 +7,7 @@ import { CommercialHero3D } from "./CommercialHero3D";
 import { useI18n } from "./I18nProvider";
 import { SalesPipelineWorkspace, type UnitReservationHandoff } from "./SalesPipelineWorkspace";
 import { clientApi } from "../lib/client-api";
+import { commercialApi, type TransferCase, type TransferDocument } from "../lib/commercial-api";
 import type { BrowserSessionUser } from "../lib/types";
 
 const localize = (ar: boolean, en: string, arabic: string) => ar ? arabic : en;
@@ -48,13 +49,28 @@ const transferStatusLabel = (ar: boolean, status: string) => ({
   Approved: localize(ar, "Approved", "معتمد"),
   "In review": localize(ar, "In review", "قيد المراجعة"),
   Ready: localize(ar, "Ready", "جاهز"),
+  DOCUMENTS_PENDING: localize(ar, "Documents pending", "بانتظار المستندات"),
+  UNDER_REVIEW: localize(ar, "Under review", "قيد المراجعة"),
+  APPROVED: localize(ar, "Approved", "معتمد"),
+  READY_FOR_AUTHORITY: localize(ar, "Ready for authority", "جاهز للجهة المعتمدة"),
+  COMPLETED: localize(ar, "Completed", "مكتمل"),
+  RETURNED: localize(ar, "Returned for correction", "معاد للتصحيح"),
 }[status] ?? status);
 const transferBlockerLabel = (ar: boolean, blocker: string) => ({
   "Mortgagee approval": localize(ar, "Mortgagee approval", "موافقة الجهة المرتهنة"),
   "RETT tax reference": localize(ar, "RETT tax reference", "مرجع ضريبة التصرفات العقارية"),
   "Buyer IBAN": localize(ar, "Buyer IBAN", "رقم آيبان المشتري"),
+  SELLER_ID: localize(ar, "Seller identity", "هوية البائع"),
+  BUYER_ID: localize(ar, "Buyer identity", "هوية المشتري"),
+  TITLE_DEED: localize(ar, "Title deed", "الصك العقاري"),
+  BENEFICIARY_IBAN: localize(ar, "Beneficiary IBAN", "آيبان المستفيد"),
+  RETT_REFERENCE: localize(ar, "RETT reference", "مرجع ضريبة التصرفات العقارية"),
+  MORTGAGEE_APPROVAL: localize(ar, "Mortgagee approval", "موافقة الجهة المرتهنة"),
+  SIGNED_CONTRACT: localize(ar, "Signed contract", "عقد البيع الموقّع"),
+  EVIDENCE: localize(ar, "Evidence attachments", "مرفقات الإثبات"),
   "—": "—",
 }[blocker] ?? blocker);
+const inventoryValueLabel = (ar: boolean, value: string) => localize(ar, `SAR ${value}`, `${value.replace(/M$/, " مليون")} ر.س`);
 
 type Tab = "pipeline" | "portfolio" | "units" | "transfer" | "operations";
 type ProjectAssets = {
@@ -155,6 +171,8 @@ const units: UnitDashboardRow[] = [
   ["A-1204", "3BR", "12", "162.3", "142.1", "1,980,000", "Interest"],
   ["A-1205", "Studio", "12", "45.6", "40.1", "620,000", "Available"],
   ["A-1206", "2BR", "12", "123.1", "108.7", "1,470,000", "Held"],
+  ["A-1207", "1BR", "12", "92.4", "81.2", "1,090,000", "Available"],
+  ["A-1208", "3BR", "12", "171.2", "149.8", "2,120,000", "Reserved"],
 ];
 
 function unitsFor(building: string, floor: number): UnitDashboardRow[] {
@@ -166,6 +184,8 @@ function unitsFor(building: string, floor: number): UnitDashboardRow[] {
     "Interest",
     "Available",
     "Held",
+    "Available",
+    "Reserved",
   ];
   return units.map((unit, index) => {
     const price =
@@ -185,12 +205,14 @@ function unitsFor(building: string, floor: number): UnitDashboardRow[] {
 }
 
 const floorHotspots = [
-  { left: "23%", top: "29%" },
-  { left: "44%", top: "30%" },
-  { left: "77%", top: "30%" },
-  { left: "23%", top: "70%" },
-  { left: "47%", top: "72%" },
-  { left: "77%", top: "70%" },
+  { left: "19%", top: "31%" },
+  { left: "39%", top: "32%" },
+  { left: "60%", top: "31%" },
+  { left: "80%", top: "31%" },
+  { left: "20%", top: "70%" },
+  { left: "39%", top: "70%" },
+  { left: "60%", top: "70%" },
+  { left: "80%", top: "70%" },
 ];
 
 const transferTemplates = [
@@ -219,6 +241,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
   const [saved, setSaved] = useState(false);
   const [unitReservation, setUnitReservation] = useState<UnitReservationHandoff | null>(null);
   const [isAdmin, setIsAdmin] = useState(preview);
+  const [canViewAllLeads, setCanViewAllLeads] = useState(preview);
   const [projectAssets, setProjectAssets] = useState<Record<string, ProjectAssets>>({});
   const selected = useMemo(
     () => projects.find((item) => item.name === project) ?? projects[0]!,
@@ -228,8 +251,11 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
   useEffect(() => {
     if (preview) return;
     clientApi<{ user: BrowserSessionUser }>("/api/session")
-      .then(({ user }) => setIsAdmin(user.role === "ADMIN" || user.permissions.includes("commercial:manage")))
-      .catch(() => setIsAdmin(false));
+      .then(({ user }) => {
+        setIsAdmin(user.role === "ADMIN" || user.permissions.includes("commercial:manage"));
+        setCanViewAllLeads(user.permissions.includes("commercial:lead:view-all"));
+      })
+      .catch(() => { setIsAdmin(false); setCanViewAllLeads(false); });
   }, [preview]);
 
   useEffect(() => {
@@ -314,7 +340,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           </div>
         </section>
       ) : null}
-      {tab === "pipeline" ? <SalesPipelineWorkspace externalReservation={unitReservation} ar={ar} /> : null}
+      {tab === "pipeline" ? <SalesPipelineWorkspace externalReservation={unitReservation} ar={ar} persistent={!preview} canManageMedia={isAdmin} canViewAllLeads={canViewAllLeads} /> : null}
       {tab === "portfolio" ? (
         <PortfolioDashboard
           selectedProject={project}
@@ -341,7 +367,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
         />
       ) : null}
       {tab === "transfer" ? (
-        <TransferDashboard project={project} onProjectChange={setProject} ar={ar} />
+        <TransferDashboard project={project} onProjectChange={setProject} ar={ar} persistent={!preview} />
       ) : null}
       {tab === "operations" ? (
         preview ? <PreviewSalesOperations project={project} ar={ar} /> : <CommercialOperatorWorkspace />
@@ -476,6 +502,7 @@ function PortfolioDashboard({
           project={focusedProject.name}
           progress={focusedProject.progress}
           modelUrl={assets?.modelUrl}
+          label={localize(ar, `Interactive 3D construction model for ${focusedProject.name}`, `نموذج إنشائي ثلاثي الأبعاد تفاعلي لمشروع ${projectDisplayName(ar, focusedProject.name)}`)}
         />
         <div className="executive-hero-copy">
           <p className="eyebrow">{localize(ar, "Live development digital twin", "التوأم الرقمي المباشر للمشروع")}</p>
@@ -507,7 +534,7 @@ function PortfolioDashboard({
         <Metric value="684" label={localize(ar, "Sold", "المباع")} tone="good" caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
         <Metric value="92" label={localize(ar, "Pending / reserved", "قيد الانتظار / محجوز")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
         <Metric value="147" label={localize(ar, "Active leads", "العملاء المحتملون النشطون")} caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
-        <Metric value="SAR 1.84B" label={localize(ar, "Contracted value", "القيمة التعاقدية")} tone="good" caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
+        <Metric value={localize(ar, "SAR 1.84B", "1.84 مليار ر.س")} label={localize(ar, "Contracted value", "القيمة التعاقدية")} tone="good" caption={localize(ar, "Portfolio current view", "عرض المحفظة الحالي")} />
       </section>
       <section className="portfolio-layout">
         <div className="suite-panel">
@@ -517,15 +544,15 @@ function PortfolioDashboard({
               <p>{localize(ar, "Construction delivery, inventory and commercial performance", "التنفيذ الإنشائي والمخزون والأداء التجاري")}</p>
             </div>
             <div className="suite-filter-row">
-              <select aria-label="City">
+              <select aria-label={localize(ar, "City", "المدينة")}>
                 <option>{localize(ar, "All cities", "كل المدن")}</option>
-                <option>Riyadh</option>
-                <option>Jeddah</option>
+                <option>{localize(ar, "Riyadh", "الرياض")}</option>
+                <option>{localize(ar, "Jeddah", "جدة")}</option>
               </select>
-              <select aria-label="Phase">
+              <select aria-label={localize(ar, "Phase", "المرحلة")}>
                 <option>{localize(ar, "All phases", "كل المراحل")}</option>
-                <option>Structure</option>
-                <option>Finishing</option>
+                <option>{localize(ar, "Structure", "الهيكل الإنشائي")}</option>
+                <option>{localize(ar, "Finishing", "التشطيبات")}</option>
               </select>
             </div>
           </div>
@@ -565,7 +592,7 @@ function PortfolioDashboard({
                 <span>{p.pending}</span>
                 <span className="good">{p.sold}</span>
                 <span>{p.leads}</span>
-                <strong>SAR {p.value}</strong>
+                <strong>{inventoryValueLabel(ar, p.value)}</strong>
               </button>
             ))}
           </div>
@@ -575,7 +602,7 @@ function PortfolioDashboard({
             <img
               className="project-visual"
               src={assets?.galleryUrl ?? "/assets/commercial/riyadh-heights.png"}
-              alt={`${focusedProject.name} residential development`}
+              alt={localize(ar, `${focusedProject.name} residential development`, `مشروع ${projectDisplayName(ar, focusedProject.name)} السكني`)}
             />
             {isAdmin ? (
               <label className="admin-asset-upload admin-gallery-upload">
@@ -629,7 +656,7 @@ function PortfolioDashboard({
             </div>
             <div>
               <dt>{localize(ar, "Inventory value", "قيمة المخزون")}</dt>
-              <dd>SAR {focusedProject.value}</dd>
+              <dd>{inventoryValueLabel(ar, focusedProject.value)}</dd>
             </div>
           </dl>
           <button
@@ -643,22 +670,24 @@ function PortfolioDashboard({
       </section>
       <section className="suite-analytics">
         <Chart
-          title="Sales vs construction progress"
+          title={localize(ar, "Sales vs construction progress", "تقدم المبيعات مقابل الإنشاء")}
           values={[38, 46, 52, 59, 66, 71]}
           second={[24, 31, 39, 47, 54, 62]}
+          ar={ar}
         />
         <Chart
-          title="Quarterly reservation value (SAR M)"
+          title={localize(ar, "Quarterly reservation value (SAR M)", "قيمة الحجوزات الفصلية (مليون ر.س)")}
           values={[31, 46, 52, 48, 67, 82]}
+          ar={ar}
         />
         <article className="suite-panel suite-funnel">
-          <h2>Lead conversion</h2>
+          <h2>{localize(ar, "Lead conversion", "تحويل العملاء المحتملين")}</h2>
           {[
-            ["New leads", 147, 100],
-            ["Contacted", 98, 67],
-            ["Qualified", 62, 42],
-            ["Site visit", 34, 23],
-            ["Reserved", 16, 11],
+            [localize(ar, "New leads", "عملاء جدد"), 147, 100],
+            [localize(ar, "Contacted", "تم التواصل"), 98, 67],
+            [localize(ar, "Qualified", "مؤهلون"), 62, 42],
+            [localize(ar, "Site visit", "زيارة الموقع"), 34, 23],
+            [localize(ar, "Reserved", "حجوزات"), 16, 11],
           ].map(([n, v, w]) => (
             <div key={String(n)}>
               <span>{n}</span>
@@ -668,22 +697,22 @@ function PortfolioDashboard({
           ))}
         </article>
         <article className="suite-panel financial-card">
-          <h2>Executive financial analysis</h2>
+          <h2>{localize(ar, "Executive financial analysis", "التحليل المالي التنفيذي")}</h2>
           <dl>
             <div>
-              <dt>Gross sales value</dt>
-              <dd>SAR 1.84B</dd>
+              <dt>{localize(ar, "Gross sales value", "إجمالي قيمة المبيعات")}</dt>
+              <dd>{localize(ar, "SAR 1.84B", "1.84 مليار ر.س")}</dd>
             </div>
             <div>
-              <dt>Weighted forecast</dt>
-              <dd>SAR 2.63B</dd>
+              <dt>{localize(ar, "Weighted forecast", "التوقع المرجّح")}</dt>
+              <dd>{localize(ar, "SAR 2.63B", "2.63 مليار ر.س")}</dd>
             </div>
             <div>
-              <dt>Average price / m²</dt>
-              <dd>SAR 7,512</dd>
+              <dt>{localize(ar, "Average price / m²", "متوسط السعر / م²")}</dt>
+              <dd>{localize(ar, "SAR 7,512", "7,512 ر.س")}</dd>
             </div>
             <div>
-              <dt>Variance to target</dt>
+              <dt>{localize(ar, "Variance to target", "الانحراف عن المستهدف")}</dt>
               <dd className="good">+8.9%</dd>
             </div>
           </dl>
@@ -696,34 +725,33 @@ function PortfolioDashboard({
       >
         <div className="suite-panel-heading">
           <div>
-            <h2>Executive closing summary</h2>
+            <h2>{localize(ar, "Executive closing summary", "ملخص الإغلاق التنفيذي")}</h2>
             <p>
-              Portfolio-level ownership-transfer readiness; detailed files
-              remain in their dedicated tab.
+              {localize(ar, "Portfolio-level ownership-transfer readiness; detailed files remain in their dedicated tab.", "جاهزية الإفراغ العقاري على مستوى المحفظة؛ وتبقى الملفات التفصيلية في التبويب المخصص.")}
             </p>
           </div>
-          <strong>34 transfers in progress</strong>
+          <strong>{localize(ar, "34 transfers in progress", "34 عملية إفراغ جارية")}</strong>
         </div>
         <div className="closing-summary-grid">
           <div>
             <strong>18</strong>
-            <span>Ready for handoff</span>
+            <span>{localize(ar, "Ready for handoff", "جاهز للتسليم")}</span>
           </div>
           <div>
             <strong>9</strong>
-            <span>Awaiting documents</span>
+            <span>{localize(ar, "Awaiting documents", "بانتظار المستندات")}</span>
           </div>
           <div>
             <strong>5</strong>
-            <span>Government review</span>
+            <span>{localize(ar, "Government review", "المراجعة الحكومية")}</span>
           </div>
           <div>
             <strong>2</strong>
-            <span>Blocked</span>
+            <span>{localize(ar, "Blocked", "متعثر")}</span>
           </div>
           <div>
-            <strong>SAR 84.6M</strong>
-            <span>Value in closing</span>
+            <strong>{localize(ar, "SAR 84.6M", "84.6 مليون ر.س")}</strong>
+            <span>{localize(ar, "Value in closing", "القيمة قيد الإغلاق")}</span>
           </div>
         </div>
       </button>
@@ -735,10 +763,12 @@ function Chart({
   title,
   values,
   second,
+  ar,
 }: {
   title: string;
   values: number[];
   second?: number[];
+  ar: boolean;
 }) {
   return (
     <article className="suite-panel chart-card">
@@ -751,12 +781,12 @@ function Chart({
         ))}
       </div>
       <div className="chart-labels">
-        <span>Dec</span>
-        <span>Jan</span>
-        <span>Feb</span>
-        <span>Mar</span>
-        <span>Apr</span>
-        <span>May</span>
+        <span>{localize(ar, "Dec", "ديسمبر")}</span>
+        <span>{localize(ar, "Jan", "يناير")}</span>
+        <span>{localize(ar, "Feb", "فبراير")}</span>
+        <span>{localize(ar, "Mar", "مارس")}</span>
+        <span>{localize(ar, "Apr", "أبريل")}</span>
+        <span>{localize(ar, "May", "مايو")}</span>
       </div>
     </article>
   );
@@ -864,7 +894,7 @@ function UnitDashboard({
                 >
                   <span>{localize(ar, "Floor", "الدور")} {item}</span>
                   <small>
-                    6 {localize(ar, "units", "وحدات")} ·{" "}
+                    8 {localize(ar, "units", "وحدات")} ·{" "}
                     {
                       unitsFor(building, item).filter(
                         (row) => row[6] === "Available",
@@ -965,14 +995,14 @@ function UnitDashboard({
               <strong>
                 {localize(ar, `${building} · Floor ${floor} layout`, `${building === "Building A" ? "المبنى أ" : "المبنى ب"} · مخطط الدور ${floor}`)}
               </strong>
-              <span>{localize(ar, "6 units · 1,004.9 m² gross floor area", "6 وحدات · 1,004.9 م² إجمالي مساحة الدور")}</span>
+              <span>{localize(ar, "8 units · 949.1 m² gross floor area", "8 وحدات · 949.1 م² إجمالي مساحة الدور")}</span>
             </div>
             <span>{localize(ar, "North ↑", "الشمال ↑")}</span>
           </div>
           <div className="floor-plan-wrap">
             <img
               className="floor-plan-image"
-              src="/assets/commercial/floor-12-layout.png"
+              src="/assets/commercial/floor-12-layout-8-units.png"
               alt={localize(ar, `${building} floor ${floor} architectural unit layout`, `المخطط المعماري للدور ${floor} في ${building === "Building A" ? "المبنى أ" : "المبنى ب"}`)}
             />
             {floorUnits.map(({ row, status }, index) => (
@@ -1218,12 +1248,17 @@ function TransferDashboard({
   project,
   onProjectChange,
   ar,
+  persistent,
 }: {
   project: string;
   onProjectChange: (project: string) => void;
   ar: boolean;
+  persistent: boolean;
 }) {
   const [rows, setRows] = useState<UnitDashboardRow[]>(transfers);
+  const [transferCases, setTransferCases] = useState<TransferCase[]>([]);
+  const [transferNotice, setTransferNotice] = useState("");
+  const [transferBusy, setTransferBusy] = useState(false);
   const [selectedId, setSelectedId] = useState(
     transfers.find((row) => row[1] === project)?.[0] ?? transfers[0]![0],
   );
@@ -1235,17 +1270,41 @@ function TransferDashboard({
   const [reviewDecisions, setReviewDecisions] = useState<Record<string, Record<string, "approved" | "changes">>>({});
   const projectRows = rows.filter((row) => row[1] === project);
   const selectedTransfer =
-    rows.find((row) => row[0] === selectedId) ?? projectRows[0] ?? rows[0]!;
+    rows.find((row) => row[0] === selectedId) ?? projectRows[0] ?? rows[0] ?? (["—", project, "—", "—", "0%", "—", "DOCUMENTS_PENDING"] as UnitDashboardRow);
   const approved = selectedTransfer[4] === "100%";
   const currentUploads = uploadedDocuments[selectedTransfer[0]] ?? {};
   const currentDecisions = reviewDecisions[selectedTransfer[0]] ?? {};
+  const selectedCase = transferCases.find((item) => item.reservation.unit.code === selectedTransfer[0]);
+
+  async function refreshTransferCases() {
+    if (!persistent) return;
+    try {
+      const cases = await commercialApi.transferCases();
+      setTransferCases(cases);
+      setRows(cases.map((item) => {
+        const customer = item.reservation.customer;
+        const buyer = customer ? `${customer.firstName}${customer.lastName ? ` ${customer.lastName}` : ""}` : "—";
+        const blocker = item.documents.find((document) => !["VERIFIED", "NOT_APPLICABLE"].includes(document.status));
+        return [item.reservation.unit.code, item.project.name, buyer, "—", `${item.readiness}%`, blocker?.documentType ?? "—", item.status] as UnitDashboardRow;
+      }));
+      if (cases.length) {
+        setSelectedId((current) => cases.some((item) => item.reservation.unit.code === current) ? current : cases[0]!.reservation.unit.code);
+        if (!cases.some((item) => item.project.name === project)) onProjectChange(cases[0]!.project.name);
+      }
+      setTransferNotice("");
+    } catch (error) {
+      setTransferNotice(error instanceof Error ? error.message : localize(ar, "Could not load transfer files", "تعذر تحميل ملفات الإفراغ"));
+    }
+  }
+
+  useEffect(() => { void refreshTransferCases(); }, [persistent]);
 
   useEffect(() => {
     const next = rows.find((row) => row[1] === project);
     if (next) setSelectedId(next[0]);
   }, [project, rows]);
 
-  const checks: [string, string, string, string][] = [
+  const previewChecks: [string, string, string, string][] = [
     ["seller-id", localize(ar, "Seller identity / representative", "هوية البائع / الممثل النظامي"), "Verified", localize(ar, "Verified", "متحقق")],
     ["buyer-id", localize(ar, "Buyer identity", "هوية المشتري"), "Verified", localize(ar, "Verified", "متحقق")],
     ["title-deed", localize(ar, "Electronic title deed / property sheet", "الصك الإلكتروني / صحيفة العقار"), "Verified", localize(ar, "Verified", "متحقق")],
@@ -1265,6 +1324,53 @@ function TransferDashboard({
     ["sales-contract", localize(ar, "Signed sales contract", "عقد البيع الموقّع"), "Verified", localize(ar, "Verified", "متحقق")],
     ["evidence", localize(ar, "Evidence attachments", "مرفقات الإثبات"), "Verified", localize(ar, "Verified", "متحقق")],
   ];
+  const documentLabels: Record<string, string> = {
+    SELLER_ID: localize(ar, "Seller identity / representative", "هوية البائع / الممثل النظامي"),
+    BUYER_ID: localize(ar, "Buyer identity", "هوية المشتري"),
+    TITLE_DEED: localize(ar, "Electronic title deed / property sheet", "الصك الإلكتروني / صحيفة العقار"),
+    BENEFICIARY_IBAN: localize(ar, "Active beneficiary IBAN", "آيبان المستفيد النشط"),
+    RETT_REFERENCE: localize(ar, "Real estate transaction tax reference", "مرجع ضريبة التصرفات العقارية"),
+    UNIT_SUBDIVISION: localize(ar, "Unit subdivision document", "مستند فرز الوحدة"),
+    MORTGAGEE_APPROVAL: localize(ar, "Mortgagee approval", "موافقة الجهة المرتهنة"),
+    SIGNED_CONTRACT: localize(ar, "Signed sales contract", "عقد البيع الموقّع"),
+    EVIDENCE: localize(ar, "Evidence attachments", "مرفقات الإثبات"),
+  };
+  const statusLabels: Record<string, string> = {
+    MISSING: localize(ar, "Missing", "ناقص"), UPLOADED: localize(ar, "Uploaded for review", "مرفوع للمراجعة"),
+    VERIFIED: localize(ar, "Verified", "متحقق"), REJECTED: localize(ar, "Correction required", "مطلوب تصحيح"),
+    NOT_APPLICABLE: localize(ar, "Not applicable", "لا ينطبق"),
+  };
+  const checks: [string, string, string, string][] = selectedCase
+    ? selectedCase.documents.map((document) => [document.id, documentLabels[document.documentType] ?? document.documentType, document.status, statusLabels[document.status] ?? document.status])
+    : previewChecks;
+
+  async function uploadTransferDocument(document: TransferDocument, file: File) {
+    setTransferBusy(true);
+    setTransferNotice(localize(ar, "Uploading document…", "جاري رفع المستند…"));
+    try {
+      const request = await commercialApi.requestTransferDocumentUpload(document.id, { fileName: file.name, mimeType: file.type, sizeBytes: file.size });
+      const uploaded = await fetch(request.uploadUrl, { method: "PUT", headers: { "content-type": file.type }, body: file });
+      if (!uploaded.ok) throw new Error(localize(ar, "Object storage rejected the upload", "رفض مستودع الملفات عملية الرفع"));
+      await commercialApi.confirmTransferDocumentUpload(document.id);
+      await refreshTransferCases();
+      setTransferNotice(localize(ar, "Document uploaded and queued for manager review.", "تم رفع المستند وإرساله لمراجعة المدير."));
+    } catch (error) {
+      setTransferNotice(error instanceof Error ? error.message : localize(ar, "Upload failed", "فشل رفع المستند"));
+    } finally { setTransferBusy(false); }
+  }
+
+  async function reviewDocument(id: string, status: "VERIFIED" | "REJECTED") {
+    if (!persistent) {
+      setReviewDecisions((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: status === "VERIFIED" ? "approved" : "changes" } }));
+      return;
+    }
+    setTransferBusy(true);
+    try {
+      await commercialApi.reviewTransferDocument(id, { status, ...(reviewNote.trim() ? { notes: reviewNote.trim() } : {}) });
+      await refreshTransferCases();
+    } catch (error) { setTransferNotice(error instanceof Error ? error.message : localize(ar, "Review failed", "فشلت المراجعة")); }
+    finally { setTransferBusy(false); }
+  }
   function approveReadiness() {
     setRows((current) =>
       current.map((row) =>
@@ -1307,7 +1413,7 @@ function TransferDashboard({
               value={project}
               onChange={(event) => onProjectChange(event.target.value)}
             >
-              {projects.map((item) => (
+              {(persistent ? Array.from(new Set(transferCases.map((item) => item.project.name))).map((name) => ({ name })) : projects).map((item) => (
                 <option key={item.name} value={item.name}>{projectDisplayName(ar, item.name)}</option>
               ))}
             </select>
@@ -1324,6 +1430,7 @@ function TransferDashboard({
             <span>{localize(ar, "Blocking item", "العنصر المعيق")}</span>
             <span>{localize(ar, "Handoff status", "حالة التسليم")}</span>
           </div>
+          {transferNotice ? <div className="transfer-notice" role="status">{transferNotice}</div> : null}
           {projectRows.map((r) => (
             <button
               type="button"
@@ -1361,17 +1468,19 @@ function TransferDashboard({
             <strong>{selectedTransfer[4]} {localize(ar, "ready", "جاهز")}</strong>
           </div>
           <div className="checklist">
-            {checks.map(([id, label, status, statusLabel]) => (
+            {checks.map(([id, label, status, statusLabel]) => {
+              const persistentDocument = selectedCase?.documents.find((document) => document.id === id);
+              return (
               <div key={id} className="transfer-document-row">
-                <span><b>{label}</b>{currentUploads[id] ? <small>{currentUploads[id]}</small> : null}</span>
+                <span><b>{label}</b>{persistentDocument?.fileName || currentUploads[id] ? <small>{persistentDocument?.fileName ?? currentUploads[id]}</small> : null}</span>
                 <strong
                   className={`check-${status.toLowerCase().replaceAll(" ", "-")}`}
                 >
                   {statusLabel}
                 </strong>
-                <label className="transfer-upload-control"><FileArrowUp size={16} /><span>{localize(ar, "Upload / replace", "رفع / استبدال")}</span><input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(event) => { const file = event.target.files?.[0]; if (file) setUploadedDocuments((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: file.name } })); }} /></label>
+                <label className="transfer-upload-control" aria-disabled={transferBusy}><FileArrowUp size={16} /><span>{localize(ar, "Upload / replace", "رفع / استبدال")}</span><input disabled={transferBusy || status === "NOT_APPLICABLE"} type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; if (persistentDocument) void uploadTransferDocument(persistentDocument, file); else setUploadedDocuments((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: file.name } })); event.currentTarget.value = ""; }} /></label>
               </div>
-            ))}
+            );})}
           </div>
         </article>
         <aside className="suite-panel transfer-actions">
@@ -1401,7 +1510,7 @@ function TransferDashboard({
           </p>
         </aside>
       </section>
-      {reviewOpen ? <div className="suite-modal-backdrop" role="presentation" onMouseDown={() => setReviewOpen(false)}><section className="suite-modal transfer-review-modal" role="dialog" aria-modal="true" aria-labelledby="transfer-review-title" onMouseDown={(event) => event.stopPropagation()}><header><div><p className="eyebrow">{localize(ar, "Supervisor gate", "بوابة اعتماد المشرف")}</p><h2 id="transfer-review-title">{localize(ar, "Review every customer document", "مراجعة جميع ملفات العميل")}</h2><span>{selectedTransfer[0]} · {buyerDisplayName(ar, selectedTransfer[2])}</span></div><button type="button" aria-label={localize(ar, "Close", "إغلاق")} onClick={() => setReviewOpen(false)}><X size={21} /></button></header><div className="review-role-banner"><ShieldCheck size={22} weight="duotone" /><div><strong>{localize(ar, "Sales manager / supervisor approval", "اعتماد مدير / مشرف المبيعات")}</strong><span>{localize(ar, "Final readiness cannot be approved by the sales agent who prepared the file.", "لا يمكن لمندوب المبيعات مُعدّ الملف اعتماد الجاهزية النهائية.")}</span></div><b>{localize(ar, "Authorized reviewer", "مراجع مخوّل")}</b></div><div className="review-document-list">{checks.map(([id, label, status, statusLabel]) => <article key={id}><div><strong>{label}</strong><span>{currentUploads[id] ?? localize(ar, "Existing governed document", "مستند محكوم قائم")}</span></div><i className={`check-${status.toLowerCase().replaceAll(" ", "-")}`}>{statusLabel}</i><button type="button" onClick={() => setReviewDecisions((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: "approved" } }))}><Eye size={16} />{currentDecisions[id] === "approved" ? localize(ar, "Reviewed", "تمت المراجعة") : localize(ar, "Review & approve", "مراجعة واعتماد")}</button><button type="button" className="review-change" onClick={() => setReviewDecisions((current) => ({ ...current, [selectedTransfer[0]]: { ...(current[selectedTransfer[0]] ?? {}), [id]: "changes" } }))}>{localize(ar, "Request correction", "طلب تصحيح")}</button></article>)}</div><label className="review-note"><span>{localize(ar, "Supervisor review note", "ملاحظة المراجع")}</span><textarea value={reviewNote} onChange={(event) => setReviewNote(event.target.value)} placeholder={localize(ar, "Record the approval basis or required action", "سجّل أساس الاعتماد أو الإجراء المطلوب")} /></label><footer><button className="button button-secondary" type="button" onClick={() => setReviewOpen(false)}>{localize(ar, "Save review draft", "حفظ مسودة المراجعة")}</button><button className="button button-primary" type="button" disabled={Object.values(currentDecisions).includes("changes")} onClick={() => { approveReadiness(); setReviewOpen(false); }}>{localize(ar, "Approve file readiness", "اعتماد جاهزية الملف")}</button></footer></section></div> : null}
+      {reviewOpen ? <div className="suite-modal-backdrop" role="presentation" onMouseDown={() => setReviewOpen(false)}><section className="suite-modal transfer-review-modal" role="dialog" aria-modal="true" aria-labelledby="transfer-review-title" onMouseDown={(event) => event.stopPropagation()}><header><div><p className="eyebrow">{localize(ar, "Supervisor gate", "بوابة اعتماد المشرف")}</p><h2 id="transfer-review-title">{localize(ar, "Review every customer document", "مراجعة جميع ملفات العميل")}</h2><span>{selectedTransfer[0]} · {buyerDisplayName(ar, selectedTransfer[2])}</span></div><button type="button" aria-label={localize(ar, "Close", "إغلاق")} onClick={() => setReviewOpen(false)}><X size={21} /></button></header><div className="review-role-banner"><ShieldCheck size={22} weight="duotone" /><div><strong>{localize(ar, "Sales manager / supervisor approval", "اعتماد مدير / مشرف المبيعات")}</strong><span>{localize(ar, "Final readiness cannot be approved by the sales agent who prepared the file.", "لا يمكن لمندوب المبيعات مُعدّ الملف اعتماد الجاهزية النهائية.")}</span></div><b>{localize(ar, "Authorized reviewer", "مراجع مخوّل")}</b></div><div className="review-document-list">{checks.map(([id, label, status, statusLabel]) => <article key={id}><div><strong>{label}</strong><span>{selectedCase?.documents.find((document) => document.id === id)?.fileName ?? currentUploads[id] ?? localize(ar, "No uploaded file", "لا يوجد ملف مرفوع")}</span></div><i className={`check-${status.toLowerCase().replaceAll(" ", "-")}`}>{statusLabel}</i><button disabled={transferBusy || status === "MISSING" || status === "NOT_APPLICABLE"} type="button" onClick={() => void reviewDocument(id, "VERIFIED")}><Eye size={16} />{status === "VERIFIED" || currentDecisions[id] === "approved" ? localize(ar, "Reviewed", "تمت المراجعة") : localize(ar, "Review & approve", "مراجعة واعتماد")}</button><button disabled={transferBusy || status === "MISSING" || status === "NOT_APPLICABLE"} type="button" className="review-change" onClick={() => void reviewDocument(id, "REJECTED")}>{localize(ar, "Request correction", "طلب تصحيح")}</button></article>)}</div><label className="review-note"><span>{localize(ar, "Supervisor review note", "ملاحظة المراجع")}</span><textarea value={reviewNote} onChange={(event) => setReviewNote(event.target.value)} placeholder={localize(ar, "Record the approval basis or required action", "سجّل أساس الاعتماد أو الإجراء المطلوب")} /></label><footer><button className="button button-secondary" type="button" onClick={() => setReviewOpen(false)}>{localize(ar, "Save review draft", "حفظ مسودة المراجعة")}</button><button className="button button-primary" type="button" disabled={transferBusy || (persistent ? selectedCase?.readiness !== 100 : Object.values(currentDecisions).includes("changes"))} onClick={() => { if (persistent && selectedCase) { setTransferBusy(true); void commercialApi.reviewTransferCase(selectedCase.id, "APPROVED").then(refreshTransferCases).then(() => setReviewOpen(false)).catch((error) => setTransferNotice(error instanceof Error ? error.message : localize(ar, "Approval failed", "فشل الاعتماد"))).finally(() => setTransferBusy(false)); } else { approveReadiness(); setReviewOpen(false); } }}>{localize(ar, "Approve file readiness", "اعتماد جاهزية الملف")}</button></footer></section></div> : null}
       {integrationOpen ? <div className="suite-modal-backdrop" role="presentation" onMouseDown={() => setIntegrationOpen(false)}><section className="suite-modal government-integration-modal" role="dialog" aria-modal="true" aria-labelledby="integration-title" onMouseDown={(event) => event.stopPropagation()}><header><div><p className="eyebrow">{localize(ar, "Integration blueprint", "مخطط الربط")}</p><h2 id="integration-title">{localize(ar, "Authorized government channel", "القناة الحكومية المعتمدة")}</h2></div><button type="button" aria-label={localize(ar, "Close", "إغلاق")} onClick={() => setIntegrationOpen(false)}><X size={21} /></button></header><div className="integration-status"><PlugsConnected size={26} weight="duotone" /><div><strong>{localize(ar, "Integration deferred pending authority agreement", "الربط مؤجل لحين الاتفاق مع الجهة")}</strong><span>{localize(ar, "The operational contract is prepared without activating external transmission.", "تم إعداد عقد التشغيل دون تفعيل الإرسال الخارجي.")}</span></div><b>{localize(ar, "Not connected", "غير متصل")}</b></div><div className="integration-contract"><label><span>{localize(ar, "Authority / service", "الجهة / الخدمة")}</span><input value={localize(ar, "To be agreed", "تحدد بعد الاتفاق")} readOnly /></label><label><span>{localize(ar, "Exchange method", "طريقة التبادل")}</span><select defaultValue="api"><option value="api">API</option><option value="file">{localize(ar, "Secure file exchange", "تبادل ملفات آمن")}</option></select></label><label><span>{localize(ar, "Authentication", "المصادقة")}</span><input value={localize(ar, "Authority-issued credentials — pending", "بيانات اعتماد تصدرها الجهة — معلقة")} readOnly /></label><label><span>{localize(ar, "Endpoint", "نقطة الربط")}</span><input value="https://authority.example/api/transfer" readOnly dir="ltr" /></label></div><section><h3>{localize(ar, "Prepared payload", "البيانات المجهزة للإرسال")}</h3><ul><li>{localize(ar, "Transfer reference and unit", "مرجع الإفراغ والوحدة")}</li><li>{localize(ar, "Buyer and seller verified identities", "هويتا البائع والمشتري المتحقق منهما")}</li><li>{localize(ar, "Approved document manifest and hashes", "بيان المستندات المعتمدة وبصماتها")}</li><li>{localize(ar, "Manager approval and audit trail", "اعتماد المدير وسجل التدقيق")}</li></ul></section><footer><button className="button button-secondary" type="button" disabled>{localize(ar, "Test connection after agreement", "اختبار الاتصال بعد الاتفاق")}</button><button className="button button-primary" type="button" onClick={() => setIntegrationOpen(false)}>{localize(ar, "Save deferred integration draft", "حفظ مسودة الربط المؤجل")}</button></footer></section></div> : null}
     </main>
   );

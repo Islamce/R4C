@@ -16,12 +16,13 @@ const tenantResolution = await readFile(new URL("../lib/tenant-resolution.ts", i
 const shell = await readFile(new URL("../components/AppShell.tsx", import.meta.url), "utf8");
 const shellModern = await readFile(new URL("../app/shell-modern.css", import.meta.url), "utf8");
 const salesPipelineCss = await readFile(new URL("../app/sales-pipeline.css", import.meta.url), "utf8");
+const commercialApi = await readFile(new URL("../lib/commercial-api.ts", import.meta.url), "utf8");
 
 test("production entry routes users into the commercial journey", () => {
   assert.match(home, /redirect\("\/login"\)/);
   assert.match(login, /router\.replace\("\/commercial"\)/);
-  assert.match(commercialPage, /CommercialOperatorWorkspace/);
-  assert.doesNotMatch(commercialPage, /CommercialWorkspaceSuite/);
+  assert.match(commercialPage, /CommercialWorkspaceSuite/);
+  assert.doesNotMatch(commercialPage, /CommercialOperatorWorkspace/);
   assert.match(designPreviewPage, /process\.env\.NODE_ENV !== "development"/);
   assert.match(designPreviewPage, /CommercialWorkspaceSuite preview/);
 });
@@ -57,6 +58,32 @@ test("the browser proxy exposes only the bounded journey contracts", () => {
   assert.match(proxy, /commercial\\\/holds/);
   assert.match(proxy, /commercial\\\/assignees/);
   assert.match(proxy, /admin\\\/users/);
+  for (const route of ["tasks", "transfer-cases", "transfer-documents", "dispatches"]) assert.match(proxy, new RegExp(route));
+});
+
+test("production commercial operations persist tasks, transfer reviews, and dispatches", () => {
+  assert.match(suite, /SalesPipelineWorkspace externalReservation=\{unitReservation\} ar=\{ar\} persistent=\{!preview\}/);
+  assert.match(pipeline, /commercialApi\.tasks\(\)/);
+  assert.match(pipeline, /commercialApi\.createTask/);
+  assert.match(pipeline, /commercialApi\.updateTask/);
+  assert.match(pipeline, /commercialApi\.leads\(canViewAllLeads\)/);
+  assert.match(pipeline, /commercialApi\.advanceLead/);
+  assert.match(pipeline, /setCustomers\(loaded\)/);
+  assert.match(commercialApi, /transferCases:/);
+  assert.match(commercialApi, /reviewTransferDocument:/);
+  assert.match(commercialApi, /reviewTransferCase:/);
+  assert.match(commercialApi, /requestTransferDocumentUpload:/);
+  assert.match(commercialApi, /confirmTransferDocumentUpload:/);
+  assert.match(commercialApi, /createDispatch:/);
+  assert.match(commercialApi, /projectMedia:/);
+  assert.match(commercialApi, /requestProjectMediaUpload:/);
+  assert.match(commercialApi, /confirmProjectMediaUpload:/);
+  assert.match(pipeline, /commercialApi\.createDispatch/);
+  assert.match(pipeline, /commercialApi\.requestProjectMediaUpload/);
+  assert.match(suite, /commercialApi\.transferCases\(\)/);
+  assert.match(suite, /fetch\(request\.uploadUrl/);
+  assert.match(suite, /commercialApi\.confirmTransferDocumentUpload/);
+  assert.match(suite, /selectedCase\?\.readiness !== 100/);
 });
 
 test("mass import validates contacts and campaign results before governed creation", () => {
@@ -82,7 +109,7 @@ test("production web configuration cannot fall back to localhost or a .local ten
 });
 
 test("authenticated routes share the KYNOX shell and commercial tools use real navigation targets", () => {
-  for (const target of ["/projects", "/commercial?view=customers#commercial-customers", "/commercial?view=units#commercial-units", "/commercial?view=transfer#commercial-transfer", "/commercial?view=operations#commercial-operations"]) {
+  for (const target of ["/projects", "/commercial?view=customers#commercial-customers", "/commercial?view=units#commercial-units", "/commercial?view=transfer#commercial-transfer", "/commercial?view=operations#commercial-operations", "/progress", "/cost-control"]) {
     assert.match(shell, new RegExp(target.replace(/[?]/g, "\\?")));
   }
   assert.match(shell, /className="kynox-tool-link" href=\{href\}/);
@@ -104,4 +131,9 @@ test("commercial UAT safeguards localization, dialogs, contrast, and mobile cont
   assert.match(salesPipelineCss, /\.commercial-suite \.commercial-operator \.page-heading h1 \{ color: #fff; \}/);
   assert.match(shellModern, /\.app-shell \{ width: 100%; max-width: 100%; grid-template-columns: minmax\(0, 1fr\); overflow-x: clip; \}/);
   assert.match(shellModern, /\.app-nav \{ min-width: 0;[^}]+overflow-x: auto;/);
+  assert.match(suite, /floor-12-layout-8-units\.png/);
+  for (const unit of ["A-1201", "A-1202", "A-1203", "A-1204", "A-1205", "A-1206", "A-1207", "A-1208"]) assert.match(suite, new RegExp(unit));
+  assert.match(suite, /8 وحدات/);
+  assert.match(pipeline, /canonicalProjectName\(externalReservation\.project\)/);
+  assert.doesNotMatch(pipeline, /PERFORMANCE & ALERTING|SALES TEAM CONTROL|PROJECT CONTENT HUB|78\.0M ر\.س/);
 });

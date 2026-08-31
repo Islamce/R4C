@@ -111,6 +111,9 @@ export function LoginForm({
           <Link className="text-link" href="/forgot-password">
             {t("passwordReset.forgot")}
           </Link>
+          <Link className="text-link" href={`/explore${tenant?.code ? `?tenant=${encodeURIComponent(tenant.code)}` : ""}`}>
+            تصفح المشاريع المتاحة للعملاء
+          </Link>
         </form>
       </section>
     </main>

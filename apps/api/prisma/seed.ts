@@ -25,6 +25,11 @@ const COMMERCIAL_ROLE_DEFINITIONS = [
       "commercial:activity:log",
       "commercial:hold:create",
       "commercial:hold:release",
+      "commercial:task:view",
+      "commercial:dispatch:create",
+      "commercial:media:view",
+      "commercial:transfer:view",
+      "commercial:transfer:upload",
     ],
   },
   {
@@ -34,6 +39,10 @@ const COMMERCIAL_ROLE_DEFINITIONS = [
       "commercial:lead:view-all",
       "commercial:lead:reassign",
       "commercial:reservation:confirm",
+      "commercial:task:manage",
+      "commercial:media:view",
+      "commercial:transfer:upload",
+      "commercial:transfer:review",
     ],
   },
 ] as const;

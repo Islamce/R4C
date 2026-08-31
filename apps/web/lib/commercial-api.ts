@@ -48,6 +48,21 @@ export interface UnitContext {
 }
 export interface UnitHold { id: string; unitId: string; leadId: string; status: string; holdExpiresAt: string }
 export interface Reservation { id: string; status: string; currency: string; basePriceSnapshotMinor: string; listPriceSnapshotMinor: string; reservationAmountMinor: string; sourcePriceRevisionId: string; paymentPlanId: string; confirmedAt: string }
+export interface SalesTask { id: string; title: string; description: string | null; priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT"; status: "OPEN" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"; dueAt: string; assignee: { id: string; displayName: string }; createdBy: { id: string; displayName: string } }
+export interface TransferDocument { id: string; documentType: string; status: "MISSING" | "UPLOADED" | "VERIFIED" | "REJECTED" | "NOT_APPLICABLE"; storageKey: string | null; fileName: string | null; mimeType: string | null; sizeBytes: string | null; notes: string | null }
+export interface TransferCase {
+  id: string;
+  status: "DOCUMENTS_PENDING" | "UNDER_REVIEW" | "APPROVED" | "READY_FOR_AUTHORITY" | "COMPLETED" | "RETURNED";
+  readiness: number;
+  project: { id: string; code: string; name: string };
+  reservation: Pick<Reservation, "id" | "status" | "currency" | "confirmedAt"> & {
+    customer: CommercialLead["customer"];
+    unit: Pick<UnitContext, "id" | "code" | "number">;
+  };
+  documents: TransferDocument[];
+}
+export interface CommercialDispatch { id: string; status: "QUEUED" | "SENT" | "FAILED"; recipientEmail: string; subject: string; assetIds: string[]; createdAt: string }
+export interface ProjectMediaAsset { id: string; projectId: string; title: string; documentType: string; fileName: string; mimeType: string; sizeBytes: string; createdAt: string; downloadUrl: string }
 
 function commercialPath(path: string) {
   return `/api/backend/commercial/${path}`;
@@ -70,6 +85,19 @@ export const commercialApi = {
   createHold: (body: Record<string, unknown>) => clientApi<UnitHold>(commercialPath("holds"), json("POST", body)),
   releaseHold: (id: string) => clientApi<UnitHold>(commercialPath(`holds/${id}/cancel`), { method: "POST" }),
   confirmReservation: (id: string, paymentPlanId: string) => clientApi<Reservation>(commercialPath(`holds/${id}/confirm`), json("POST", { paymentPlanId })),
+  tasks: () => clientApi<SalesTask[]>(commercialPath("tasks")),
+  createTask: (body: Record<string, unknown>) => clientApi<SalesTask>(commercialPath("tasks"), json("POST", body)),
+  updateTask: (id: string, body: Record<string, unknown>) => clientApi<SalesTask>(commercialPath(`tasks/${id}`), json("PATCH", body)),
+  transferCases: () => clientApi<TransferCase[]>(commercialPath("transfer-cases")),
+  createTransferCase: (reservationId: string) => clientApi<TransferCase>(commercialPath("transfer-cases"), json("POST", { reservationId })),
+  reviewTransferDocument: (id: string, body: Record<string, unknown>) => clientApi<TransferDocument>(commercialPath(`transfer-documents/${id}`), json("PATCH", body)),
+  requestTransferDocumentUpload: (id: string, body: Record<string, unknown>) => clientApi<{ uploadUrl: string; storageKey: string; expiresInSeconds: number }>(commercialPath(`transfer-documents/${id}/upload-request`), json("POST", body)),
+  confirmTransferDocumentUpload: (id: string) => clientApi<TransferDocument>(commercialPath(`transfer-documents/${id}/confirm-upload`), { method: "POST" }),
+  reviewTransferCase: (id: string, status: string) => clientApi<TransferCase>(commercialPath(`transfer-cases/${id}/status`), json("PATCH", { status })),
+  createDispatch: (body: Record<string, unknown>) => clientApi<CommercialDispatch>(commercialPath("dispatches"), json("POST", body)),
+  projectMedia: (projectId: string) => clientApi<ProjectMediaAsset[]>(commercialPath(`projects/${projectId}/media`)),
+  requestProjectMediaUpload: (projectId: string, body: Record<string, unknown>) => clientApi<{ mediaId: string; versionId: string; uploadUrl: string; expiresInSeconds: number }>(commercialPath(`projects/${projectId}/media/upload-request`), json("POST", body)),
+  confirmProjectMediaUpload: (mediaId: string) => clientApi<{ id: string; status: string }>(commercialPath(`project-media/${mediaId}/confirm-upload`), { method: "POST" }),
 };
 
 function json(method: "POST" | "PATCH", body: Record<string, unknown>): RequestInit {

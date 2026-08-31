@@ -38,7 +38,12 @@
     "unit-price-revision",
     "payment-plan",
     "progress-record",
-    "password-reset-token"
+    "password-reset-token",
+    "sales-task",
+    "transfer-case",
+    "transfer-document",
+    "commercial-dispatch",
+    "phone-verification"
   ],
   "owner": "Backend",
   "permissions": [
@@ -52,6 +57,7 @@
     { "key": "commercial:payment-plan:view", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
     { "key": "commercial:payment-plan:manage", "roles": ["ADMIN"] },
     { "key": "commercial:media:manage", "roles": ["ADMIN"] },
+    { "key": "commercial:media:view", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
     { "key": "commercial:customer:create", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
     { "key": "commercial:customer:view", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
     { "key": "commercial:lead:create", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
@@ -64,7 +70,13 @@
     { "key": "commercial:activity:log", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
     { "key": "commercial:hold:create", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
     { "key": "commercial:hold:release", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
-    { "key": "commercial:reservation:confirm", "roles": ["ADMIN", "SALES_MANAGER"] }
+    { "key": "commercial:reservation:confirm", "roles": ["ADMIN", "SALES_MANAGER"] },
+    { "key": "commercial:task:view", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
+    { "key": "commercial:task:manage", "roles": ["ADMIN", "SALES_MANAGER"] },
+    { "key": "commercial:transfer:view", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
+    { "key": "commercial:transfer:upload", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] },
+    { "key": "commercial:transfer:review", "roles": ["ADMIN", "SALES_MANAGER"] },
+    { "key": "commercial:dispatch:create", "roles": ["ADMIN", "SALES_AGENT", "SALES_MANAGER"] }
   ],
   "publicEntryPoints": [
     "apps/api/package.json",

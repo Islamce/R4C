@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "5b1c04d2ba08052fd57c8086a99ac5c14aa76bf407ecd8c04fcc5f5f57aedbd3",
+    "bodyDigest": "3f0638364648223be1b0f1ac1b780e356deddca055fe6723a01b5f28f8c47ce6",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "909eb793b70024397d0abe3c96f16d332d892fdc1049077fc7fbefd4bf5a1e66",
+    "inputDigest": "50b4795b8474d7670d5198851fd487ae581bd5f6d63819dc56e6740e41e5d662",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -92,13 +92,13 @@
   "modules": [
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 99 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 101 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [],
       "dependsOn": [],
       "discovery": {
-        "codeFileCount": 99,
+        "codeFileCount": 101,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -108,12 +108,13 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 103
+        "sourceFileCount": 105
       },
       "id": "r4c-api",
       "ownedEntities": [
         "approval",
         "building",
+        "commercial-dispatch",
         "customer",
         "design-document",
         "development-phase",
@@ -121,10 +122,14 @@
         "lead",
         "password-reset-token",
         "payment-plan",
+        "phone-verification",
         "progress-record",
         "project",
         "reservation",
         "sales-activity",
+        "sales-task",
+        "transfer-case",
+        "transfer-document",
         "translation",
         "unit",
         "unit-hold",
@@ -275,7 +280,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 83
+        "sourceFileCount": 86
       },
       "id": "r4c-runtime-entry",
       "ownedEntities": [],
@@ -323,7 +328,7 @@
     },
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 62 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 66 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [
@@ -333,7 +338,7 @@
         "r4c-contracts"
       ],
       "discovery": {
-        "codeFileCount": 62,
+        "codeFileCount": 66,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -343,7 +348,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 65
+        "sourceFileCount": 69
       },
       "id": "r4c-web",
       "ownedEntities": [],
@@ -393,6 +398,17 @@
     {
       "confidence": "verified",
       "key": "commercial:customer:view",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:dispatch:create",
       "module": "r4c-api",
       "roles": [
         "ADMIN",
@@ -507,6 +523,17 @@
     },
     {
       "confidence": "verified",
+      "key": "commercial:media:view",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
       "key": "commercial:payment-plan:manage",
       "module": "r4c-api",
       "roles": [
@@ -591,6 +618,59 @@
       "module": "r4c-api",
       "roles": [
         "ADMIN"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:task:manage",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_MANAGER"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:task:view",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:transfer:review",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_MANAGER"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:transfer:upload",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
+      ],
+      "sourceManifest": "apps/api/kaaf.module.json"
+    },
+    {
+      "confidence": "verified",
+      "key": "commercial:transfer:view",
+      "module": "r4c-api",
+      "roles": [
+        "ADMIN",
+        "SALES_AGENT",
+        "SALES_MANAGER"
       ],
       "sourceManifest": "apps/api/kaaf.module.json"
     }

@@ -8,10 +8,12 @@ export function CommercialHero3D({
   project,
   progress,
   modelUrl,
+  label,
 }: {
   project: string;
   progress: number;
   modelUrl?: string;
+  label?: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
 
@@ -174,7 +176,7 @@ export function CommercialHero3D({
       className="commercial-hero-3d"
       ref={host}
       role="img"
-      aria-label={`Interactive 3D construction model for ${project}`}
+      aria-label={label ?? `Interactive 3D construction model for ${project}`}
     />
   );
 }

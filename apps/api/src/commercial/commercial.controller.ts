@@ -14,6 +14,14 @@ import {
   ConfirmReservationDto,
   CreateLeadDto,
   CreateSalesActivityDto,
+  CreateSalesTaskDto,
+  UpdateSalesTaskDto,
+  CreateTransferCaseDto,
+  ReviewTransferDocumentDto,
+  RequestTransferDocumentUploadDto,
+  RequestProjectMediaUploadDto,
+  ReviewTransferCaseDto,
+  CreateCommercialDispatchDto,
   CreatePaymentPlanDto,
   CreateUnitPriceRevisionDto,
   CreateFloorDto,
@@ -312,4 +320,43 @@ export class CommercialController {
   logActivity(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: CreateSalesActivityDto) {
     return this.commercial.logActivity(user, id, body);
   }
+
+  @Get("projects/:id/media") @RequirePermissions("commercial:media:view")
+  projectMedia(@CurrentUser() user: AuthContext, @Param("id") id: string) { return this.commercial.projectMedia(user.tenantId, id); }
+
+  @Post("projects/:id/media/upload-request") @RequirePermissions("commercial:media:manage")
+  requestProjectMediaUpload(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: RequestProjectMediaUploadDto) { return this.commercial.requestProjectMediaUpload(user, id, body); }
+
+  @Post("project-media/:id/confirm-upload") @RequirePermissions("commercial:media:manage")
+  confirmProjectMediaUpload(@CurrentUser() user: AuthContext, @Param("id") id: string) { return this.commercial.confirmProjectMediaUpload(user, id); }
+
+  @Get("tasks") @RequirePermissions("commercial:task:view")
+  tasks(@CurrentUser() user: AuthContext) { return this.commercial.tasks(user); }
+
+  @Post("tasks") @RequirePermissions("commercial:task:manage")
+  createTask(@CurrentUser() user: AuthContext, @Body() body: CreateSalesTaskDto) { return this.commercial.createTask(user, body); }
+
+  @Patch("tasks/:id") @RequirePermissions("commercial:task:manage")
+  updateTask(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: UpdateSalesTaskDto) { return this.commercial.updateTask(user, id, body); }
+
+  @Get("transfer-cases") @RequirePermissions("commercial:transfer:view")
+  transferCases(@CurrentUser() user: AuthContext) { return this.commercial.transferCases(user.tenantId); }
+
+  @Post("transfer-cases") @RequirePermissions("commercial:transfer:review")
+  createTransferCase(@CurrentUser() user: AuthContext, @Body() body: CreateTransferCaseDto) { return this.commercial.createTransferCase(user, body); }
+
+  @Patch("transfer-documents/:id") @RequirePermissions("commercial:transfer:review")
+  reviewTransferDocument(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: ReviewTransferDocumentDto) { return this.commercial.reviewTransferDocument(user, id, body); }
+
+  @Post("transfer-documents/:id/upload-request") @RequirePermissions("commercial:transfer:upload")
+  requestTransferDocumentUpload(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: RequestTransferDocumentUploadDto) { return this.commercial.requestTransferDocumentUpload(user, id, body); }
+
+  @Post("transfer-documents/:id/confirm-upload") @RequirePermissions("commercial:transfer:upload")
+  confirmTransferDocumentUpload(@CurrentUser() user: AuthContext, @Param("id") id: string) { return this.commercial.confirmTransferDocumentUpload(user, id); }
+
+  @Patch("transfer-cases/:id/status") @RequirePermissions("commercial:transfer:review")
+  reviewTransferCase(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: ReviewTransferCaseDto) { return this.commercial.reviewTransferCase(user, id, body); }
+
+  @Post("dispatches") @RequirePermissions("commercial:dispatch:create")
+  createDispatch(@CurrentUser() user: AuthContext, @Body() body: CreateCommercialDispatchDto) { return this.commercial.createDispatch(user, body); }
 }

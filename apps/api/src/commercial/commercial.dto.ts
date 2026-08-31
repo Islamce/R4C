@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { DevelopmentPhaseStatus, LeadStatus, SalesActivityType, TranslationLocale, UnitStatus } from "@prisma/client";
+import { DevelopmentPhaseStatus, LeadStatus, SalesActivityType, SalesTaskPriority, SalesTaskStatus, TransferCaseStatus, TransferDocumentStatus, TranslationLocale, UnitStatus } from "@prisma/client";
 import {
   ArrayMinSize,
   IsArray,
@@ -313,4 +313,85 @@ export class WithdrawLeadConsentDto {
 export class CreateSalesActivityDto {
   @IsEnum(SalesActivityType) type!: SalesActivityType;
   @IsString() @Length(1, 4000) notes!: string;
+}
+
+export class CreateSalesTaskDto {
+  @IsString() @Length(2, 240) title!: string;
+  @IsOptional() @IsString() @Length(1, 4000) description?: string;
+  @IsUUID() assigneeId!: string;
+  @IsDateString() dueAt!: string;
+  @IsOptional() @IsUUID() projectId?: string;
+  @IsOptional() @IsUUID() leadId?: string;
+  @IsOptional() @IsEnum(SalesTaskPriority) priority?: SalesTaskPriority;
+}
+
+export class UpdateSalesTaskDto {
+  @IsOptional() @IsEnum(SalesTaskStatus) status?: SalesTaskStatus;
+  @IsOptional() @IsEnum(SalesTaskPriority) priority?: SalesTaskPriority;
+  @IsOptional() @IsDateString() dueAt?: string;
+  @IsOptional() @IsUUID() assigneeId?: string;
+}
+
+export class CreateTransferCaseDto {
+  @IsUUID() reservationId!: string;
+}
+
+export class RequestTransferDocumentUploadDto {
+  @IsString() @Length(1, 255) fileName!: string;
+  @IsString() @Length(3, 120) mimeType!: string;
+  @Type(() => Number) @IsInt() @Min(1) @Max(26214400) sizeBytes!: number;
+}
+
+export class RequestProjectMediaUploadDto {
+  @IsString() @Length(2, 200) title!: string;
+  @IsString() @Length(3, 240) fileName!: string;
+  @IsString() @Length(3, 120) mimeType!: string;
+  @Type(() => Number) @IsInt() @Min(1) @Max(104857600) sizeBytes!: number;
+}
+
+export class ReviewTransferDocumentDto {
+  @IsEnum(TransferDocumentStatus) status!: TransferDocumentStatus;
+  @IsOptional() @IsString() @Length(1, 1024) storageKey?: string;
+  @IsOptional() @IsString() @Length(1, 2000) notes?: string;
+}
+
+export class ReviewTransferCaseDto {
+  @IsEnum(TransferCaseStatus) status!: TransferCaseStatus;
+}
+
+export class CreateCommercialDispatchDto {
+  @IsUUID() projectId!: string;
+  @IsUUID() customerId!: string;
+  @IsEmail() @Length(3, 320) recipientEmail!: string;
+  @IsString() @Length(2, 240) subject!: string;
+  @IsString() @Length(2, 10000) message!: string;
+  @IsArray() @ArrayMinSize(1) @IsUUID("4", { each: true }) assetIds!: string[];
+}
+
+export class PublicPortfolioQueryDto {
+  @IsString() @Length(2, 40) tenantCode!: string;
+}
+
+export class RequestPhoneVerificationDto {
+  @IsString() @Length(2, 40) tenantCode!: string;
+  @IsString() @Length(9, 32) phone!: string;
+}
+
+export class VerifyPhoneDto {
+  @IsString() @Length(2, 40) tenantCode!: string;
+  @IsUUID() verificationId!: string;
+  @Matches(/^\d{6}$/) code!: string;
+}
+
+export class SubmitPublicInterestDto {
+  @IsString() @Length(2, 40) tenantCode!: string;
+  @IsUUID() verificationId!: string;
+  @IsString() @Length(1, 160) firstName!: string;
+  @IsOptional() @IsString() @Length(1, 160) lastName?: string;
+  @IsString() @Length(9, 32) phone!: string;
+  @IsEmail() @Length(3, 320) email!: string;
+  @IsUUID() projectId!: string;
+  @IsOptional() @IsUUID() unitId?: string;
+  @IsBoolean() enquiryConsentGranted!: boolean;
+  @IsOptional() @IsBoolean() marketingConsentGranted?: boolean;
 }

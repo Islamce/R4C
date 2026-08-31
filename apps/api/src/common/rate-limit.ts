@@ -49,6 +49,14 @@ export const PasswordResetRateLimit = () =>
     },
   });
 
+export const PublicInterestRateLimit = () =>
+  Throttle({
+    default: {
+      limit: environmentLimit("RATE_LIMIT_PUBLIC_INTEREST_PER_MINUTE", 5),
+      ttl: RATE_LIMIT_WINDOW_MS,
+    },
+  });
+
 export const TenantLookupRateLimit = () =>
   Throttle({
     default: {

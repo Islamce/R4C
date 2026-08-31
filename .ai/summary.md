@@ -10,7 +10,7 @@ R4C — a BIM-centered platform for governed real-estate development delivery, c
 - Modules: 7 declared, 0 discovered only
 - Drift: 0 error, 0 warning, 1 info
 - Generator: `kaaf` v0.7.0
-- Input digest: `909eb793b7002439…`
+- Input digest: `50b4795b8474d767…`
 
 ## Modules
 
@@ -58,6 +58,7 @@ No declared public contracts.
 | `commercial:activity:view` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
 | `commercial:customer:create` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
 | `commercial:customer:view` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
+| `commercial:dispatch:create` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
 | `commercial:hold:create` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
 | `commercial:hold:release` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
 | `commercial:lead:create` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
@@ -68,6 +69,7 @@ No declared public contracts.
 | `commercial:lead:view-own` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
 | `commercial:manage` | `r4c-api` | ADMIN | — |
 | `commercial:media:manage` | `r4c-api` | ADMIN | — |
+| `commercial:media:view` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
 | `commercial:payment-plan:manage` | `r4c-api` | ADMIN | — |
 | `commercial:payment-plan:view` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
 | `commercial:price:create-draft` | `r4c-api` | ADMIN | — |
@@ -77,6 +79,11 @@ No declared public contracts.
 | `commercial:read` | `r4c-api` | ADMIN, VIEWER, SALES_AGENT, SALES_MANAGER | — |
 | `commercial:reservation:confirm` | `r4c-api` | ADMIN, SALES_MANAGER | — |
 | `commercial:status` | `r4c-api` | ADMIN | — |
+| `commercial:task:manage` | `r4c-api` | ADMIN, SALES_MANAGER | — |
+| `commercial:task:view` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
+| `commercial:transfer:review` | `r4c-api` | ADMIN, SALES_MANAGER | — |
+| `commercial:transfer:upload` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
+| `commercial:transfer:view` | `r4c-api` | ADMIN, SALES_AGENT, SALES_MANAGER | — |
 
 ## External integrations
 
@@ -107,4 +114,4 @@ Full detail, with evidence and recommendations, in `.ai/drift.json`.
 Declarations come from `kaaf.repo.json` and `kaaf.module.json`. Discovery is a static
 read of the source: dynamic imports and runtime wiring are invisible to it, so the
 absence of a drift finding is not proof that none exists.
-<!-- kaaf:bodyDigest=8cc67778b9475961e015ecd2d823bd832ea1bc5c0af74932873102c3ef80ad27 -->
+<!-- kaaf:bodyDigest=37ff6e905364f647b77726969fc202354c22d15c6dddbfc6fa9544b148b07914 -->

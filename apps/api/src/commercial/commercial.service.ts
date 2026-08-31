@@ -5,9 +5,12 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { LeadStatus, Prisma, SalesActivityType, TranslationLocale, UnitHoldStatus, UnitPriceRevisionStatus, UnitStatus } from "@prisma/client";
+import { LeadStatus, Prisma, SalesActivityType, TranslationLocale, UnitHoldStatus, UnitPriceRevisionStatus, UnitStatus, UploadStatus } from "@prisma/client";
 import { AuthContext } from "../common/auth-context";
 import { PrismaService } from "../prisma/prisma.service";
+import { ObjectStorageService } from "../storage/object-storage.service";
+import { randomUUID } from "node:crypto";
+import { extname } from "node:path";
 import {
   AttachCommercialMediaDto,
   BuildingQueryDto,
@@ -18,6 +21,14 @@ import {
   CreateUnitHoldDto,
   CreateLeadDto,
   CreateSalesActivityDto,
+  CreateSalesTaskDto,
+  UpdateSalesTaskDto,
+  CreateTransferCaseDto,
+  ReviewTransferDocumentDto,
+  ReviewTransferCaseDto,
+  RequestTransferDocumentUploadDto,
+  RequestProjectMediaUploadDto,
+  CreateCommercialDispatchDto,
   CreatePaymentPlanDto,
   CreateUnitPriceRevisionDto,
   CreateFloorDto,
@@ -37,7 +48,10 @@ import {
 
 @Injectable()
 export class CommercialService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: ObjectStorageService,
+  ) {}
 
   async phases(tenantId: string, projectId: string) {
     await this.requireProject(tenantId, projectId);
@@ -927,6 +941,173 @@ export class CommercialService {
       });
       await this.audit(tx, user, "COMMERCIAL_SALES_ACTIVITY_LOGGED", "SalesActivity", activity.id, { leadId, type: activity.type });
       return this.activityView(activity);
+    });
+  }
+
+  async projectMedia(tenantId: string, projectId: string) {
+    await this.requireProject(tenantId, projectId);
+    const media = await this.prisma.projectMedia.findMany({
+      where: { tenantId, projectId, documentVersion: { uploadStatus: UploadStatus.UPLOADED } },
+      include: { documentVersion: { include: { document: { select: { title: true, documentType: true } } } } },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    });
+    return Promise.all(media.map(async (item) => ({
+      id: item.id,
+      projectId: item.projectId,
+      title: item.documentVersion.document.title,
+      documentType: item.documentVersion.document.documentType,
+      fileName: item.documentVersion.fileName,
+      mimeType: item.documentVersion.mimeType,
+      sizeBytes: item.documentVersion.sizeBytes.toString(),
+      createdAt: item.createdAt,
+      downloadUrl: await this.storage.createDownloadUrl(item.documentVersion.storageKey, item.documentVersion.fileName),
+    })));
+  }
+
+  async requestProjectMediaUpload(user: AuthContext, projectId: string, command: RequestProjectMediaUploadDto) {
+    await this.requireProject(user.tenantId, projectId);
+    const extension = extname(command.fileName).toLowerCase();
+    const mimeType = command.mimeType.toLowerCase();
+    const allowed = new Map([[".pdf", "application/pdf"], [".png", "image/png"], [".jpg", "image/jpeg"], [".jpeg", "image/jpeg"], [".pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"]]);
+    if (allowed.get(extension) !== mimeType) throw new BadRequestException("Project media must be PDF, PNG, JPG, JPEG, or PPTX");
+    const cleanName = command.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const documentId = randomUUID();
+    const versionId = randomUUID();
+    const mediaId = randomUUID();
+    const storageKey = ["tenants", user.tenantId, "projects", projectId, "commercial-media", mediaId, randomUUID(), cleanName].join("/");
+    await this.prisma.$transaction(async (tx) => {
+      await tx.document.create({ data: { id: documentId, tenantId: user.tenantId, projectId, code: `MEDIA-${mediaId.slice(0, 8).toUpperCase()}`, title: command.title.trim(), documentType: "COMMERCIAL_MEDIA" } });
+      await tx.documentVersion.create({ data: { id: versionId, tenantId: user.tenantId, documentId, versionNumber: 1, revision: "01", fileName: cleanName, mimeType, sizeBytes: BigInt(command.sizeBytes), storageKey, uploadedById: user.userId } });
+      await tx.projectMedia.create({ data: { id: mediaId, tenantId: user.tenantId, projectId, documentVersionId: versionId } });
+      await this.audit(tx, user, "COMMERCIAL_PROJECT_MEDIA_UPLOAD_REQUESTED", "ProjectMedia", mediaId, { projectId, fileName: cleanName, sizeBytes: command.sizeBytes });
+    });
+    return { mediaId, versionId, uploadUrl: await this.storage.createUploadUrl(storageKey, mimeType), expiresInSeconds: 900 };
+  }
+
+  async confirmProjectMediaUpload(user: AuthContext, mediaId: string) {
+    const media = await this.prisma.projectMedia.findFirst({ where: { id: mediaId, tenantId: user.tenantId }, include: { documentVersion: true } });
+    if (!media || media.documentVersion.uploadStatus !== UploadStatus.PENDING) throw new ConflictException("No pending project-media upload exists");
+    const stored = await this.storage.head(media.documentVersion.storageKey);
+    if (stored.sizeBytes !== Number(media.documentVersion.sizeBytes)) throw new ConflictException("Uploaded file size does not match the declared size");
+    return this.prisma.$transaction(async (tx) => {
+      await tx.documentVersion.update({ where: { id: media.documentVersionId }, data: { uploadStatus: UploadStatus.UPLOADED, uploadedAt: new Date(), storageChecksum: stored.checksumSha256 ?? stored.etag } });
+      await tx.document.update({ where: { id: media.documentVersion.documentId }, data: { currentVersionId: media.documentVersionId } });
+      await this.audit(tx, user, "COMMERCIAL_PROJECT_MEDIA_UPLOAD_CONFIRMED", "ProjectMedia", mediaId, { projectId: media.projectId });
+      return { id: mediaId, status: "UPLOADED" };
+    });
+  }
+
+  async tasks(user: AuthContext) {
+    const canViewAll = user.permissions.includes("commercial:lead:view-all") || user.permissions.includes("commercial:task:manage");
+    return this.prisma.salesTask.findMany({
+      where: { tenantId: user.tenantId, ...(canViewAll ? {} : { assigneeId: user.userId }) },
+      include: { assignee: { select: { id: true, displayName: true } }, createdBy: { select: { id: true, displayName: true } }, project: { select: { id: true, code: true, name: true } }, lead: { select: { id: true, status: true } } },
+      orderBy: [{ status: "asc" }, { dueAt: "asc" }],
+    });
+  }
+
+  async createTask(user: AuthContext, command: CreateSalesTaskDto) {
+    await this.requireTenantAssignee(this.prisma, user.tenantId, command.assigneeId);
+    if (command.projectId) await this.requireProject(user.tenantId, command.projectId);
+    if (command.leadId) await this.requireLead(user.tenantId, command.leadId);
+    return this.prisma.$transaction(async (tx) => {
+      const task = await tx.salesTask.create({ data: { tenantId: user.tenantId, title: command.title.trim(), ...(command.description ? { description: command.description.trim() } : {}), assigneeId: command.assigneeId, createdById: user.userId, dueAt: new Date(command.dueAt), ...(command.projectId ? { projectId: command.projectId } : {}), ...(command.leadId ? { leadId: command.leadId } : {}), ...(command.priority ? { priority: command.priority } : {}) }, include: { assignee: { select: { id: true, displayName: true } }, createdBy: { select: { id: true, displayName: true } } } });
+      await this.audit(tx, user, "COMMERCIAL_SALES_TASK_CREATED", "SalesTask", task.id, { assigneeId: task.assigneeId, dueAt: task.dueAt });
+      return task;
+    });
+  }
+
+  async updateTask(user: AuthContext, id: string, command: UpdateSalesTaskDto) {
+    const task = await this.prisma.salesTask.findFirst({ where: { id, tenantId: user.tenantId } });
+    if (!task) throw new NotFoundException("Sales task not found");
+    if (command.assigneeId) await this.requireTenantAssignee(this.prisma, user.tenantId, command.assigneeId);
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.salesTask.update({ where: { id }, data: { ...(command.status ? { status: command.status, completedAt: command.status === "COMPLETED" ? new Date() : null } : {}), ...(command.priority ? { priority: command.priority } : {}), ...(command.dueAt ? { dueAt: new Date(command.dueAt) } : {}), ...(command.assigneeId ? { assigneeId: command.assigneeId } : {}) } });
+      await this.audit(tx, user, "COMMERCIAL_SALES_TASK_UPDATED", "SalesTask", id, { fromStatus: task.status, toStatus: updated.status });
+      return updated;
+    });
+  }
+
+  async transferCases(tenantId: string) {
+    return this.prisma.transferCase.findMany({ where: { tenantId }, include: { project: { select: { id: true, code: true, name: true } }, reservation: { select: { id: true, status: true, currency: true, confirmedAt: true, customer: { select: { id: true, firstName: true, lastName: true, phone: true, email: true } }, unit: { select: { id: true, code: true, number: true, status: true } } } }, documents: { orderBy: { documentType: "asc" } }, reviewedBy: { select: { id: true, displayName: true } } }, orderBy: { updatedAt: "desc" } });
+  }
+
+  async createTransferCase(user: AuthContext, command: CreateTransferCaseDto) {
+    const reservation = await this.prisma.reservation.findFirst({ where: { id: command.reservationId, tenantId: user.tenantId }, include: { unit: true } });
+    if (!reservation) throw new NotFoundException("Reservation not found");
+    const documentTypes = ["SELLER_ID", "BUYER_ID", "TITLE_DEED", "BENEFICIARY_IBAN", "RETT_REFERENCE", "UNIT_SUBDIVISION", "MORTGAGEE_APPROVAL", "SIGNED_CONTRACT", "EVIDENCE"];
+    return this.prisma.$transaction(async (tx) => {
+      const transferCase = await tx.transferCase.create({ data: { tenantId: user.tenantId, projectId: reservation.unit.projectId, reservationId: reservation.id, documents: { create: documentTypes.map((documentType) => ({ documentType, status: documentType === "UNIT_SUBDIVISION" ? "NOT_APPLICABLE" : "MISSING" })) } }, include: { documents: true } });
+      await this.audit(tx, user, "COMMERCIAL_TRANSFER_CASE_CREATED", "TransferCase", transferCase.id, { reservationId: reservation.id });
+      return transferCase;
+    });
+  }
+
+  async requestTransferDocumentUpload(user: AuthContext, id: string, command: RequestTransferDocumentUploadDto) {
+    const document = await this.prisma.transferDocument.findFirst({ where: { id, tenantId: user.tenantId } });
+    if (!document) throw new NotFoundException("Transfer document not found");
+    const extension = extname(command.fileName).toLowerCase();
+    const mimeType = command.mimeType.toLowerCase();
+    const allowedExtensions = new Set([".pdf", ".png", ".jpg", ".jpeg"]);
+    const allowedMimeTypes = new Set(["application/pdf", "image/png", "image/jpeg"]);
+    if (!allowedExtensions.has(extension) || !allowedMimeTypes.has(mimeType)) {
+      throw new BadRequestException("Transfer documents must be PDF, PNG, JPG, or JPEG files");
+    }
+    const cleanName = command.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const storageKey = ["tenants", user.tenantId, "commercial", "transfers", document.transferCaseId, id, randomUUID(), cleanName].join("/");
+    await this.prisma.$transaction(async (tx) => {
+      await tx.transferDocument.update({ where: { id }, data: { storageKey, fileName: cleanName, mimeType, sizeBytes: BigInt(command.sizeBytes), status: "MISSING", reviewedById: null, reviewedAt: null, notes: null } });
+      await this.audit(tx, user, "COMMERCIAL_TRANSFER_DOCUMENT_UPLOAD_REQUESTED", "TransferDocument", id, { transferCaseId: document.transferCaseId, fileName: cleanName, sizeBytes: command.sizeBytes });
+    });
+    return { uploadUrl: await this.storage.createUploadUrl(storageKey, mimeType), storageKey, expiresInSeconds: 900 };
+  }
+
+  async confirmTransferDocumentUpload(user: AuthContext, id: string) {
+    const document = await this.prisma.transferDocument.findFirst({ where: { id, tenantId: user.tenantId } });
+    if (!document?.storageKey || !document.sizeBytes) throw new ConflictException("No pending upload exists for this transfer document");
+    const stored = await this.storage.head(document.storageKey);
+    if (stored.sizeBytes === undefined || BigInt(stored.sizeBytes) !== document.sizeBytes) throw new ConflictException("Uploaded file size does not match the declared size");
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.transferDocument.update({ where: { id }, data: { status: "UPLOADED" } });
+      await this.audit(tx, user, "COMMERCIAL_TRANSFER_DOCUMENT_UPLOAD_CONFIRMED", "TransferDocument", id, { transferCaseId: document.transferCaseId, storageKey: document.storageKey });
+      return { ...updated, sizeBytes: updated.sizeBytes?.toString() ?? null };
+    });
+  }
+
+  async reviewTransferDocument(user: AuthContext, id: string, command: ReviewTransferDocumentDto) {
+    const before = await this.prisma.transferDocument.findFirst({ where: { id, tenantId: user.tenantId } });
+    if (!before) throw new NotFoundException("Transfer document not found");
+    return this.prisma.$transaction(async (tx) => {
+      const document = await tx.transferDocument.update({ where: { id }, data: { status: command.status, ...(command.storageKey ? { storageKey: command.storageKey.trim() } : {}), ...(command.notes ? { notes: command.notes.trim() } : {}), reviewedById: user.userId, reviewedAt: new Date() } });
+      const all = await tx.transferDocument.findMany({ where: { transferCaseId: before.transferCaseId } });
+      const ready = all.filter((item) => ["VERIFIED", "NOT_APPLICABLE"].includes(item.status)).length;
+      await tx.transferCase.update({ where: { id: before.transferCaseId }, data: { readiness: Math.round((ready / all.length) * 100) } });
+      await this.audit(tx, user, "COMMERCIAL_TRANSFER_DOCUMENT_REVIEWED", "TransferDocument", id, { fromStatus: before.status, toStatus: document.status });
+      return document;
+    });
+  }
+
+  async reviewTransferCase(user: AuthContext, id: string, command: ReviewTransferCaseDto) {
+    const transferCase = await this.prisma.transferCase.findFirst({ where: { id, tenantId: user.tenantId }, include: { documents: true } });
+    if (!transferCase) throw new NotFoundException("Transfer case not found");
+    if (["APPROVED", "READY_FOR_AUTHORITY", "COMPLETED"].includes(command.status) && transferCase.readiness !== 100) throw new ConflictException("All applicable documents must be verified before approval");
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.transferCase.update({ where: { id }, data: { status: command.status, reviewedById: user.userId, reviewedAt: new Date() } });
+      await this.audit(tx, user, "COMMERCIAL_TRANSFER_CASE_REVIEWED", "TransferCase", id, { fromStatus: transferCase.status, toStatus: updated.status });
+      return updated;
+    });
+  }
+
+  async createDispatch(user: AuthContext, command: CreateCommercialDispatchDto) {
+    await this.requireProject(user.tenantId, command.projectId);
+    const customer = await this.prisma.customer.findFirst({ where: { id: command.customerId, tenantId: user.tenantId } });
+    if (!customer) throw new NotFoundException("Customer not found");
+    const assets = await this.prisma.projectMedia.findMany({ where: { id: { in: command.assetIds }, tenantId: user.tenantId, projectId: command.projectId } });
+    if (assets.length !== new Set(command.assetIds).size) throw new BadRequestException("One or more media assets are not attached to the selected project");
+    return this.prisma.$transaction(async (tx) => {
+      const dispatch = await tx.commercialDispatch.create({ data: { tenantId: user.tenantId, projectId: command.projectId, customerId: customer.id, recipientEmail: command.recipientEmail.trim().toLowerCase(), subject: command.subject.trim(), message: command.message.trim(), assetIds: command.assetIds, createdById: user.userId } });
+      await this.audit(tx, user, "COMMERCIAL_MEDIA_DISPATCH_QUEUED", "CommercialDispatch", dispatch.id, { projectId: dispatch.projectId, customerId: dispatch.customerId, assetCount: command.assetIds.length });
+      return dispatch;
     });
   }
 
