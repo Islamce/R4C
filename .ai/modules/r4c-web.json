@@ -1,18 +1,18 @@
 {
   "_meta": {
     "artifact": "modules/r4c-web.json",
-    "bodyDigest": "8e197f6898e2c90aa9367fddb4d6f3a75d65e07bc7f3977a012a797436cb08ec",
+    "bodyDigest": "4f0bc7b7fd57e8994fbc5fff7955bca8f6b935017976ff51f317d3e929eca110",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "50b4795b8474d7670d5198851fd487ae581bd5f6d63819dc56e6740e41e5d662",
+    "inputDigest": "34e3fe8dc4a6cee91b511cec8ca9903867ddb641983ada652bdb2af1d72131a6",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 66 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 67 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
   "dependedOnBy": [
@@ -37,6 +37,7 @@
       "apps/web/app/api/password-reset/request/route.ts",
       "apps/web/app/api/progress/[progressUpdateId]/review/route.ts",
       "apps/web/app/api/projects/[projectId]/cost-control/route.ts",
+      "apps/web/app/api/projects/[projectId]/publish/route.ts",
       "apps/web/app/api/projects/[projectId]/route.ts",
       "apps/web/app/api/projects/route.ts",
       "apps/web/app/api/public/commercial/[...path]/route.ts",
@@ -114,6 +115,7 @@
       "apps/web/app/api/password-reset/request/route.ts",
       "apps/web/app/api/progress/[progressUpdateId]/review/route.ts",
       "apps/web/app/api/projects/[projectId]/cost-control/route.ts",
+      "apps/web/app/api/projects/[projectId]/publish/route.ts",
       "apps/web/app/api/projects/[projectId]/route.ts",
       "apps/web/app/api/projects/route.ts",
       "apps/web/app/api/public/commercial/[...path]/route.ts",
