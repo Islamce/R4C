@@ -17,6 +17,7 @@ const shell = await readFile(new URL("../components/AppShell.tsx", import.meta.u
 const shellModern = await readFile(new URL("../app/shell-modern.css", import.meta.url), "utf8");
 const salesPipelineCss = await readFile(new URL("../app/sales-pipeline.css", import.meta.url), "utf8");
 const commercialApi = await readFile(new URL("../lib/commercial-api.ts", import.meta.url), "utf8");
+const customerPortfolio = await readFile(new URL("../components/CustomerPortfolio.tsx", import.meta.url), "utf8");
 
 test("production entry routes users into the commercial journey", () => {
   assert.match(home, /redirect\("\/login"\)/);
@@ -136,4 +137,7 @@ test("commercial UAT safeguards localization, dialogs, contrast, and mobile cont
   assert.match(suite, /8 وحدات/);
   assert.match(pipeline, /canonicalProjectName\(externalReservation\.project\)/);
   assert.doesNotMatch(pipeline, /PERFORMANCE & ALERTING|SALES TEAM CONTROL|PROJECT CONTENT HUB|78\.0M ر\.س/);
+  assert.match(customerPortfolio, /role="dialog" aria-modal="true" aria-labelledby="interest-panel-title"/);
+  assert.match(customerPortfolio, /document\.body\.style\.overflow = "hidden"/);
+  assert.match(customerPortfolio, /event\.key === "Escape"/);
 });
