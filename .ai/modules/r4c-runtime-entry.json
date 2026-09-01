@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-runtime-entry.json",
-    "bodyDigest": "dc27787506ed8c4b78e0825e5bd7f4172434eb71b8a2890c6f404ffb09641e3f",
+    "bodyDigest": "0e97d93f30feff71533f5755405b20006481264efb74365b6d50b5dec3584fd9",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "34e3fe8dc4a6cee91b511cec8ca9903867ddb641983ada652bdb2af1d72131a6",
+    "inputDigest": "c7593ce6e726eb625ab10ce2b1abf7cf8e386a88ee7b931a135684881ce8970b",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -111,6 +111,7 @@
       "docs/uat/2026-08-27/R4C_UAT_REMEDIATION.md",
       "docs/uat/2026-08-27/production-full/R4C_FULL_UAT_REPORT.md",
       "docs/uat/2026-08-28/transfer-document-production/R4C_TRANSFER_DOCUMENT_UAT.md",
+      "docs/uat/2026-09-01/project-publication-live/REPORT.md",
       "docs/wafi-readiness.md",
       "docs/zatca-architecture.md",
       "hostinger-web-entry.cjs",
