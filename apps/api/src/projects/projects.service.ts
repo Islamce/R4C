@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { AuditService } from "../audit/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateProjectDto, CreateWbsNodeDto } from "./projects.dto";
@@ -54,6 +54,34 @@ export class ProjectsService {
       metadata: { code: project.code },
     });
     return project;
+  }
+
+  async publish(tenantId: string, projectId: string, actorId: string) {
+    const project = await this.requireProject(tenantId, projectId);
+    if (project.status !== "DRAFT") {
+      throw new ConflictException("Only a draft project can be published");
+    }
+
+    const availableUnits = await this.prisma.unit.count({
+      where: { tenantId, projectId, status: "AVAILABLE" },
+    });
+    if (availableUnits === 0) {
+      throw new ConflictException("Publish at least one available unit before publishing the project");
+    }
+
+    const published = await this.prisma.project.update({
+      where: { id: project.id },
+      data: { status: "ACTIVE" },
+    });
+    await this.audit.record({
+      tenantId,
+      actorId,
+      action: "PROJECT_PUBLISHED",
+      entityType: "Project",
+      entityId: published.id,
+      metadata: { code: published.code, availableUnits },
+    });
+    return published;
   }
 
   async createWbsNode(

@@ -29,6 +29,15 @@ export class ProjectsController {
     return this.projects.create(user.tenantId, user.userId, body);
   }
 
+  @Post(":projectId/publish")
+  @RequirePermissions("project:create")
+  publish(
+    @CurrentUser() user: AuthContext,
+    @Param("projectId") projectId: string,
+  ) {
+    return this.projects.publish(user.tenantId, projectId, user.userId);
+  }
+
   @Post(":projectId/wbs")
   @RequirePermissions("wbs:create")
   createWbs(
