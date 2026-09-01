@@ -18,7 +18,7 @@ function StatusBadge({ status }: { status: ProjectStatus }) {
   );
 }
 
-export function ProjectsJourney() {
+export function ProjectsJourney({ canPublish = false }: { canPublish?: boolean }) {
   const { t, locale } = useI18n();
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +26,8 @@ export function ProjectsJourney() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState(false);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [publishMessage, setPublishMessage] = useState<MessageKey | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -74,6 +76,24 @@ export function ProjectsJourney() {
       setFailed(true);
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function publishProject(projectId: string) {
+    setPublishingId(projectId);
+    setPublishMessage(null);
+    try {
+      const published = await clientApi<ProjectRecord>(`/api/projects/${projectId}/publish`, {
+        method: "POST",
+      });
+      setProjects((current) => current.map((project) => project.id === projectId
+        ? { ...project, ...published }
+        : project));
+      setPublishMessage("projects.publishSuccess");
+    } catch {
+      setPublishMessage("projects.publishFailure");
+    } finally {
+      setPublishingId(null);
     }
   }
 
@@ -142,6 +162,7 @@ export function ProjectsJourney() {
       ) : null}
 
       {created ? <div className="success-banner">{t("projects.createSuccess")}</div> : null}
+      {publishMessage ? <div role={publishMessage === "projects.publishFailure" ? "alert" : "status"} className={publishMessage === "projects.publishSuccess" ? "success-banner" : "inline-alert"}>{t(publishMessage)}</div> : null}
       {loading ? <LoadingState /> : null}
       {!loading && failed ? <ErrorState onRetry={load} /> : null}
       {!loading && !failed && projects.length === 0 ? (
@@ -185,9 +206,16 @@ export function ProjectsJourney() {
                     <dd>{dateFormatter.format(new Date(project.updatedAt))}</dd>
                   </div>
                 </dl>
-                <Link className="button button-secondary card-link" href={`/projects/${project.id}`}>
-                  {t("projects.open")}
-                </Link>
+                <div className="form-actions">
+                  <Link className="button button-secondary card-link" href={`/projects/${project.id}`}>
+                    {t("projects.open")}
+                  </Link>
+                  {canPublish && project.status === "DRAFT" ? (
+                    <button className="button button-primary" type="button" disabled={publishingId === project.id} onClick={() => void publishProject(project.id)}>
+                      {publishingId === project.id ? t("projects.publishing") : t("projects.publish")}
+                    </button>
+                  ) : null}
+                </div>
               </div>
             </article>
           ))}

@@ -1,18 +1,18 @@
 {
   "_meta": {
     "artifact": "modules/r4c-api.json",
-    "bodyDigest": "c40120350bf025cab1685c4aa1caa437cfc039af27b2f93db039bdc04cbfc589",
+    "bodyDigest": "226e59982c5ecd4506001ac239abdccd15d619e6a383629dff405b9eadc604e8",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "50b4795b8474d7670d5198851fd487ae581bd5f6d63819dc56e6740e41e5d662",
+    "inputDigest": "34e3fe8dc4a6cee91b511cec8ca9903867ddb641983ada652bdb2af1d72131a6",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 101 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 102 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
   "dependedOnBy": [],
@@ -117,6 +117,7 @@
       "apps/api/test/http-e2e.mjs",
       "apps/api/test/password-reset-contract.test.mjs",
       "apps/api/test/prisma-adapter-bootstrap.test.mjs",
+      "apps/api/test/project-publication-contract.test.mjs",
       "apps/api/test/rate-limit-e2e.mjs",
       "apps/api/test/security-contracts.test.mjs",
       "apps/api/test/seed-e2e.mjs"
@@ -232,6 +233,7 @@
       "apps/api/test/http-e2e.mjs",
       "apps/api/test/password-reset-contract.test.mjs",
       "apps/api/test/prisma-adapter-bootstrap.test.mjs",
+      "apps/api/test/project-publication-contract.test.mjs",
       "apps/api/test/rate-limit-e2e.mjs",
       "apps/api/test/security-contracts.test.mjs",
       "apps/api/test/seed-e2e.mjs",
