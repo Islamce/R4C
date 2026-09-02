@@ -112,10 +112,16 @@ export function AppShell({ children, preview = false, initialUser = null }: { ch
               {t("commercial.nav")}
             </Link>
             {user?.role === "ADMIN" ? (
-              <Link className={pathname.startsWith("/admin/users") ? "nav-link nav-link-active" : "nav-link"} href="/admin/users">
-                <UserGear className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
-                {locale === "ar" ? "المستخدمون والصلاحيات" : "Users & access"}
-              </Link>
+              <>
+                <Link className={pathname.startsWith("/admin/projects") ? "nav-link nav-link-active" : "nav-link"} href="/admin/projects">
+                  <Buildings className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
+                  {locale === "ar" ? "إدارة المشروعات" : "Project administration"}
+                </Link>
+                <Link className={pathname.startsWith("/admin/users") ? "nav-link nav-link-active" : "nav-link"} href="/admin/users">
+                  <UserGear className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
+                  {locale === "ar" ? "المستخدمون والصلاحيات" : "Users & access"}
+                </Link>
+              </>
             ) : null}
             <Link className={pathname.startsWith("/progress") ? "nav-link nav-link-active" : "nav-link"} href="/progress">
               <Gauge className="nav-icon" size={21} weight="duotone" aria-hidden="true" />

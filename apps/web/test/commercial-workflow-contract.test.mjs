@@ -18,6 +18,8 @@ const shellModern = await readFile(new URL("../app/shell-modern.css", import.met
 const salesPipelineCss = await readFile(new URL("../app/sales-pipeline.css", import.meta.url), "utf8");
 const commercialApi = await readFile(new URL("../lib/commercial-api.ts", import.meta.url), "utf8");
 const customerPortfolio = await readFile(new URL("../components/CustomerPortfolio.tsx", import.meta.url), "utf8");
+const projectsPage = await readFile(new URL("../app/(authenticated)/projects/page.tsx", import.meta.url), "utf8");
+const projectAdministrationPage = await readFile(new URL("../app/(authenticated)/admin/projects/page.tsx", import.meta.url), "utf8");
 
 test("production entry routes users into the commercial journey", () => {
   assert.match(home, /redirect\("\/login"\)/);
@@ -26,6 +28,9 @@ test("production entry routes users into the commercial journey", () => {
   assert.doesNotMatch(commercialPage, /CommercialOperatorWorkspace/);
   assert.match(designPreviewPage, /process\.env\.NODE_ENV !== "development"/);
   assert.match(designPreviewPage, /CommercialWorkspaceSuite preview/);
+  assert.match(projectsPage, /redirect\("\/commercial\?view=portfolio"\)/);
+  assert.match(projectAdministrationPage, /user\?\.permissions\.includes\("project:create"\)/);
+  assert.match(projectAdministrationPage, /<ProjectsJourney canPublish/);
 });
 
 test("commercial journey authorizes exclusively through session permissions", () => {
@@ -118,6 +123,7 @@ test("authenticated routes share the KYNOX shell and commercial tools use real n
   assert.match(shellModern, /\.kynox-tool-link:hover/);
   assert.match(shell, /locale === "ar" \? "وضع المعاينة" : "Preview mode"/);
   assert.match(shell, /locale === "ar" && user\.role === "ADMIN" \? "مدير النظام" : user\.role/);
+  assert.match(shell, /href="\/admin\/projects"/);
   assert.match(workspace, /id="commercial-customers"/);
   assert.match(workspace, /id="commercial-units"/);
   assert.match(workspace, /id="commercial-transfer"/);
