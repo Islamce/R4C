@@ -92,6 +92,16 @@ test("production commercial operations persist tasks, transfer reviews, and disp
   assert.match(suite, /selectedCase\?\.readiness !== 100/);
 });
 
+test("the approved workspace uses live projects and the real reservation engine in production", () => {
+  assert.match(suite, /clientApi<import\("\.\.\/lib\/types"\)\.ProjectRecord\[]>\("\/api\/projects"\)/);
+  assert.match(suite, /const workspaceProjects = preview \? projects : productionProjects/);
+  assert.match(suite, /tab === "units" && !preview \? <CommercialOperatorWorkspace focus="units"/);
+  assert.match(suite, /CommercialOperatorWorkspace focus="operations"/);
+  assert.match(workspace, /focus = "all"/);
+  assert.match(workspace, /commercialApi\.createHold/);
+  assert.match(workspace, /commercialApi\.confirmReservation/);
+});
+
 test("mass import validates contacts and campaign results before governed creation", () => {
   assert.match(workspace, /parseBulkCsv\(contents/);
   assert.match(workspace, /bulkMode === "campaign"/);

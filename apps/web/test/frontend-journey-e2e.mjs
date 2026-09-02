@@ -192,9 +192,9 @@ test("frontend foundation completes the real bilingual project journey", { timeo
   assert.equal(inventory.body.total, 1);
 
   const english = await webRequest(jar, "/projects");
-  assert.equal(english.response.status, 200);
-  assert.match(english.text, /<html[^>]*lang="en"[^>]*dir="ltr"/);
-  assert.match(english.text, />Projects</);
+  assert.ok([303, 307, 308].includes(english.response.status));
+  assert.equal(new URL(english.response.headers.get("location"), webBase).pathname, "/commercial");
+  assert.equal(new URL(english.response.headers.get("location"), webBase).search, "?view=portfolio");
   const commercialEnglish = await webRequest(jar, "/commercial");
   assert.equal(commercialEnglish.response.status, 200);
   assert.match(commercialEnglish.text, /Commercial sales/);
@@ -205,9 +205,9 @@ test("frontend foundation completes the real bilingual project journey", { timeo
   });
   assert.equal(arabicToggle.response.status, 200);
   const arabic = await webRequest(jar, "/projects");
-  assert.equal(arabic.response.status, 200);
-  assert.match(arabic.text, /<html[^>]*lang="ar"[^>]*dir="rtl"/);
-  assert.match(arabic.text, /المشاريع/);
+  assert.ok([303, 307, 308].includes(arabic.response.status));
+  assert.equal(new URL(arabic.response.headers.get("location"), webBase).pathname, "/commercial");
+  assert.equal(new URL(arabic.response.headers.get("location"), webBase).search, "?view=portfolio");
   const commercialArabic = await webRequest(jar, "/commercial");
   assert.equal(commercialArabic.response.status, 200);
   assert.match(commercialArabic.text, /المبيعات التجارية/);
