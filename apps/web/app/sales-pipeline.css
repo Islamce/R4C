@@ -254,6 +254,17 @@ button.ledger-row { width: 100%; cursor: pointer; }
 .preview-operations > .page-heading h1 { margin: .15rem 0 .35rem; color: #fff; font-size: clamp(1.45rem,3vw,2.45rem); line-height: 1.15; letter-spacing: -.025em; }
 .preview-operations > .page-heading p:last-child { max-width: 760px; color: #a8c1cd; font-size: .78rem; }
 .preview-operations > .page-heading .status-badge { flex: 0 0 auto; }
+.preview-operations .create-panel { border-color: #315569; background: #0d2b3b; color: #c8dbe2; }
+.preview-operations .create-panel h2,
+.preview-operations .create-panel h3,
+.preview-operations .create-panel strong,
+.preview-operations .create-panel legend { color: #fff; }
+.preview-operations .create-panel label,
+.preview-operations .create-panel dt,
+.preview-operations .create-panel p { color: #9eb7c2; }
+.preview-operations .create-panel input,
+.preview-operations .create-panel select,
+.preview-operations .create-panel textarea { border-color: #43677a; background: #102f43; color: #fff; }
 @media(max-width:680px){.preview-operations{padding-block-start:.75rem}.preview-operations>.page-heading{padding:.85rem;align-items:stretch}.preview-operations>.page-heading h1{font-size:1.35rem}}
 
 .sales-workspace-switcher { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); border: 1px solid #315569; margin-bottom: .8rem; background: #0d2b3b; }
