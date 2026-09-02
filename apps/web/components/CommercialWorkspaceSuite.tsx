@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Cube, Eye, FileArrowUp, ImageSquare, PlugsConnected, ShieldCheck, UploadSimple, X } from "@phosphor-icons/react";
 import { CommercialOperatorWorkspace } from "./CommercialOperatorWorkspace";
 import { CommercialHero3D } from "./CommercialHero3D";
@@ -233,6 +234,7 @@ const transfers: UnitDashboardRow[] = Array.from({ length: 34 }, (_, index) => {
 
 export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolean }) {
   const { locale } = useI18n();
+  const searchParams = useSearchParams();
   const ar = locale === "ar";
   const [tab, setTab] = useState<Tab>("pipeline");
   const [project, setProject] = useState("Riyadh Heights");
@@ -257,6 +259,17 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
       })
       .catch(() => { setIsAdmin(false); setCanViewAllLeads(false); });
   }, [preview]);
+
+  useEffect(() => {
+    if (preview) return;
+    const requestedView = searchParams.get("view");
+    const nextTab: Tab = requestedView === "customers"
+      ? "pipeline"
+      : (["pipeline", "portfolio", "units", "transfer", "operations"].includes(requestedView ?? "")
+        ? requestedView as Tab
+        : "pipeline");
+    setTab(nextTab);
+  }, [preview, searchParams]);
 
   useEffect(() => {
     const onCommercialTab = (event: Event) => {
