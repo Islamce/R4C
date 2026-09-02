@@ -110,7 +110,7 @@ test("production web configuration cannot fall back to localhost or a .local ten
 });
 
 test("authenticated routes share the KYNOX shell and commercial tools use real navigation targets", () => {
-  for (const target of ["/projects", "/commercial?view=customers#commercial-customers", "/commercial?view=units#commercial-units", "/commercial?view=transfer#commercial-transfer", "/commercial?view=operations#commercial-operations", "/progress", "/cost-control"]) {
+  for (const target of ["/commercial?view=portfolio", "/commercial?view=customers#commercial-customers", "/commercial?view=units#commercial-units", "/commercial?view=transfer#commercial-transfer", "/commercial?view=operations#commercial-operations", "/progress", "/cost-control"]) {
     assert.match(shell, new RegExp(target.replace(/[?]/g, "\\?")));
   }
   assert.match(shell, /className="kynox-tool-link" href=\{href\}/);
@@ -122,6 +122,8 @@ test("authenticated routes share the KYNOX shell and commercial tools use real n
   assert.match(workspace, /id="commercial-units"/);
   assert.match(workspace, /id="commercial-transfer"/);
   assert.match(workspace, /id="commercial-operations"/);
+  assert.match(suite, /searchParams\.get\("view"\)/);
+  assert.match(suite, /requestedView === "customers"/);
 });
 
 test("commercial UAT safeguards localization, dialogs, contrast, and mobile containment", () => {
