@@ -1,18 +1,18 @@
 {
   "_meta": {
     "artifact": "modules/r4c-web.json",
-    "bodyDigest": "4f0bc7b7fd57e8994fbc5fff7955bca8f6b935017976ff51f317d3e929eca110",
+    "bodyDigest": "fdd083f66c6209f66c3784c4bae6904e7d7d7a369951b7c90da97e48f9622c44",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "e2e8efe5bac6188436e75d8eee07c9e9f6c86cec1a7907566e85613fc444be37",
+    "inputDigest": "ff9fcd720e6a6c89968363cc88f9aa977477460c8377c9bd79d2aac44d0baba2",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 67 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 68 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
   "dependedOnBy": [
@@ -23,6 +23,7 @@
   ],
   "discovery": {
     "codeFiles": [
+      "apps/web/app/(authenticated)/admin/projects/page.tsx",
       "apps/web/app/(authenticated)/admin/users/page.tsx",
       "apps/web/app/(authenticated)/commercial/page.tsx",
       "apps/web/app/(authenticated)/cost-control/page.tsx",
@@ -101,6 +102,7 @@
     "parseErrors": [],
     "publicSymbols": [],
     "sourceFiles": [
+      "apps/web/app/(authenticated)/admin/projects/page.tsx",
       "apps/web/app/(authenticated)/admin/users/page.tsx",
       "apps/web/app/(authenticated)/commercial/page.tsx",
       "apps/web/app/(authenticated)/cost-control/page.tsx",

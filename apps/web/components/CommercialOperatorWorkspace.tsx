@@ -74,7 +74,7 @@ function localDateTime(hours = 24) {
   return date.toISOString().slice(0, 16);
 }
 
-export function CommercialOperatorWorkspace() {
+export function CommercialOperatorWorkspace({ focus = "all" }: { focus?: "all" | "units" | "operations" }) {
   const { t, locale } = useI18n();
   const [user, setUser] = useState<BrowserSessionUser | null>(null);
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
@@ -273,7 +273,7 @@ export function CommercialOperatorWorkspace() {
 
         {!canOperate ? <section className="create-panel"><p>{t("commercial.restricted")}</p></section> : (
           <>
-            <section className="bulk-import-panel" id="commercial-operations">
+            {focus !== "units" ? <section className="bulk-import-panel" id="commercial-operations">
               <div><h2>{t("commercial.bulkTitle")}</h2><p>{t("commercial.bulkHint")}</p></div>
               <button className="button button-secondary" type="button" onClick={() => setBulkOpen((open) => !open)}>{bulkOpen ? t("commercial.bulkClose") : t("commercial.bulkOpen")}</button>
               {bulkOpen ? <div className="bulk-import-body">
@@ -283,8 +283,8 @@ export function CommercialOperatorWorkspace() {
                 {bulkRows.length ? <><div className="bulk-preview" role="table" aria-label={t("commercial.bulkPreview")}><div role="row"><b>{t("commercial.firstName")}</b><b>{t("commercial.phone")}</b><b>{t("commercial.source")}</b><b>{t("commercial.project")}</b><b>{t("commercial.status")}</b></div>{bulkRows.slice(0, 20).map((row, index) => <div role="row" key={`${row.email}-${index}`} className={row.valid ? "" : "invalid"}><span>{row.firstName} {row.lastName}</span><span dir="ltr">{row.phone}</span><span>{row.source}</span><span>{row.projectCode || "—"}</span><span>{row.valid ? t("commercial.bulkValid") : row.error}</span></div>)}</div><footer><span>{t("commercial.bulkReady").replace("{valid}", String(bulkRows.filter((row) => row.valid).length)).replace("{total}", String(bulkRows.length))}</span><button className="button button-primary" type="button" disabled={busy || !bulkRows.some((row) => row.valid)} onClick={() => void importBulkRows()}>{busy ? t("commercial.creating") : t("commercial.bulkImport")}</button></footer></> : null}
                 {bulkSummary ? <p className="bulk-summary" role="status">{bulkSummary}</p> : null}
               </div> : null}
-            </section>
-            <section className="commercial-journey-grid" id="commercial-customers">
+            </section> : null}
+            {focus === "all" ? <section className="commercial-journey-grid" id="commercial-customers">
               <form className="create-panel commercial-capture" onSubmit={captureLead}>
                 <h2>{t("commercial.newLead")}</h2>
                 <fieldset><legend>{t("commercial.customer")}</legend>
@@ -305,9 +305,9 @@ export function CommercialOperatorWorkspace() {
                 <div className="section-heading"><h2>{t("commercial.pipeline")}</h2>{canViewAll ? <div className="segmented"><button type="button" aria-pressed={!allLeads} onClick={() => { setAllLeads(false); void loadLeads(false); }}>{t("commercial.own")}</button><button type="button" aria-pressed={allLeads} onClick={() => { setAllLeads(true); void loadLeads(true); }}>{t("commercial.all")}</button></div> : null}</div>
                 {groupedLeads.length === 0 ? <p>{t("commercial.noLeads")}</p> : groupedLeads.map(([status, rows]) => <div className="lead-stage" key={status}><h3><span>{t(`commercial.status.${status}` as "commercial.status.NEW")}</span><small>{rows.length}</small></h3>{rows.map((lead) => <button type="button" className={selectedLead?.id === lead.id ? "lead-card lead-card-selected" : "lead-card"} key={lead.id} onClick={() => setSelectedLead(lead)}><strong>{lead.customer ? `${lead.customer.firstName} ${lead.customer.lastName ?? ""}` : lead.source}</strong><span>{lead.project?.name ?? lead.source}</span><small>{lead.assignedTo.displayName}</small></button>)}</div>)}
               </section>
-            </section>
+            </section> : null}
 
-            {selectedLead ? <section className="create-panel lead-detail">
+            {focus === "all" && selectedLead ? <section className="create-panel lead-detail">
               <div className="section-heading"><div><p className="eyebrow">{t("commercial.selectLead")}</p><h2>{selectedLead.customer ? `${selectedLead.customer.firstName} ${selectedLead.customer.lastName ?? ""}` : selectedLead.source}</h2></div><span className="status-badge">{t(`commercial.status.${selectedLead.status}` as "commercial.status.NEW")}</span></div>
               <dl><div><dt>{t("commercial.customer")}</dt><dd>{selectedLead.customer?.email ?? "—"}<br />{selectedLead.customer?.phone ?? "—"}</dd></div><div><dt>{t("commercial.project")}</dt><dd>{selectedLead.project?.name ?? "—"}</dd></div><div><dt>{t("commercial.assignee")}</dt><dd>{selectedLead.assignedTo.displayName}</dd></div><div><dt>{t("commercial.status")}</dt><dd>{t(`commercial.status.${selectedLead.status}` as "commercial.status.NEW")}</dd></div></dl>
               <div className="lead-actions">
@@ -319,8 +319,8 @@ export function CommercialOperatorWorkspace() {
             </section> : null}
 
             <span className="commercial-anchor" id="commercial-transfer" aria-hidden="true" />
-            {selectedLead ? <section className="commercial-work-grid">
-              <section className="create-panel"><h2>{t("commercial.activities")}</h2><form className="activity-form" onSubmit={(event) => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); void action(async () => { const created = await commercialApi.logActivity(selectedLead.id, { type: data.get("type"), notes: data.get("notes") }); setActivities((rows) => [...rows, created]); form.reset(); }); }}><label><span>{t("commercial.activityType")}</span><select name="type">{activityTypes.map((type) => <option key={type} value={type}>{t(`commercial.activity.${type}` as "commercial.activity.CALL")}</option>)}</select></label><label><span>{t("commercial.notes")}</span><textarea name="notes" required maxLength={4000} /></label><button className="button button-primary" disabled={busy}>{t("commercial.logActivity")}</button></form><ol className="activity-list">{activities.map((item) => <li key={item.id}><strong>{t(`commercial.activity.${item.type}` as "commercial.activity.CALL")} · {item.actor.displayName}</strong><p>{item.notes}</p><time>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></li>)}</ol>{activities.length === 0 ? <p>{t("commercial.noActivities")}</p> : null}</section>
+            {selectedLead && focus !== "operations" ? <section className={`commercial-work-grid ${focus === "units" ? "commercial-work-grid-focus" : ""}`}>
+              {focus === "all" ? <section className="create-panel"><h2>{t("commercial.activities")}</h2><form className="activity-form" onSubmit={(event) => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); void action(async () => { const created = await commercialApi.logActivity(selectedLead.id, { type: data.get("type"), notes: data.get("notes") }); setActivities((rows) => [...rows, created]); form.reset(); }); }}><label><span>{t("commercial.activityType")}</span><select name="type">{activityTypes.map((type) => <option key={type} value={type}>{t(`commercial.activity.${type}` as "commercial.activity.CALL")}</option>)}</select></label><label><span>{t("commercial.notes")}</span><textarea name="notes" required maxLength={4000} /></label><button className="button button-primary" disabled={busy}>{t("commercial.logActivity")}</button></form><ol className="activity-list">{activities.map((item) => <li key={item.id}><strong>{t(`commercial.activity.${item.type}` as "commercial.activity.CALL")} · {item.actor.displayName}</strong><p>{item.notes}</p><time>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></li>)}</ol>{activities.length === 0 ? <p>{t("commercial.noActivities")}</p> : null}</section> : null}
 
               <section className="create-panel" id="commercial-units"><h2>{t("commercial.units")}</h2><label><span>{t("commercial.project")}</span><select value={projectId} onChange={(event) => { setProjectId(event.target.value); setSelectedUnit(null); }}><option value="">{t("commercial.selectProject")}</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.code} — {project.name}</option>)}</select></label><label><span>{t("commercial.availableOnly")}</span><select value={selectedUnit?.id ?? ""} onChange={(event) => void chooseUnit(event.target.value)}><option value="">{t("commercial.selectUnit")}</option>{units.map((unit) => <option key={unit.id} value={unit.id}>{unit.code} — {unit.number} · {unit.grossArea} m²</option>)}</select></label>{projectId && units.length === 0 ? <p>{t("commercial.noUnits")}</p> : null}
                 {selectedUnit ? <div className="unit-review"><h3>{selectedUnit.code} · {selectedUnit.unitType.name}</h3><p>{selectedUnit.building.name} / {selectedUnit.floor.name} · {selectedUnit.bedrooms} / {selectedUnit.bathrooms}</p><dl><div><dt>{t("commercial.publishedPrice")}</dt><dd>{activePrice ? formatMoney(activePrice.listPriceMinor, activePrice.currency, locale) : "—"}</dd></div><div><dt>{t("commercial.description")}</dt><dd>{selectedUnit.descriptions.unitType.value ?? "—"}{selectedUnit.descriptions.unitType.fallbackUsed ? <small> · {t("commercial.fallback")}</small> : null}</dd></div></dl>
@@ -334,7 +334,7 @@ export function CommercialOperatorWorkspace() {
           </>
         )}
       </main>
-      {canManage ? <section className="commercial-admin-boundary" id="commercial-inventory-admin"><header><h2>{t("commercial.admin")}</h2><p>{t("commercial.adminHint")}</p></header><CommercialInventory /></section> : null}
+      {canManage && focus !== "units" ? <section className="commercial-admin-boundary" id="commercial-inventory-admin"><header><h2>{t("commercial.admin")}</h2><p>{t("commercial.adminHint")}</p></header><CommercialInventory /></section> : null}
     </>
   );
 }

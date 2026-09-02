@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "6be7ac8ab87d55d3a6e4623780dde98e71804ea209c8bf9073befd32694c4bf4",
+    "bodyDigest": "c346038eb4ccdd29bb93e025c27c9beea279c84ca50da9b739775c5a90d34caa",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "e2e8efe5bac6188436e75d8eee07c9e9f6c86cec1a7907566e85613fc444be37",
+    "inputDigest": "ff9fcd720e6a6c89968363cc88f9aa977477460c8377c9bd79d2aac44d0baba2",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -280,7 +280,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 88
+        "sourceFileCount": 89
       },
       "id": "r4c-runtime-entry",
       "ownedEntities": [],
@@ -328,7 +328,7 @@
     },
     {
       "confidence": "verified",
-      "confidenceReason": "Declared and corroborated by 67 discovered code file(s).",
+      "confidenceReason": "Declared and corroborated by 68 discovered code file(s).",
       "declared": true,
       "declaredConfidence": "verified",
       "dependedOnBy": [
@@ -338,7 +338,7 @@
         "r4c-contracts"
       ],
       "discovery": {
-        "codeFileCount": 67,
+        "codeFileCount": 68,
         "discovered": true,
         "entryPoints": [],
         "languages": [
@@ -348,7 +348,7 @@
         ],
         "parseErrors": [],
         "publicSymbols": [],
-        "sourceFileCount": 70
+        "sourceFileCount": 71
       },
       "id": "r4c-web",
       "ownedEntities": [],
