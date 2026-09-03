@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-runtime-entry.json",
-    "bodyDigest": "1cbc08f276f70e8bfc0345eff77b0522ada85c4668962a730d48f5e700ec20db",
+    "bodyDigest": "9a81764942bb6a940ccef88de2a1805d18c5425192e2a220e86fa3715bff442a",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "ff9fcd720e6a6c89968363cc88f9aa977477460c8377c9bd79d2aac44d0baba2",
+    "inputDigest": "be24d2916ddfd9a05847743b62723c63eef5e0d28e7a71c98854e4fdba9a7a0f",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -113,6 +113,7 @@
       "docs/uat/2026-08-28/transfer-document-production/R4C_TRANSFER_DOCUMENT_UAT.md",
       "docs/uat/2026-09-01/production-interface-audit/REPORT.md",
       "docs/uat/2026-09-01/project-publication-live/REPORT.md",
+      "docs/uat/2026-09-02/production-post-merge/UAT-REPORT.md",
       "docs/uat/2026-09-02/regenerated-uat/UAT-REPORT.md",
       "docs/wafi-readiness.md",
       "docs/zatca-architecture.md",
