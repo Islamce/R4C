@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { Buildings, CalendarCheck, ChartLineUp, Files, Gauge, GlobeHemisphereEast, HouseLine, ShieldCheck, SignOut, SquaresFour, UserCircle, UserGear, UsersThree } from "@phosphor-icons/react";
 import { clientApi, ClientApiError } from "../lib/client-api";
@@ -11,6 +11,7 @@ import { useI18n } from "./I18nProvider";
 export function AppShell({ children, preview = false, initialUser = null }: { children: ReactNode; preview?: boolean; initialUser?: BrowserSessionUser | null }) {
   const { t, locale } = useI18n();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [user, setUser] = useState<BrowserSessionUser | null>(preview ? {
     id: "design-preview",
@@ -68,8 +69,9 @@ export function AppShell({ children, preview = false, initialUser = null }: { ch
     }
   }
 
-  const projectsActive = pathname.startsWith("/projects");
-  const commercialActive = pathname.startsWith("/commercial");
+  const commercialView = searchParams.get("view");
+  const projectsActive = pathname.startsWith("/projects") || (pathname.startsWith("/commercial") && ["portfolio", "units"].includes(commercialView ?? ""));
+  const commercialActive = pathname.startsWith("/commercial") && !projectsActive;
 
   if (!preview && !user && !sessionError) {
     return (
@@ -95,7 +97,7 @@ export function AppShell({ children, preview = false, initialUser = null }: { ch
             <p className="nav-group-label">{t("commercial.navGroup")}</p>
             <Link
               className={projectsActive ? "nav-link nav-link-active" : "nav-link"}
-              href={preview ? "/design-preview" : "/projects"}
+              href={preview ? "/design-preview" : "/commercial?view=portfolio"}
               aria-current={projectsActive ? "page" : undefined}
             >
               <Buildings className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
@@ -110,10 +112,16 @@ export function AppShell({ children, preview = false, initialUser = null }: { ch
               {t("commercial.nav")}
             </Link>
             {user?.role === "ADMIN" ? (
-              <Link className={pathname.startsWith("/admin/users") ? "nav-link nav-link-active" : "nav-link"} href="/admin/users">
-                <UserGear className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
-                {locale === "ar" ? "المستخدمون والصلاحيات" : "Users & access"}
-              </Link>
+              <>
+                <Link className={pathname.startsWith("/admin/projects") ? "nav-link nav-link-active" : "nav-link"} href="/admin/projects">
+                  <Buildings className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
+                  {locale === "ar" ? "إدارة المشروعات" : "Project administration"}
+                </Link>
+                <Link className={pathname.startsWith("/admin/users") ? "nav-link nav-link-active" : "nav-link"} href="/admin/users">
+                  <UserGear className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
+                  {locale === "ar" ? "المستخدمون والصلاحيات" : "Users & access"}
+                </Link>
+              </>
             ) : null}
             <Link className={pathname.startsWith("/progress") ? "nav-link nav-link-active" : "nav-link"} href="/progress">
               <Gauge className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
@@ -126,7 +134,7 @@ export function AppShell({ children, preview = false, initialUser = null }: { ch
           </section>
           <section className="kynox-sidebar-tools" aria-label={locale === "ar" ? "أدوات العمل التجاري" : "Commercial tools"}>
             {([
-              ["portfolio", Gauge, locale === "ar" ? "المحفظة" : "Portfolio", "/projects"],
+              ["portfolio", Gauge, locale === "ar" ? "المحفظة" : "Portfolio", "/commercial?view=portfolio"],
               ["pipeline", UsersThree, locale === "ar" ? "العملاء" : "Customers", "/commercial?view=customers#commercial-customers"],
               ["units", HouseLine, locale === "ar" ? "الوحدات" : "Units", "/commercial?view=units#commercial-units"],
               ["transfer", Files, locale === "ar" ? "الحجز والإفراغ" : "Booking & transfer", "/commercial?view=transfer#commercial-transfer"],

@@ -17,6 +17,9 @@ const shell = await readFile(new URL("../components/AppShell.tsx", import.meta.u
 const shellModern = await readFile(new URL("../app/shell-modern.css", import.meta.url), "utf8");
 const salesPipelineCss = await readFile(new URL("../app/sales-pipeline.css", import.meta.url), "utf8");
 const commercialApi = await readFile(new URL("../lib/commercial-api.ts", import.meta.url), "utf8");
+const customerPortfolio = await readFile(new URL("../components/CustomerPortfolio.tsx", import.meta.url), "utf8");
+const projectsPage = await readFile(new URL("../app/(authenticated)/projects/page.tsx", import.meta.url), "utf8");
+const projectAdministrationPage = await readFile(new URL("../app/(authenticated)/admin/projects/page.tsx", import.meta.url), "utf8");
 
 test("production entry routes users into the commercial journey", () => {
   assert.match(home, /redirect\("\/login"\)/);
@@ -25,6 +28,9 @@ test("production entry routes users into the commercial journey", () => {
   assert.doesNotMatch(commercialPage, /CommercialOperatorWorkspace/);
   assert.match(designPreviewPage, /process\.env\.NODE_ENV !== "development"/);
   assert.match(designPreviewPage, /CommercialWorkspaceSuite preview/);
+  assert.match(projectsPage, /redirect\("\/commercial\?view=portfolio"\)/);
+  assert.match(projectAdministrationPage, /user\?\.permissions\.includes\("project:create"\)/);
+  assert.match(projectAdministrationPage, /<ProjectsJourney canPublish/);
 });
 
 test("commercial journey authorizes exclusively through session permissions", () => {
@@ -86,6 +92,16 @@ test("production commercial operations persist tasks, transfer reviews, and disp
   assert.match(suite, /selectedCase\?\.readiness !== 100/);
 });
 
+test("the approved workspace uses live projects and the real reservation engine in production", () => {
+  assert.match(suite, /clientApi<import\("\.\.\/lib\/types"\)\.ProjectRecord\[]>\("\/api\/projects"\)/);
+  assert.match(suite, /const workspaceProjects = preview \? projects : productionProjects/);
+  assert.match(suite, /tab === "units" && !preview \? <CommercialOperatorWorkspace focus="units"/);
+  assert.match(suite, /CommercialOperatorWorkspace focus="operations"/);
+  assert.match(workspace, /focus = "all"/);
+  assert.match(workspace, /commercialApi\.createHold/);
+  assert.match(workspace, /commercialApi\.confirmReservation/);
+});
+
 test("mass import validates contacts and campaign results before governed creation", () => {
   assert.match(workspace, /parseBulkCsv\(contents/);
   assert.match(workspace, /bulkMode === "campaign"/);
@@ -109,7 +125,7 @@ test("production web configuration cannot fall back to localhost or a .local ten
 });
 
 test("authenticated routes share the KYNOX shell and commercial tools use real navigation targets", () => {
-  for (const target of ["/projects", "/commercial?view=customers#commercial-customers", "/commercial?view=units#commercial-units", "/commercial?view=transfer#commercial-transfer", "/commercial?view=operations#commercial-operations", "/progress", "/cost-control"]) {
+  for (const target of ["/commercial?view=portfolio", "/commercial?view=customers#commercial-customers", "/commercial?view=units#commercial-units", "/commercial?view=transfer#commercial-transfer", "/commercial?view=operations#commercial-operations", "/progress", "/cost-control"]) {
     assert.match(shell, new RegExp(target.replace(/[?]/g, "\\?")));
   }
   assert.match(shell, /className="kynox-tool-link" href=\{href\}/);
@@ -117,10 +133,13 @@ test("authenticated routes share the KYNOX shell and commercial tools use real n
   assert.match(shellModern, /\.kynox-tool-link:hover/);
   assert.match(shell, /locale === "ar" \? "وضع المعاينة" : "Preview mode"/);
   assert.match(shell, /locale === "ar" && user\.role === "ADMIN" \? "مدير النظام" : user\.role/);
+  assert.match(shell, /href="\/admin\/projects"/);
   assert.match(workspace, /id="commercial-customers"/);
   assert.match(workspace, /id="commercial-units"/);
   assert.match(workspace, /id="commercial-transfer"/);
   assert.match(workspace, /id="commercial-operations"/);
+  assert.match(suite, /searchParams\.get\("view"\)/);
+  assert.match(suite, /requestedView === "customers"/);
 });
 
 test("commercial UAT safeguards localization, dialogs, contrast, and mobile containment", () => {
@@ -136,4 +155,7 @@ test("commercial UAT safeguards localization, dialogs, contrast, and mobile cont
   assert.match(suite, /8 وحدات/);
   assert.match(pipeline, /canonicalProjectName\(externalReservation\.project\)/);
   assert.doesNotMatch(pipeline, /PERFORMANCE & ALERTING|SALES TEAM CONTROL|PROJECT CONTENT HUB|78\.0M ر\.س/);
+  assert.match(customerPortfolio, /role="dialog" aria-modal="true" aria-labelledby="interest-panel-title"/);
+  assert.match(customerPortfolio, /document\.body\.style\.overflow = "hidden"/);
+  assert.match(customerPortfolio, /event\.key === "Escape"/);
 });

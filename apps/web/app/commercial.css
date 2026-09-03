@@ -1320,6 +1320,10 @@
 .commercial-suite .commercial-admin-boundary .commercial-workspace {
   width: 100%;
 }
+
+.commercial-live-state { padding: 2rem; color: var(--steel); }
+.commercial-work-grid-focus { grid-template-columns: minmax(0, 1fr); }
+.commercial-work-grid-focus > .create-panel { max-width: none; }
 @media (max-width: 1180px) {
   .suite-metrics {
     grid-template-columns: repeat(3, 1fr);

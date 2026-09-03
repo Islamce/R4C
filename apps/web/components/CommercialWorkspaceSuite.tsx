@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Cube, Eye, FileArrowUp, ImageSquare, PlugsConnected, ShieldCheck, UploadSimple, X } from "@phosphor-icons/react";
 import { CommercialOperatorWorkspace } from "./CommercialOperatorWorkspace";
 import { CommercialHero3D } from "./CommercialHero3D";
@@ -233,6 +234,7 @@ const transfers: UnitDashboardRow[] = Array.from({ length: 34 }, (_, index) => {
 
 export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolean }) {
   const { locale } = useI18n();
+  const searchParams = useSearchParams();
   const ar = locale === "ar";
   const [tab, setTab] = useState<Tab>("pipeline");
   const [project, setProject] = useState("Riyadh Heights");
@@ -243,20 +245,49 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
   const [isAdmin, setIsAdmin] = useState(preview);
   const [canViewAllLeads, setCanViewAllLeads] = useState(preview);
   const [projectAssets, setProjectAssets] = useState<Record<string, ProjectAssets>>({});
+  const [productionProjects, setProductionProjects] = useState<ProjectDashboardRecord[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(!preview);
+  const workspaceProjects = preview ? projects : productionProjects;
   const selected = useMemo(
-    () => projects.find((item) => item.name === project) ?? projects[0]!,
-    [project],
+    () => workspaceProjects.find((item) => item.name === project) ?? workspaceProjects[0] ?? projects[0]!,
+    [project, workspaceProjects],
   );
 
   useEffect(() => {
     if (preview) return;
-    clientApi<{ user: BrowserSessionUser }>("/api/session")
-      .then(({ user }) => {
+    Promise.all([clientApi<{ user: BrowserSessionUser }>("/api/session"), clientApi<import("../lib/types").ProjectRecord[]>("/api/projects")])
+      .then(([{ user }, projectRows]) => {
         setIsAdmin(user.role === "ADMIN" || user.permissions.includes("commercial:manage"));
         setCanViewAllLeads(user.permissions.includes("commercial:lead:view-all"));
+        const mapped = projectRows.map((item) => ({
+          name: item.name,
+          city: "—",
+          phase: item.status,
+          progress: 0,
+          units: 0,
+          available: 0,
+          pending: 0,
+          sold: 0,
+          leads: 0,
+          value: "0",
+        }));
+        setProductionProjects(mapped);
+        if (mapped[0]) setProject(mapped[0].name);
       })
-      .catch(() => { setIsAdmin(false); setCanViewAllLeads(false); });
+      .catch(() => { setIsAdmin(false); setCanViewAllLeads(false); })
+      .finally(() => setProjectsLoading(false));
   }, [preview]);
+
+  useEffect(() => {
+    if (preview) return;
+    const requestedView = searchParams.get("view");
+    const nextTab: Tab = requestedView === "customers"
+      ? "pipeline"
+      : (["pipeline", "portfolio", "units", "transfer", "operations"].includes(requestedView ?? "")
+        ? requestedView as Tab
+        : "pipeline");
+    setTab(nextTab);
+  }, [preview, searchParams]);
 
   useEffect(() => {
     const onCommercialTab = (event: Event) => {
@@ -327,11 +358,11 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           <label>
             <span>{localize(ar, "Switch project", "تغيير المشروع")}</span>
             <select value={project} onChange={(event) => setProject(event.target.value)}>
-              {projects.map((item) => <option value={item.name} key={item.name}>{projectDisplayName(ar, item.name)}</option>)}
+              {workspaceProjects.map((item) => <option value={item.name} key={item.name}>{projectDisplayName(ar, item.name)}</option>)}
             </select>
           </label>
           <div className="project-switcher-links" role="list" aria-label={localize(ar, "Available projects", "المشروعات المتاحة")}>
-            {projects.map((item) => (
+            {workspaceProjects.map((item) => (
               <button type="button" role="listitem" key={item.name} className={project === item.name ? "active" : ""} onClick={() => setProject(item.name)}>
                 <span>{projectDisplayName(ar, item.name)}</span>
                 <small>{cityDisplayName(ar, item.city)} · {item.units} {localize(ar, "units", "وحدة")}</small>
@@ -341,7 +372,9 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
         </section>
       ) : null}
       {tab === "pipeline" ? <SalesPipelineWorkspace externalReservation={unitReservation} ar={ar} persistent={!preview} canManageMedia={isAdmin} canViewAllLeads={canViewAllLeads} /> : null}
-      {tab === "portfolio" ? (
+      {tab === "portfolio" && projectsLoading ? <section className="suite-panel commercial-live-state" aria-busy="true">{localize(ar, "Loading live projects…", "جارٍ تحميل المشروعات الفعلية…")}</section> : null}
+      {tab === "portfolio" && !projectsLoading && !workspaceProjects.length ? <section className="suite-panel commercial-live-state">{localize(ar, "No projects are available for this tenant.", "لا توجد مشروعات متاحة لهذه المنشأة.")}</section> : null}
+      {tab === "portfolio" && workspaceProjects.length ? (
         <PortfolioDashboard
           selectedProject={project}
           onSelectProject={setProject}
@@ -353,7 +386,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           ar={ar}
         />
       ) : null}
-      {tab === "units" ? (
+      {tab === "units" && preview ? (
         <UnitDashboard
           project={selected}
           selectedUnit={selectedUnit}
@@ -366,11 +399,12 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           ar={ar}
         />
       ) : null}
+      {tab === "units" && !preview ? <CommercialOperatorWorkspace focus="units" /> : null}
       {tab === "transfer" ? (
         <TransferDashboard project={project} onProjectChange={setProject} ar={ar} persistent={!preview} />
       ) : null}
       {tab === "operations" ? (
-        preview ? <PreviewSalesOperations project={project} ar={ar} /> : <CommercialOperatorWorkspace />
+        preview ? <PreviewSalesOperations project={project} ar={ar} /> : <CommercialOperatorWorkspace focus="operations" />
       ) : null}
     </div>
   );

@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "drift.json",
-    "bodyDigest": "92b06c9bdf71f0c21646eb72e49d4ad64e7b81f1f6b60df835c19278b7f6ce41",
+    "bodyDigest": "e2836db6c2563c33131ea89a462c4602bfdb760a33232315b90ee97defa718bb",
     "confidence": "derived",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "34e3fe8dc4a6cee91b511cec8ca9903867ddb641983ada652bdb2af1d72131a6",
+    "inputDigest": "be24d2916ddfd9a05847743b62723c63eef5e0d28e7a71c98854e4fdba9a7a0f",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -37,7 +37,7 @@
     },
     "r4c-web": {
       "level": "verified",
-      "reason": "Declared and corroborated by 67 discovered code file(s)."
+      "reason": "Declared and corroborated by 68 discovered code file(s)."
     }
   },
   "counts": {
