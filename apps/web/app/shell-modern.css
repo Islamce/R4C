@@ -9,6 +9,9 @@
 .app-nav { min-height: 0; margin-top: .2rem; display: flex; flex: 1; flex-direction: column; gap: .65rem; }
 .nav-group { gap: .25rem; }
 .nav-link { min-height: 70px; display: grid; place-items: center; align-content: center; gap: .35rem; padding: .45rem .25rem; text-align: center; font-size: .68rem; line-height: 1.35; }
+.kynox-unified-nav button.nav-link { width: 100%; border: 1px solid transparent; border-radius: 7px; color: #d7e1e5; background: transparent; cursor: pointer; font: inherit; font-size: .68rem; font-weight: 750; line-height: 1.35; }
+.kynox-unified-nav button.nav-link:hover,
+.kynox-unified-nav button.nav-link-active { border-color: rgb(93 213 225 / 45%); color: #fff; background: rgb(93 213 225 / 10%); }
 .nav-icon { width: 23px; height: 23px; color: #5dd5e1; }
 .kynox-sidebar-tools { display: grid; gap: .3rem; margin-top: .4rem; padding-top: .7rem; border-top: 1px solid rgb(255 255 255 / 18%); }
 .kynox-sidebar-tools button,

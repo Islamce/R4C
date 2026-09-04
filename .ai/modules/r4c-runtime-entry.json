@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-runtime-entry.json",
-    "bodyDigest": "9a81764942bb6a940ccef88de2a1805d18c5425192e2a220e86fa3715bff442a",
+    "bodyDigest": "49663b2eb09a424a3cfba8acd0d10272ed4f96b426e3b77e05c5417fa54f9674",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "be24d2916ddfd9a05847743b62723c63eef5e0d28e7a71c98854e4fdba9a7a0f",
+    "inputDigest": "7fc0db70bc23e784ec74ba5da71f354671ccddd2f8ee992c7dbcce2bfaacac8c",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -115,6 +115,7 @@
       "docs/uat/2026-09-01/project-publication-live/REPORT.md",
       "docs/uat/2026-09-02/production-post-merge/UAT-REPORT.md",
       "docs/uat/2026-09-02/regenerated-uat/UAT-REPORT.md",
+      "docs/uat/2026-09-03/salesforce-design-benchmark/BENCHMARK.md",
       "docs/wafi-readiness.md",
       "docs/zatca-architecture.md",
       "hostinger-web-entry.cjs",

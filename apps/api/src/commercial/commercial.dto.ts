@@ -10,6 +10,7 @@ import {
   IsEnum,
   IsInt,
   IsIn,
+  IsObject,
   IsOptional,
   IsString,
   IsUUID,
@@ -293,8 +294,32 @@ export class LeadQueryDto {
   @IsOptional() @IsUUID() projectId?: string;
   @IsOptional() @IsUUID() unitId?: string;
   @IsOptional() @IsEnum(LeadStatus) status?: LeadStatus;
+  @IsOptional() @IsUUID() assignedToId?: string;
+  @IsOptional() @IsString() @Length(1, 160) q?: string;
+  @IsOptional() @IsIn(["createdAt", "updatedAt", "status"]) sortBy: "createdAt" | "updatedAt" | "status" = "updatedAt";
+  @IsOptional() @IsIn(["asc", "desc"]) sortDirection: "asc" | "desc" = "desc";
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) page: number = 1;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) pageSize: number = 25;
+}
+
+export class CreateSavedLeadViewDto {
+  @IsString() @Length(1, 120) name!: string;
+  @IsIn(["table", "kanban", "split"]) displayMode!: "table" | "kanban" | "split";
+  @IsObject() filters!: Record<string, unknown>;
+  @IsArray() @IsString({ each: true }) columns!: string[];
+  @IsIn(["createdAt", "updatedAt", "status"]) sortBy!: "createdAt" | "updatedAt" | "status";
+  @IsIn(["asc", "desc"]) sortDirection!: "asc" | "desc";
+  @IsOptional() @IsBoolean() isDefault?: boolean;
+}
+
+export class UpdateSavedLeadViewDto {
+  @IsOptional() @IsString() @Length(1, 120) name?: string;
+  @IsOptional() @IsIn(["table", "kanban", "split"]) displayMode?: "table" | "kanban" | "split";
+  @IsOptional() @IsObject() filters?: Record<string, unknown>;
+  @IsOptional() @IsArray() @IsString({ each: true }) columns?: string[];
+  @IsOptional() @IsIn(["createdAt", "updatedAt", "status"]) sortBy?: "createdAt" | "updatedAt" | "status";
+  @IsOptional() @IsIn(["asc", "desc"]) sortDirection?: "asc" | "desc";
+  @IsOptional() @IsBoolean() isDefault?: boolean;
 }
 
 export class AdvanceLeadDto {
