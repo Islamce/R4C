@@ -15,7 +15,9 @@ import {
   CreateLeadDto,
   CreateSalesActivityDto,
   CreateSalesTaskDto,
+  CreateSavedLeadViewDto,
   UpdateSalesTaskDto,
+  UpdateSavedLeadViewDto,
   CreateTransferCaseDto,
   ReviewTransferDocumentDto,
   RequestTransferDocumentUploadDto,
@@ -274,6 +276,23 @@ export class CommercialController {
   @Get("leads/all/:id") @RequirePermissions("commercial:lead:view-all")
   lead(@CurrentUser() user: AuthContext, @Param("id") id: string) {
     return this.commercial.lead(user.tenantId, id);
+  }
+
+  @Get("lead-views") @RequirePermissions("commercial:lead:view-own")
+  savedLeadViews(@CurrentUser() user: AuthContext) { return this.commercial.savedLeadViews(user); }
+
+  @Post("lead-views") @RequirePermissions("commercial:lead:view-own")
+  createSavedLeadView(@CurrentUser() user: AuthContext, @Body() body: CreateSavedLeadViewDto) { return this.commercial.createSavedLeadView(user, body); }
+
+  @Patch("lead-views/:id") @RequirePermissions("commercial:lead:view-own")
+  updateSavedLeadView(@CurrentUser() user: AuthContext, @Param("id") id: string, @Body() body: UpdateSavedLeadViewDto) { return this.commercial.updateSavedLeadView(user, id, body); }
+
+  @Delete("lead-views/:id") @RequirePermissions("commercial:lead:view-own")
+  deleteSavedLeadView(@CurrentUser() user: AuthContext, @Param("id") id: string) { return this.commercial.deleteSavedLeadView(user, id); }
+
+  @Get("leads/:id/workspace") @RequirePermissions("commercial:activity:view")
+  leadWorkspace(@CurrentUser() user: AuthContext, @Param("id") id: string) {
+    return this.commercial.leadWorkspace(user, id);
   }
 
   @Get("leads/:id") @RequirePermissions("commercial:lead:view-own")

@@ -11,6 +11,8 @@ const readPaths = [
   /^commercial\/units\/[^/]+\/prices$/,
   /^commercial\/projects\/[^/]+\/payment-plans$/,
   /^commercial\/leads(?:\/all)?(?:\/[^/]+)?$/,
+  /^commercial\/leads\/[^/]+\/workspace$/,
+  /^commercial\/lead-views(?:\/[^/]+)?$/,
   /^commercial\/leads\/[^/]+\/activities$/,
   /^commercial\/assignees$/,
   /^commercial\/(?:tasks|transfer-cases)$/,
@@ -24,6 +26,7 @@ const readPaths = [
 const writePaths = [
   /^commercial\/(?:phases|buildings|floors|unit-types|units)(?:\/[^/]+)?(?:\/(?:release|block))?$/,
   /^commercial\/(?:customers|leads|holds)$/,
+  /^commercial\/lead-views(?:\/[^/]+)?$/,
   /^commercial\/leads\/[^/]+\/(?:status|disqualify|assignee|activities)$/,
   /^commercial\/holds\/[^/]+\/(?:cancel|confirm)$/,
   /^commercial\/(?:tasks|transfer-cases|dispatches)$/,
@@ -38,7 +41,7 @@ const writePaths = [
 ];
 
 function permitted(path: string, method: string) {
-  const patterns = method === "GET" ? readPaths : ["POST", "PATCH"].includes(method) ? writePaths : [];
+  const patterns = method === "GET" ? readPaths : ["POST", "PATCH", "DELETE"].includes(method) ? writePaths : [];
   return patterns.some((pattern) => pattern.test(path));
 }
 
@@ -79,3 +82,4 @@ async function forward(
 export const GET = forward;
 export const POST = forward;
 export const PATCH = forward;
+export const DELETE = forward;

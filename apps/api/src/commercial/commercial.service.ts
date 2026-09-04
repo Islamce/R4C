@@ -22,7 +22,9 @@ import {
   CreateLeadDto,
   CreateSalesActivityDto,
   CreateSalesTaskDto,
+  CreateSavedLeadViewDto,
   UpdateSalesTaskDto,
+  UpdateSavedLeadViewDto,
   CreateTransferCaseDto,
   ReviewTransferDocumentDto,
   ReviewTransferCaseDto,
@@ -738,6 +740,59 @@ export class CommercialService {
     return this.leadView(await this.requireLead(tenantId, id));
   }
 
+  savedLeadViews(user: AuthContext) {
+    return this.prisma.savedLeadView.findMany({ where: { tenantId: user.tenantId, userId: user.userId }, orderBy: [{ isDefault: "desc" }, { name: "asc" }] });
+  }
+
+  async createSavedLeadView(user: AuthContext, command: CreateSavedLeadViewDto) {
+    return this.prisma.$transaction(async (tx) => {
+      if (command.isDefault) await tx.savedLeadView.updateMany({ where: { tenantId: user.tenantId, userId: user.userId, isDefault: true }, data: { isDefault: false } });
+      const view = await tx.savedLeadView.create({ data: { tenantId: user.tenantId, userId: user.userId, name: command.name.trim(), displayMode: command.displayMode, filters: command.filters as Prisma.InputJsonValue, columns: command.columns, sortBy: command.sortBy, sortDirection: command.sortDirection, isDefault: command.isDefault ?? false } });
+      await this.audit(tx, user, "COMMERCIAL_LEAD_VIEW_CREATED", "SavedLeadView", view.id, { name: view.name, isDefault: view.isDefault });
+      return view;
+    });
+  }
+
+  async updateSavedLeadView(user: AuthContext, id: string, command: UpdateSavedLeadViewDto) {
+    const existing = await this.prisma.savedLeadView.findFirst({ where: { id, tenantId: user.tenantId, userId: user.userId } });
+    if (!existing) throw new NotFoundException("Saved lead view not found");
+    return this.prisma.$transaction(async (tx) => {
+      if (command.isDefault) await tx.savedLeadView.updateMany({ where: { tenantId: user.tenantId, userId: user.userId, isDefault: true, NOT: { id } }, data: { isDefault: false } });
+      const view = await tx.savedLeadView.update({ where: { id }, data: { ...(command.name ? { name: command.name.trim() } : {}), ...(command.displayMode ? { displayMode: command.displayMode } : {}), ...(command.filters ? { filters: command.filters as Prisma.InputJsonValue } : {}), ...(command.columns ? { columns: command.columns } : {}), ...(command.sortBy ? { sortBy: command.sortBy } : {}), ...(command.sortDirection ? { sortDirection: command.sortDirection } : {}), ...(command.isDefault !== undefined ? { isDefault: command.isDefault } : {}) } });
+      await this.audit(tx, user, "COMMERCIAL_LEAD_VIEW_UPDATED", "SavedLeadView", id, { name: view.name, isDefault: view.isDefault });
+      return view;
+    });
+  }
+
+  async deleteSavedLeadView(user: AuthContext, id: string) {
+    const removed = await this.prisma.savedLeadView.deleteMany({ where: { id, tenantId: user.tenantId, userId: user.userId } });
+    if (removed.count !== 1) throw new NotFoundException("Saved lead view not found");
+    return { deleted: true };
+  }
+
+  async leadWorkspace(user: AuthContext, id: string) {
+    const lead = await this.requireLead(user.tenantId, id);
+    this.assertLeadOwnerOrManager(user, lead.assignedToId);
+    const [activities, tasks, holds, reservations, transferCases] = await Promise.all([
+      this.prisma.salesActivity.findMany({ where: { tenantId: user.tenantId, leadId: id }, orderBy: { createdAt: "desc" }, include: { actor: { select: { id: true, displayName: true } } } }),
+      this.prisma.salesTask.findMany({ where: { tenantId: user.tenantId, leadId: id }, orderBy: [{ status: "asc" }, { dueAt: "asc" }], include: { assignee: { select: { id: true, displayName: true } }, createdBy: { select: { id: true, displayName: true } } } }),
+      this.prisma.unitHold.findMany({ where: { tenantId: user.tenantId, leadId: id }, orderBy: { createdAt: "desc" }, include: { unit: { select: { id: true, code: true, number: true, status: true } } } }),
+      this.prisma.reservation.findMany({ where: { tenantId: user.tenantId, leadId: id }, orderBy: { createdAt: "desc" }, include: { unit: { select: { id: true, code: true, number: true, status: true } }, paymentPlan: { select: { id: true } } } }),
+      this.prisma.transferCase.findMany({ where: { tenantId: user.tenantId, reservation: { leadId: id } }, orderBy: { updatedAt: "desc" }, include: { documents: { orderBy: { documentType: "asc" } } } }),
+    ]);
+    return {
+      lead: this.leadView(lead),
+      activities: activities.map((activity) => this.activityView(activity)),
+      tasks,
+      holds,
+      reservations: reservations.map((reservation) => this.reservationView(reservation)),
+      transferCases: transferCases.map((transferCase) => ({
+        ...transferCase,
+        documents: transferCase.documents.map((document) => ({ ...document, sizeBytes: document.sizeBytes?.toString() ?? null })),
+      })),
+    };
+  }
+
   async createLead(user: AuthContext, command: CreateLeadDto) {
     const assigneeId = command.assignedToId ?? user.userId;
     if (assigneeId !== user.userId && !user.permissions.includes("commercial:lead:reassign")) {
@@ -1115,17 +1170,25 @@ export class CommercialService {
     const where: Prisma.LeadWhereInput = {
       tenantId,
       ...(assignedToId ? { assignedToId } : {}),
+      ...(!assignedToId && query.assignedToId ? { assignedToId: query.assignedToId } : {}),
       ...(query.customerId ? { customerId: query.customerId } : {}),
       ...(query.projectId ? { projectId: query.projectId } : {}),
       ...(query.unitId ? { unitId: query.unitId } : {}),
       ...(query.status ? { status: query.status } : {}),
+      ...(query.q ? { OR: [
+        { customer: { firstName: { contains: query.q, mode: "insensitive" } } },
+        { customer: { lastName: { contains: query.q, mode: "insensitive" } } },
+        { customer: { phone: { contains: query.q } } },
+        { customer: { email: { contains: query.q, mode: "insensitive" } } },
+        { unit: { code: { contains: query.q, mode: "insensitive" } } },
+      ] } : {}),
     };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.lead.findMany({
         where,
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
-        orderBy: { createdAt: "desc" },
+        orderBy: { [query.sortBy]: query.sortDirection },
         include: this.leadInclude(),
       }),
       this.prisma.lead.count({ where }),
