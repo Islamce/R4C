@@ -9,12 +9,12 @@ dependencies = [
   "ifcopenshell>=0.8,<1",
   "httpx>=0.28,<1",
   "numpy>=2,<3",
-  "trimesh>=4.7,<5",
+  "trimesh>=4.7,<6",
   "pydantic-settings>=2.10,<3"
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.4,<9", "ruff>=0.12,<1"]
+dev = ["pytest>=8.4,<10", "ruff>=0.12,<1"]
 
 [tool.ruff]
 line-length = 100
