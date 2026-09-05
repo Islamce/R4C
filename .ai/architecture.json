@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "architecture.json",
-    "bodyDigest": "68e7db49dda9564adc82d6e6c9dce164904fea4e44fb35a567233fa656d58819",
+    "bodyDigest": "b438de5a0e253eeeaaa637218a8815bd0edd59c708622ee0f2d5662b37840cc0",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "be24d2916ddfd9a05847743b62723c63eef5e0d28e7a71c98854e4fdba9a7a0f",
+    "inputDigest": "dc54b617641cdc9a928241fbe30fa9d4510cec9b8a7fe1469132861b3b554b23",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -128,6 +128,7 @@
         "reservation",
         "sales-activity",
         "sales-task",
+        "saved-lead-view",
         "transfer-case",
         "transfer-document",
         "translation",

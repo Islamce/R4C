@@ -61,6 +61,9 @@ test("English and Arabic use the shared i18n provider and RTL-safe logical CSS",
 test("the browser proxy exposes only the bounded journey contracts", () => {
   assert.match(proxy, /commercial\\\/projects\\\/\[\^\/\]\+\\\/payment-plans/);
   assert.match(proxy, /commercial\\\/leads/);
+  assert.match(proxy, /lead-views/);
+  assert.match(proxy, /leads\\\/\[\^\/\]\+\\\/workspace/);
+  assert.match(proxy, /export const DELETE = forward/);
   assert.match(proxy, /commercial\\\/holds/);
   assert.match(proxy, /commercial\\\/assignees/);
   assert.match(proxy, /admin\\\/users/);
@@ -90,6 +93,17 @@ test("production commercial operations persist tasks, transfer reviews, and disp
   assert.match(suite, /fetch\(request\.uploadUrl/);
   assert.match(suite, /commercialApi\.confirmTransferDocumentUpload/);
   assert.match(suite, /selectedCase\?\.readiness !== 100/);
+});
+
+test("sales worklist supports governed table, Kanban, split view, saved views, and one record workspace", () => {
+  for (const mode of ["table", "kanban", "split"]) assert.match(pipeline, new RegExp(`setDisplayMode\\(\"${mode}\"\\)`));
+  assert.match(pipeline, /draggable/);
+  assert.match(pipeline, /moveCustomerToStage/);
+  assert.match(pipeline, /commercialApi\.savedLeadViews/);
+  assert.match(pipeline, /commercialApi\.createSavedLeadView/);
+  assert.match(pipeline, /commercialApi\.leadWorkspace/);
+  assert.match(commercialApi, /lead-views/);
+  assert.match(commercialApi, /leads\/\$\{id\}\/workspace/);
 });
 
 test("the approved workspace uses live projects and the real reservation engine in production", () => {
@@ -124,13 +138,14 @@ test("production web configuration cannot fall back to localhost or a .local ten
   assert.match(tenantResolution, /TENANT_BASE_DOMAIN is required in production/);
 });
 
-test("authenticated routes share the KYNOX shell and commercial tools use real navigation targets", () => {
-  for (const target of ["/commercial?view=portfolio", "/commercial?view=customers#commercial-customers", "/commercial?view=units#commercial-units", "/commercial?view=transfer#commercial-transfer", "/commercial?view=operations#commercial-operations", "/progress", "/cost-control"]) {
+test("authenticated routes share one KYNOX navigation system with real targets", () => {
+  for (const target of ["/commercial?view=portfolio", "/commercial?view=customers", "/commercial?view=units", "/commercial?view=transfer", "/commercial?view=operations", "/progress", "/cost-control"]) {
     assert.match(shell, new RegExp(target.replace(/[?]/g, "\\?")));
   }
-  assert.match(shell, /className="kynox-tool-link" href=\{href\}/);
+  assert.match(shell, /app-nav kynox-unified-nav/);
+  assert.doesNotMatch(shell, /kynox-sidebar-tools/);
   assert.match(shellModern, /\.app-shell \{ grid-template-columns: 112px/);
-  assert.match(shellModern, /\.kynox-tool-link:hover/);
+  assert.match(shellModern, /\.kynox-unified-nav button\.nav-link:hover/);
   assert.match(shell, /locale === "ar" \? "وضع المعاينة" : "Preview mode"/);
   assert.match(shell, /locale === "ar" && user\.role === "ADMIN" \? "مدير النظام" : user\.role/);
   assert.match(shell, /href="\/admin\/projects"/);
