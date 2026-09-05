@@ -125,16 +125,6 @@ export function SalesPipelineWorkspace({ externalReservation, ar, persistent = f
   const [selectedWorkspace, setSelectedWorkspace] = useState<LeadWorkspace | null>(null);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("r4c:sales-worklist-display");
-    if (stored === "table" || stored === "kanban" || stored === "split") setDisplayMode(stored);
-    else if (window.matchMedia("(max-width: 720px)").matches) setDisplayMode("table");
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem("r4c:sales-worklist-display", displayMode);
-  }, [displayMode]);
-
-  useEffect(() => {
     if (!persistent) return;
     void commercialApi.savedLeadViews().then((views) => {
       setSavedViews(views);
