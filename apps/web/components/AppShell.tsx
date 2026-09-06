@@ -70,9 +70,6 @@ export function AppShell({ children, preview = false, initialUser = null }: { ch
   }
 
   const commercialView = searchParams.get("view");
-  const projectsActive = pathname.startsWith("/projects") || (pathname.startsWith("/commercial") && ["portfolio", "units"].includes(commercialView ?? ""));
-  const commercialActive = pathname.startsWith("/commercial") && !projectsActive;
-
   if (!preview && !user && !sessionError) {
     return (
       <main className="session-gate" dir={locale === "ar" ? "rtl" : "ltr"} aria-busy="true" aria-live="polite">
@@ -92,66 +89,22 @@ export function AppShell({ children, preview = false, initialUser = null }: { ch
             <span>{t("common.platform")}</span>
           </div>
         </div>
-        <nav className="app-nav" aria-label={t("nav.controlHome")}>
+        <nav className="app-nav kynox-unified-nav" aria-label={t("nav.controlHome")}>
           <section className="nav-group" aria-label={t("commercial.navGroup")}>
             <p className="nav-group-label">{t("commercial.navGroup")}</p>
-            <Link
-              className={projectsActive ? "nav-link nav-link-active" : "nav-link"}
-              href={preview ? "/design-preview" : "/commercial?view=portfolio"}
-              aria-current={projectsActive ? "page" : undefined}
-            >
-              <Buildings className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
-              {locale === "ar" ? "المشروعات والتطوير" : "Developments"}
-            </Link>
-            <Link
-              className={commercialActive ? "nav-link nav-link-active" : "nav-link"}
-              href={preview ? "/design-preview" : "/commercial"}
-              aria-current={commercialActive ? "page" : undefined}
-            >
-              <ChartLineUp className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
-              {t("commercial.nav")}
-            </Link>
-            {user?.role === "ADMIN" ? (
-              <>
-                <Link className={pathname.startsWith("/admin/projects") ? "nav-link nav-link-active" : "nav-link"} href="/admin/projects">
-                  <Buildings className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
-                  {locale === "ar" ? "إدارة المشروعات" : "Project administration"}
-                </Link>
-                <Link className={pathname.startsWith("/admin/users") ? "nav-link nav-link-active" : "nav-link"} href="/admin/users">
-                  <UserGear className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
-                  {locale === "ar" ? "المستخدمون والصلاحيات" : "Users & access"}
-                </Link>
-              </>
-            ) : null}
-            <Link className={pathname.startsWith("/progress") ? "nav-link nav-link-active" : "nav-link"} href="/progress">
-              <Gauge className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
-              {locale === "ar" ? "تقارير التقدم" : "Progress reports"}
-            </Link>
-            <Link className={pathname.startsWith("/cost-control") ? "nav-link nav-link-active" : "nav-link"} href="/cost-control">
-              <ChartLineUp className="nav-icon" size={21} weight="duotone" aria-hidden="true" />
-              {locale === "ar" ? "تقارير التكاليف" : "Cost reports"}
-            </Link>
-          </section>
-          <section className="kynox-sidebar-tools" aria-label={locale === "ar" ? "أدوات العمل التجاري" : "Commercial tools"}>
             {([
-              ["portfolio", Gauge, locale === "ar" ? "المحفظة" : "Portfolio", "/commercial?view=portfolio"],
-              ["pipeline", UsersThree, locale === "ar" ? "العملاء" : "Customers", "/commercial?view=customers#commercial-customers"],
-              ["units", HouseLine, locale === "ar" ? "الوحدات" : "Units", "/commercial?view=units#commercial-units"],
-              ["transfer", Files, locale === "ar" ? "الحجز والإفراغ" : "Booking & transfer", "/commercial?view=transfer#commercial-transfer"],
-              ["operations", CalendarCheck, locale === "ar" ? "العمليات" : "Operations", "/commercial?view=operations#commercial-operations"],
-            ] as const).map(([id, Icon, label, href]) => (
-              preview ? (
-                <button key={id} type="button" onClick={() => window.dispatchEvent(new CustomEvent("r4c:commercial-tab", { detail: id }))}>
-                  <Icon size={22} weight="duotone" aria-hidden="true" />
-                  <span>{label}</span>
-                </button>
-              ) : (
-                <Link key={id} className="kynox-tool-link" href={href}>
-                  <Icon size={22} weight="duotone" aria-hidden="true" />
-                  <span>{label}</span>
-                </Link>
-              )
-            ))}
+              ["portfolio", Buildings, locale === "ar" ? "المشروعات" : "Projects", "/commercial?view=portfolio"],
+              ["pipeline", UsersThree, locale === "ar" ? "العملاء والفرص" : "Customers & opportunities", "/commercial?view=customers"],
+              ["units", HouseLine, locale === "ar" ? "الوحدات" : "Units", "/commercial?view=units"],
+              ["transfer", Files, locale === "ar" ? "الحجوزات والإفراغ" : "Reservations & transfer", "/commercial?view=transfer"],
+              ["operations", CalendarCheck, locale === "ar" ? "المهام والعمليات" : "Tasks & operations", "/commercial?view=operations"],
+            ] as const).map(([id, Icon, label, href]) => {
+              const active = pathname.startsWith("/commercial") && (id === "pipeline" ? !commercialView || commercialView === "customers" || commercialView === "pipeline" : commercialView === id);
+              return preview ? <button key={id} className={active ? "nav-link nav-link-active" : "nav-link"} type="button" onClick={() => window.dispatchEvent(new CustomEvent("r4c:commercial-tab", { detail: id }))}><Icon className="nav-icon" size={21} weight="duotone" /><span>{label}</span></button> : <Link key={id} className={active ? "nav-link nav-link-active" : "nav-link"} href={href} aria-current={active ? "page" : undefined}><Icon className="nav-icon" size={21} weight="duotone" /><span>{label}</span></Link>;
+            })}
+            <Link className={pathname.startsWith("/progress") ? "nav-link nav-link-active" : "nav-link"} href="/progress"><Gauge className="nav-icon" size={21} weight="duotone" />{locale === "ar" ? "تقارير التقدم" : "Progress reports"}</Link>
+            <Link className={pathname.startsWith("/cost-control") ? "nav-link nav-link-active" : "nav-link"} href="/cost-control"><ChartLineUp className="nav-icon" size={21} weight="duotone" />{locale === "ar" ? "تقارير التكاليف" : "Cost reports"}</Link>
+            {user?.role === "ADMIN" && !preview ? <><Link className={pathname.startsWith("/admin/projects") ? "nav-link nav-link-active" : "nav-link"} href="/admin/projects"><Buildings className="nav-icon" size={21} weight="duotone" />{locale === "ar" ? "إدارة المشروعات" : "Project administration"}</Link><Link className={pathname.startsWith("/admin/users") ? "nav-link nav-link-active" : "nav-link"} href="/admin/users"><UserGear className="nav-icon" size={21} weight="duotone" />{locale === "ar" ? "المستخدمون والصلاحيات" : "Users & access"}</Link></> : null}
           </section>
         </nav>
       </aside>

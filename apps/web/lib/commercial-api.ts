@@ -63,6 +63,24 @@ export interface TransferCase {
 }
 export interface CommercialDispatch { id: string; status: "QUEUED" | "SENT" | "FAILED"; recipientEmail: string; subject: string; assetIds: string[]; createdAt: string }
 export interface ProjectMediaAsset { id: string; projectId: string; title: string; documentType: string; fileName: string; mimeType: string; sizeBytes: string; createdAt: string; downloadUrl: string }
+export interface LeadWorkspace {
+  lead: CommercialLead;
+  activities: SalesActivity[];
+  tasks: SalesTask[];
+  holds: Array<{ id: string; status: string; holdExpiresAt: string; unit: { id: string; code: string; number: string; status: string } }>;
+  reservations: Reservation[];
+  transferCases: Array<{ id: string; status: string; readiness: number; documents: TransferDocument[] }>;
+}
+export interface SavedLeadView {
+  id: string;
+  name: string;
+  displayMode: "table" | "kanban" | "split";
+  filters: { project?: string; stage?: string; query?: string; preset?: string };
+  columns: string[];
+  sortBy: "createdAt" | "updatedAt" | "status";
+  sortDirection: "asc" | "desc";
+  isDefault: boolean;
+}
 
 function commercialPath(path: string) {
   return `/api/backend/commercial/${path}`;
@@ -71,6 +89,11 @@ function commercialPath(path: string) {
 export const commercialApi = {
   leads: (all: boolean) => clientApi<LeadPage>(commercialPath(all ? "leads/all?pageSize=100" : "leads?pageSize=100")),
   lead: (id: string, all: boolean) => clientApi<CommercialLead>(commercialPath(all ? `leads/all/${id}` : `leads/${id}`)),
+  leadWorkspace: (id: string) => clientApi<LeadWorkspace>(commercialPath(`leads/${id}/workspace`)),
+  savedLeadViews: () => clientApi<SavedLeadView[]>(commercialPath("lead-views")),
+  createSavedLeadView: (body: Record<string, unknown>) => clientApi<SavedLeadView>(commercialPath("lead-views"), json("POST", body)),
+  updateSavedLeadView: (id: string, body: Record<string, unknown>) => clientApi<SavedLeadView>(commercialPath(`lead-views/${id}`), json("PATCH", body)),
+  deleteSavedLeadView: (id: string) => clientApi<{ deleted: true }>(commercialPath(`lead-views/${id}`), { method: "DELETE" }),
   createCustomer: (body: Record<string, unknown>) => clientApi<{ customer: CommercialLead["customer"]; reused: boolean }>(commercialPath("customers"), json("POST", body)),
   createLead: (body: Record<string, unknown>) => clientApi<CommercialLead>(commercialPath("leads"), json("POST", body)),
   advanceLead: (id: string, status: LeadStatus) => clientApi<CommercialLead>(commercialPath(`leads/${id}/status`), json("PATCH", { status })),

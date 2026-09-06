@@ -7,6 +7,7 @@ const service = await readFile(new URL("../src/commercial/commercial.service.ts"
 const seed = await readFile(new URL("../prisma/seed.ts", import.meta.url), "utf8");
 const uatSeed = await readFile(new URL("../prisma/seed-uat.ts", import.meta.url), "utf8");
 const permissionBackfill = await readFile(new URL("../prisma/migrations/20260902183000_backfill_commercial_role_permissions/migration.sql", import.meta.url), "utf8");
+const schema = await readFile(new URL("../prisma/schema.prisma", import.meta.url), "utf8");
 
 test("commercial read capabilities stay separate from administration", () => {
   assert.match(controller, /Get\("projects\/:projectId\/payment-plans"\)[^\n]+commercial:payment-plan:view/);
@@ -21,6 +22,14 @@ test("assignee lookup and touched operations retain tenant and Lead access guard
   assert.match(service, /async assignees\(tenantId: string\)[\s\S]*where: \{[\s\S]*tenantId,[\s\S]*user: \{ isActive: true \}/);
   assert.match(service, /async activities\(user: AuthContext, leadId: string\)[\s\S]*assertLeadOwnerOrManager/);
   assert.match(service, /async createHold[\s\S]*assertLeadOwnerOrManager\(user, lead.assignedToId\)/);
+});
+
+test("sales worklists and the opportunity workspace are tenant and user scoped", () => {
+  assert.match(controller, /Get\("lead-views"\)[^\n]+commercial:lead:view-own/);
+  assert.match(controller, /Get\("leads\/:id\/workspace"\)[^\n]+commercial:activity:view/);
+  assert.match(service, /savedLeadView\.findMany\(\{ where: \{ tenantId: user\.tenantId, userId: user\.userId \}/);
+  assert.match(service, /async leadWorkspace\(user: AuthContext, id: string\)[\s\S]*assertLeadOwnerOrManager/);
+  assert.match(schema, /model SavedLeadView[\s\S]*@@unique\(\[tenantId, userId, name\]\)/);
 });
 
 test("commercial role fixtures are least privilege and credential-free", () => {
