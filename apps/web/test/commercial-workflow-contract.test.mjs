@@ -6,6 +6,7 @@ const workspace = await readFile(new URL("../components/CommercialOperatorWorksp
 const messages = await readFile(new URL("../lib/commercial-i18n.ts", import.meta.url), "utf8");
 const proxy = await readFile(new URL("../app/api/backend/[...path]/route.ts", import.meta.url), "utf8");
 const home = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+const landing = await readFile(new URL("../components/LandingPage.tsx", import.meta.url), "utf8");
 const login = await readFile(new URL("../components/LoginForm.tsx", import.meta.url), "utf8");
 const suite = await readFile(new URL("../components/CommercialWorkspaceSuite.tsx", import.meta.url), "utf8");
 const pipeline = await readFile(new URL("../components/SalesPipelineWorkspace.tsx", import.meta.url), "utf8");
@@ -21,8 +22,14 @@ const customerPortfolio = await readFile(new URL("../components/CustomerPortfoli
 const projectsPage = await readFile(new URL("../app/(authenticated)/projects/page.tsx", import.meta.url), "utf8");
 const projectAdministrationPage = await readFile(new URL("../app/(authenticated)/admin/projects/page.tsx", import.meta.url), "utf8");
 
-test("production entry routes users into the commercial journey", () => {
-  assert.match(home, /redirect\("\/login"\)/);
+test("public entry explains the product before routing users into the commercial journey", () => {
+  assert.match(home, /<LandingPage/);
+  assert.doesNotMatch(home, /redirect\("\/login"\)/);
+  assert.match(landing, /href="\/login"/);
+  assert.match(landing, /role="tablist"/);
+  for (const asset of ["sales-pipeline.png", "project-inventory.png", "reservation-confirmed.png"]) {
+    assert.match(landing, new RegExp(asset.replace(".", "\\.")));
+  }
   assert.match(login, /router\.replace\("\/commercial"\)/);
   assert.match(commercialPage, /CommercialWorkspaceSuite/);
   assert.doesNotMatch(commercialPage, /CommercialOperatorWorkspace/);
