@@ -19,6 +19,13 @@ The VPS `.env.production` file no longer contains any `SEED_UAT_*` values, so
 the removed tenant cannot be recreated accidentally by running the UAT seed
 without deliberate fresh configuration.
 
+A follow-up audit found that the saved environment file still carried rehearsal
+domain defaults even though the running containers had already been started with
+the correct `R4C` tenant and KYNOX base domain. The persisted file was corrected
+to `r4c.kynox.io`, `r4c-api.kynox.io`, `TENANT_DEFAULT_CODE=R4C`, and the single
+allowed browser origin `https://r4c.kynox.io`. API and Web were recreated from
+the existing images so the saved and effective configurations now agree.
+
 ## Final production user list
 
 | Email | Tenant | Role | Active | Effective permissions | Result |
@@ -37,10 +44,14 @@ avoid mistaking an empty project list for a hidden or alternate-tenant dataset.
   `/opt/backups/r4c/pre-alomran-removal-20260907.dump`
 - Pre-removal environment backup, root-only on the VPS:
   `/opt/backups/r4c/env-before-alomran-removal-20260907`
+- Pre-domain-correction environment backup, root-only on the VPS:
+  `/opt/backups/r4c/env-before-domain-cleanup-20260907`
 - Backups are mode `0600` and are not stored in Git.
 - PostgreSQL, Redis, MinIO, API, and Web containers remained healthy.
 - R4C Web `/api/health` and API `/api/v1/health/ready` returned HTTP 200; API
   readiness reported the database healthy.
+- Effective runtime configuration now resolves the apex workspace to tenant
+  `R4C` and permits only `https://r4c.kynox.io` as the browser origin.
 
 ## Source correction
 
