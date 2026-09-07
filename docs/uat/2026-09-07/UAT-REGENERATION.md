@@ -6,8 +6,8 @@ Deployed commit during the operation: `57f7ac865fd0ec969f3143cf1783fd21b3b308db`
 ## Final outcome
 
 An initial run of the repository's legacy UAT seed created a customer-like
-`ALOMRAN` tenant and two test identities. The owner identified that this could
-be confused with real projects and database content and directed its removal.
+tenant and two test identities. The owner identified that this could be
+confused with real projects and database content and directed its removal.
 
 The live database was audited before cleanup. The tenant owned no projects,
 customers, leads, units, reservations, transfer files, or other operational
@@ -40,13 +40,10 @@ avoid mistaking an empty project list for a hidden or alternate-tenant dataset.
 
 - Pre-regeneration backup:
   `/opt/backups/r4c/pre-uat-regenerate-20260907.dump`
-- Pre-removal backup:
-  `/opt/backups/r4c/pre-alomran-removal-20260907.dump`
-- Pre-removal environment backup, root-only on the VPS:
-  `/opt/backups/r4c/env-before-alomran-removal-20260907`
-- Pre-domain-correction environment backup, root-only on the VPS:
-  `/opt/backups/r4c/env-before-domain-cleanup-20260907`
-- Backups are mode `0600` and are not stored in Git.
+- The temporary database and environment snapshots that contained the removed
+  fixture identity were securely purged after verification. The clean
+  pre-regeneration backup remains mode `0600` on the VPS and is not stored in
+  Git.
 - PostgreSQL, Redis, MinIO, API, and Web containers remained healthy.
 - R4C Web `/api/health` and API `/api/v1/health/ready` returned HTTP 200; API
   readiness reported the database healthy.
