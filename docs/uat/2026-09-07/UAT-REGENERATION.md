@@ -1,49 +1,57 @@
-# Production UAT regeneration — 2026-09-07
+# Production UAT cleanup and neutral fixture naming — 2026-09-07
 
 Environment: `https://r4c.kynox.io` / `https://r4c-api.kynox.io`  
-Deployed commit: `57f7ac865fd0ec969f3143cf1783fd21b3b308db` (PR #88 merge)
+Deployed commit during the operation: `57f7ac865fd0ec969f3143cf1783fd21b3b308db`
 
-## Outcome
+## Final outcome
 
-The repository-defined, idempotent Alomran UAT seed completed twice against the
-production Docker deployment. The first run created the missing UAT tenant,
-administrator, progress-submitter role, and progress-submitter account. The
-second run made no changes, proving the regenerated state is idempotent.
+An initial run of the repository's legacy UAT seed created a customer-like
+`ALOMRAN` tenant and two test identities. The owner identified that this could
+be confused with real projects and database content and directed its removal.
 
-No reset, truncate, volume removal, or user deletion was executed. A PostgreSQL
-backup was captured before the operation at
-`/opt/backups/r4c/pre-uat-regenerate-20260907.dump` on the VPS. The backup is
-mode `0600` and is not stored in Git.
+The live database was audited before cleanup. The tenant owned no projects,
+customers, leads, units, reservations, transfer files, or other operational
+records. It contained only five roles and the two memberships created by the
+seed. The exact tenant and two exact UAT users were then removed in one
+transaction. No R4C tenant or project record was included in the deletion.
 
-## Maintained user list
+The VPS `.env.production` file no longer contains any `SEED_UAT_*` values, so
+the removed tenant cannot be recreated accidentally by running the UAT seed
+without deliberate fresh configuration.
+
+## Final production user list
 
 | Email | Tenant | Role | Active | Effective permissions | Result |
 | --- | --- | --- | --- | ---: | --- |
 | `islam@kynox.io` | `R4C` | `ADMIN` | Yes | 95 | Preserved; original user ID unchanged |
-| `uat.admin@alomran.example.com` | `ALOMRAN` | `ADMIN` | Yes | 95 | Created by configured UAT seed |
-| `uat.submit@alomran.example.com` | `ALOMRAN` | `PROGRESS_SUBMITTER` | Yes | 13 | Created by configured UAT seed |
 
-The progress submitter can submit progress and cannot review it, preserving the
-intended separation of duties. Commercial sales-agent and sales-manager UAT
-accounts were not created because their optional password variables are not
-configured in the VPS environment; no credentials were invented.
+Post-cleanup queries returned zero customer-like UAT tenants and users. The
+production database currently contains zero projects; this is recorded to
+avoid mistaking an empty project list for a hidden or alternate-tenant dataset.
 
-## Verification
+## Recovery and verification
 
-- Second UAT seed run: zero tenants, permissions, roles, users, memberships, or
-  role-permission links created, updated, or removed.
-- User totals: 3 users, all active, all with tenant memberships.
-- Membership integrity: zero orphan memberships.
-- Runtime: PostgreSQL, Redis, MinIO, API, and Web containers all remained
-  healthy after the operation.
-- Public checks: R4C Web `/api/health` and API `/api/v1/health/ready` returned
-  HTTP 200 before the operation; the API readiness response reported the
-  database healthy.
+- Pre-regeneration backup:
+  `/opt/backups/r4c/pre-uat-regenerate-20260907.dump`
+- Pre-removal backup:
+  `/opt/backups/r4c/pre-alomran-removal-20260907.dump`
+- Pre-removal environment backup, root-only on the VPS:
+  `/opt/backups/r4c/env-before-alomran-removal-20260907`
+- Backups are mode `0600` and are not stored in Git.
+- PostgreSQL, Redis, MinIO, API, and Web containers remained healthy.
+- R4C Web `/api/health` and API `/api/v1/health/ready` returned HTTP 200; API
+  readiness reported the database healthy.
 
-## Scope note
+## Source correction
 
-`seed:uat` is the repository's authentication/RBAC UAT seed. It creates and
-reconciles the UAT tenant and its configured test identities; it does not invent
-project, unit, customer, lead, reservation, or transfer-file records. Any later
-business-scenario fixture generation must use an approved, separately defined
-procedure and must retain this user list.
+Active configuration examples, UAT seed defaults, authentication resolution,
+CI workflows, tests, and current operational documentation no longer use the
+customer-like identity. The neutral fixture identity is now:
+
+- tenant code: `UAT`
+- tenant name: `R4C UAT Workspace`
+- administrator email: `uat.admin@r4c.test` for local/test use
+- tenant host example: `uat.r4c.local`
+
+This source correction does not create the neutral UAT tenant in production.
+Production retains only the explicit `R4C` tenant and `islam@kynox.io` account.

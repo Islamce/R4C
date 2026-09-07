@@ -5,10 +5,10 @@ import test from "node:test";
 
 const webBase = process.env.JOURNEY_WEB_URL ?? "http://127.0.0.1:3000";
 const apiBase = process.env.JOURNEY_API_URL ?? "http://127.0.0.1:4000/api/v1";
-const email = process.env.JOURNEY_UAT_ADMIN_EMAIL ?? "uat.admin@alomran.test";
+const email = process.env.JOURNEY_UAT_ADMIN_EMAIL ?? "uat.admin@r4c.test";
 const password =
   process.env.JOURNEY_UAT_ADMIN_PASSWORD ?? process.env.SEED_UAT_ADMIN_PASSWORD;
-const workspaceHost = "alomran.r4c.local";
+const workspaceHost = "uat.r4c.local";
 let webIpOctet = 10;
 
 class CookieJar {
@@ -96,7 +96,7 @@ async function createCostFixture(jar, token) {
     method: "POST",
     body: {
       code: `UAT-${suffix}`,
-      name: "Alomran UAT residential development",
+      name: "R4C UAT residential development",
       description: "Phase 6.5 tenant and deep-link verification fixture",
       startDate: "2026-01-01",
       targetDate: "2027-12-31",
@@ -115,7 +115,7 @@ async function createCostFixture(jar, token) {
     method: "POST",
     token,
     body: {
-      name: "Alomran UAT approved budget",
+      name: "R4C UAT approved budget",
       revision: "UAT-1",
       currency: "SAR",
       lines: [
@@ -142,11 +142,11 @@ async function createCostFixture(jar, token) {
 test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, async () => {
   assert.ok(password, "JOURNEY_UAT_ADMIN_PASSWORD is required");
 
-  const tenantLookup = await apiRequest("/tenants/by-code/ALOMRAN");
+  const tenantLookup = await apiRequest("/tenants/by-code/UAT");
   assert.equal(tenantLookup.response.status, 200, tenantLookup.text);
   assert.deepEqual(Object.keys(tenantLookup.body).sort(), ["code", "id", "name", "status"]);
-  assert.equal(tenantLookup.body.code, "ALOMRAN");
-  assert.equal(tenantLookup.body.name, "Alomran Development");
+  assert.equal(tenantLookup.body.code, "UAT");
+  assert.equal(tenantLookup.body.name, "R4C UAT Workspace");
   assert.equal(tenantLookup.body.status, "ACTIVE");
   const tenantUuid = tenantLookup.body.id;
 
@@ -160,7 +160,7 @@ test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, as
   });
   assert.equal(englishLoginPage.response.status, 200);
   assert.match(englishLoginPage.text, /<html[^>]*lang="en"[^>]*dir="ltr"/);
-  assert.match(englishLoginPage.text, /Alomran Development/);
+  assert.match(englishLoginPage.text, /R4C UAT Workspace/);
   assert.doesNotMatch(englishLoginPage.text, /Tenant UUID/);
   assert.ok(!englishLoginPage.text.includes(tenantUuid));
 
@@ -169,7 +169,7 @@ test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, as
     headers: { "x-forwarded-host": "r4c.local" },
   });
   assert.equal(apexLoginPage.response.status, 200);
-  assert.match(apexLoginPage.text, /Alomran Development/);
+  assert.match(apexLoginPage.text, /R4C UAT Workspace/);
 
   const apexLogin = await webRequest(apexJar, "/api/session/login", {
     method: "POST",
@@ -177,7 +177,7 @@ test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, as
     body: { email, password },
   });
   assert.equal(apexLogin.response.status, 201, JSON.stringify(apexLogin.body));
-  assert.equal(apexLogin.body.user.tenant.code, "ALOMRAN");
+  assert.equal(apexLogin.body.user.tenant.code, "UAT");
 
   const arabicJar = new CookieJar();
   const arabicLocale = await webRequest(arabicJar, "/api/locale", {
@@ -190,7 +190,7 @@ test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, as
   });
   assert.equal(arabicLoginPage.response.status, 200);
   assert.match(arabicLoginPage.text, /<html[^>]*lang="ar"[^>]*dir="rtl"/);
-  assert.match(arabicLoginPage.text, /العمران للتطوير العقاري/);
+  assert.match(arabicLoginPage.text, /مساحة اختبار R4C/);
   assert.ok(!arabicLoginPage.text.includes(tenantUuid));
 
   const loginBody = { email, password };
@@ -201,11 +201,11 @@ test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, as
     body: loginBody,
   });
   assert.equal(login.response.status, 201, JSON.stringify(login.body));
-  assert.equal(login.body.user.tenant.code, "ALOMRAN");
-  assert.equal(login.body.user.tenant.name, "Alomran Development");
+  assert.equal(login.body.user.tenant.code, "UAT");
+  assert.equal(login.body.user.tenant.name, "R4C UAT Workspace");
   assert.ok(!("tenantId" in login.body.user));
   assert.ok(!JSON.stringify(login.body).includes(tenantUuid));
-  assert.ok(login.setCookies.some((cookie) => cookie.startsWith("r4c_tenant_code=ALOMRAN")));
+  assert.ok(login.setCookies.some((cookie) => cookie.startsWith("r4c_tenant_code=UAT")));
   const legacyTenantCookies = login.setCookies.filter((cookie) =>
     cookie.startsWith("r4c_tenant_id="),
   );
@@ -218,7 +218,7 @@ test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, as
 
   const session = await webRequest(englishJar, "/api/session");
   assert.equal(session.response.status, 200, JSON.stringify(session.body));
-  assert.equal(session.body.user.tenant.code, "ALOMRAN");
+  assert.equal(session.body.user.tenant.code, "UAT");
   assert.ok(!("tenantId" in session.body.user));
   assert.ok(!JSON.stringify(session.body).includes(tenantUuid));
 
@@ -271,7 +271,7 @@ test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, as
   const rateStatuses = [];
   for (let attempt = 0; attempt < 4; attempt += 1) {
     rateStatuses.push(
-      (await apiRequest("/tenants/by-code/ALOMRAN", { forwardedFor: "198.51.100.77" }))
+      (await apiRequest("/tenants/by-code/UAT", { forwardedFor: "198.51.100.77" }))
         .response.status,
     );
   }
@@ -303,9 +303,9 @@ test("Phase 6.5 closes tenant and 5D navigation loops", { timeout: 180_000 }, as
   }
   assert.deepEqual(browserStorageReferences, []);
 
-  console.log(`PHASE65_TENANT endpointFields=id,code,name,status code=ALOMRAN status=ACTIVE unknown=404 rate=${rateStatuses.join(",")}`);
-  console.log("PHASE65_LOGIN fields=email,password apex=r4c.local subdomain=alomran.r4c.local uuidInHtml=false uuidInJson=false uuidInCookies=false legacyCookieDeleted=true sessionTenant=ALOMRAN");
+  console.log(`PHASE65_TENANT endpointFields=id,code,name,status code=UAT status=ACTIVE unknown=404 rate=${rateStatuses.join(",")}`);
+  console.log("PHASE65_LOGIN fields=email,password apex=r4c.local subdomain=uat.r4c.local uuidInHtml=false uuidInJson=false uuidInCookies=false legacyCookieDeleted=true sessionTenant=UAT");
   console.log(`PHASE65_DEEPLINK project=${project.id} data=200 en=ltr ar=rtl urlSync=true bogusFallback=true`);
-  console.log("PHASE65_UAT login=true canonicalName=Alomran Development arabicName=العمران للتطوير العقاري roles=verified-by-workflow idempotent=verified-by-workflow");
+  console.log("PHASE65_UAT login=true canonicalName=R4C UAT Workspace arabicName=مساحة اختبار R4C roles=verified-by-workflow idempotent=verified-by-workflow");
   console.log(`PHASE65_FOUNDATION browserStorageReferences=${browserStorageReferences.length} refreshCookie=${Boolean(englishJar.get("r4c_refresh_token"))}`);
 });

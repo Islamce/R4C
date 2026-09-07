@@ -76,13 +76,13 @@ Record Pass, Fail, or Blocked for every item. Automated phase workflows may be c
 
 | Journey | Expected result | Result | Evidence |
 |---|---|---|---|
-| Web login | Seed administrator can authenticate | PASS | Local browser login as Alomran UAT administrator; protected projects route loaded |
+| Web login | Seed administrator can authenticate | PASS | Local browser login as R4C UAT administrator; protected projects route loaded |
 | Arabic toggle | Page switches to Arabic and RTL | PASS | Browser DOM confirmed `lang=ar`, `dir=rtl`; non-secret screenshot captured outside source control |
 | English toggle | Page returns to English and LTR | PASS | Browser DOM confirmed `lang=en`, `dir=ltr` |
-| Alomran tenant | Local runtime resolves correct tenant | PASS | Login and authenticated header resolved `Alomran Development` / `ALOMRAN` |
+| R4C UAT tenant | Local runtime resolves correct tenant | PASS | Login and authenticated header resolved `R4C UAT Workspace` / `UAT` |
 | Projects | Project list and project details load | PASS | Created `LOCAL-UAT-001` and regression project; portfolio and detail loaded |
 | 5D dashboard | BAC, PV, EV, AC, CPI, SPI and forecast values display | PASS | Phase 5 journey passed; browser showed populated P5 dashboard and forecast values |
-| Progress submission | Authorized submitter creates a progress update | PASS | Phase 6 journey passed and browser showed Alomran submitter duties/history |
+| Progress submission | Authorized submitter creates a progress update | PASS | Phase 6 journey passed and browser showed R4C UAT submitter duties/history |
 | Separation of duties | Submitter cannot approve own update | PASS | Submitter received HTTP 403; UI showed review not assigned |
 | Progress approval | Independent reviewer approves update | PASS | Phase 6 journey and browser history showed independent administrator approval |
 | Earned value refresh | Approved progress updates cost-control results | PASS | Phase 6 verified EV changed from `0.00` to `42500.00`; browser showed SAR 42,500 EV |

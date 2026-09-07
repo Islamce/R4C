@@ -47,7 +47,7 @@ Invoke-RequiredCommand 'Frozen dependency installation' { pnpm install --frozen-
 Invoke-RequiredCommand 'Prisma client generation' { pnpm --filter @r4c/api prisma:generate }
 Invoke-RequiredCommand 'Database migration deployment' { pnpm --filter @r4c/api prisma:migrate:deploy }
 Invoke-RequiredCommand 'Bootstrap seed' { pnpm --filter @r4c/api seed }
-Invoke-RequiredCommand 'Alomran UAT seed' { pnpm --filter @r4c/api seed:uat }
+Invoke-RequiredCommand 'R4C UAT seed' { pnpm --filter @r4c/api seed:uat }
 
 $webPort = if ($env:WEB_PORT) { $env:WEB_PORT } else { '3000' }
 $apiPort = if ($env:API_PORT) { $env:API_PORT } else { '4000' }

@@ -12,16 +12,16 @@ The browser login form sends only `email` and `password`. It never sends, displa
 
 `TENANT_BASE_DOMAIN` defines the multi-tenant base domain. For example:
 
-- `alomran.r4c.local` with `TENANT_BASE_DOMAIN=r4c.local` resolves to tenant code `ALOMRAN`.
-- `alomran.example.com` with `TENANT_BASE_DOMAIN=example.com` resolves to `ALOMRAN`.
+- `uat.r4c.local` with `TENANT_BASE_DOMAIN=r4c.local` resolves to tenant code `UAT`.
+- `uat.example.com` with `TENANT_BASE_DOMAIN=example.com` resolves to `UAT`.
 - The exact `TENANT_BASE_DOMAIN` host resolves to `TENANT_DEFAULT_CODE`, allowing a governed default workspace on the apex application domain.
 
 The request uses `X-Forwarded-Host` when present, then `Host`, so the platform works behind the configured trusted reverse proxy. The closest subdomain label before the base domain is normalized to uppercase and validated before lookup.
 
 For local development without DNS, use either:
 
-- `http://localhost:3000/login?tenant=ALOMRAN`; or
-- `TENANT_DEFAULT_CODE=ALOMRAN`.
+- `http://localhost:3000/login?tenant=UAT`; or
+- `TENANT_DEFAULT_CODE=UAT`.
 
 The query override is accepted only on localhost or outside production. Production tenant selection remains host-bound.
 
@@ -47,7 +47,7 @@ The refresh lifetime is configured with `REFRESH_TOKEN_TTL_DAYS`. It defaults to
 
 ## UAT tenant
 
-Run the idempotent Alomran UAT seed with:
+Run the idempotent R4C UAT seed with:
 
 ```bash
 SEED_UAT_ADMIN_PASSWORD='<strong secret>' pnpm --filter @r4c/api seed:uat
@@ -55,10 +55,10 @@ SEED_UAT_ADMIN_PASSWORD='<strong secret>' pnpm --filter @r4c/api seed:uat
 
 Defaults:
 
-- code: `ALOMRAN`
-- canonical database name: `Alomran Development`
-- Arabic display name: `العمران للتطوير العقاري`
-- administrator email: `uat.admin@alomran.test`
+- code: `UAT`
+- canonical database name: `R4C UAT Workspace`
+- Arabic display name: `مساحة اختبار R4C`
+- administrator email: `uat.admin@r4c.test`
 
 Override them with `SEED_UAT_TENANT_CODE`, `SEED_UAT_TENANT_NAME`, `SEED_UAT_TENANT_NAME_AR`, and `SEED_UAT_ADMIN_EMAIL`. `SEED_UAT_ADMIN_PASSWORD` is mandatory and must contain at least 12 characters. The wrapper invokes the existing bootstrap seed, so ADMIN and VIEWER roles, code-derived permission assignments, the administrator membership, password hashing, and idempotent upserts remain identical to the standard tenant seed.
 

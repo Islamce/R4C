@@ -23,11 +23,11 @@ async function runBootstrapSeed() {
     env: {
       ...process.env,
       SEED_TENANT_CODE:
-        process.env.SEED_UAT_TENANT_CODE?.trim() || "ALOMRAN",
+        process.env.SEED_UAT_TENANT_CODE?.trim() || "UAT",
       SEED_TENANT_NAME:
-        process.env.SEED_UAT_TENANT_NAME?.trim() || "Alomran Development",
+        process.env.SEED_UAT_TENANT_NAME?.trim() || "R4C UAT Workspace",
       SEED_ADMIN_EMAIL:
-        process.env.SEED_UAT_ADMIN_EMAIL?.trim() || "uat.admin@alomran.test",
+        process.env.SEED_UAT_ADMIN_EMAIL?.trim() || "uat.admin@r4c.test",
       SEED_ADMIN_PASSWORD: adminPassword,
     },
   });
@@ -54,15 +54,15 @@ async function seedProgressSubmitter() {
   }
 
   const tenantCode =
-    process.env.SEED_UAT_TENANT_CODE?.trim() || "ALOMRAN";
+    process.env.SEED_UAT_TENANT_CODE?.trim() || "UAT";
   const email = (
-    process.env.SEED_UAT_SUBMIT_EMAIL || "uat.submit@alomran.test"
+    process.env.SEED_UAT_SUBMIT_EMAIL || "uat.submit@r4c.test"
   )
     .trim()
     .toLowerCase();
   const displayName =
     process.env.SEED_UAT_SUBMIT_DISPLAY_NAME?.trim() ||
-    "Alomran UAT Progress Submitter";
+    "R4C UAT Progress Submitter";
   const password = configuredPassword;
 
   if (!email || !displayName) {
@@ -207,20 +207,20 @@ async function seedCommercialOperators() {
     throw new Error("Commercial operator passwords must contain at least 12 characters");
   }
 
-  const tenantCode = process.env.SEED_UAT_TENANT_CODE?.trim() || "ALOMRAN";
+  const tenantCode = process.env.SEED_UAT_TENANT_CODE?.trim() || "UAT";
   const tenant = await prisma.tenant.findUnique({ where: { code: tenantCode } });
   if (!tenant) throw new Error(`UAT tenant ${tenantCode} was not created`);
   const definitions = [
     {
       roleCode: "SALES_AGENT",
-      email: (process.env.SEED_UAT_SALES_AGENT_EMAIL || "uat.sales-agent@alomran.test").trim().toLowerCase(),
-      displayName: "Alomran UAT Sales Agent",
+      email: (process.env.SEED_UAT_SALES_AGENT_EMAIL || "uat.sales-agent@r4c.test").trim().toLowerCase(),
+      displayName: "R4C UAT Sales Agent",
       password: agentPassword,
     },
     {
       roleCode: "SALES_MANAGER",
-      email: (process.env.SEED_UAT_SALES_MANAGER_EMAIL || "uat.sales-manager@alomran.test").trim().toLowerCase(),
-      displayName: "Alomran UAT Sales Manager",
+      email: (process.env.SEED_UAT_SALES_MANAGER_EMAIL || "uat.sales-manager@r4c.test").trim().toLowerCase(),
+      displayName: "R4C UAT Sales Manager",
       password: managerPassword,
     },
   ];

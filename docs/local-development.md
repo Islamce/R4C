@@ -31,7 +31,7 @@ bash scripts/local-setup.sh
 pnpm local:dev
 ```
 
-The setup script validates Node and Docker, activates pnpm 10.13.1, creates `.env` when missing, starts PostgreSQL/Redis/MinIO, installs locked dependencies, generates Prisma, applies migrations, and loads bootstrap plus Alomran UAT seed data.
+The setup script validates Node and Docker, activates pnpm 10.13.1, creates `.env` when missing, starts PostgreSQL/Redis/MinIO, installs locked dependencies, generates Prisma, applies migrations, and loads bootstrap plus R4C UAT seed data.
 
 ## Access points
 
@@ -75,13 +75,13 @@ Confirm that infrastructure containers are healthy/running, the web page opens, 
 
 ## Local tenant testing
 
-The default local tenant is controlled by `TENANT_DEFAULT_CODE=ALOMRAN`. For subdomain simulation, add the following entry to the operating system hosts file:
+The default local tenant is controlled by `TENANT_DEFAULT_CODE=UAT`. For subdomain simulation, add the following entry to the operating system hosts file:
 
 ```text
-127.0.0.1 alomran.r4c.local
+127.0.0.1 uat.r4c.local
 ```
 
-Then open `http://alomran.r4c.local:3000`. Administrator privileges are required to edit the hosts file.
+Then open `http://uat.r4c.local:3000`. Administrator privileges are required to edit the hosts file.
 
 ## Troubleshooting
 
