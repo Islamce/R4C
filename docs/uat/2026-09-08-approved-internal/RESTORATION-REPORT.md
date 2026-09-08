@@ -2,16 +2,17 @@
 
 ## Acceptance source
 
-The source of truth is the repository's previously approved capture:
-`docs/uat/2026-09-01/production-interface-audit/02-approved-design-preview.png`,
-introduced with commit `628755b` (`fix(web): route navigation to approved commercial interface`).
+This historical report is superseded by the operator's latest near-accepted references:
+`docs/design-source/near-accepted-2026-09-08/01-opportunity-detail.jpg` and
+`docs/design-source/near-accepted-2026-09-08/02-opportunities-worklist.jpg`.
+Those two files are now the only visual implementation targets.
 
 ## What was wrong
 
 PR #90 replaced the compact dark KYNOX workspace with a wide desktop rail and a
 partially light commercial canvas. Although technically healthy, that was not the
-agreed interface. Production capture `01-rejected-production.png` records the rejected
-state.
+agreed interface. The former rejected-state capture is no longer retained as an active
+design reference.
 
 ## Restoration
 
@@ -29,16 +30,9 @@ state.
 
 ## Evidence
 
-1. `01-rejected-production.png` — authenticated production after PR #90; rejected.
-2. `02-restored-approved-preview.png` — restored candidate at the same audit viewport.
-3. `../2026-09-01/production-interface-audit/02-approved-design-preview.png` — approved
-   reference used for direct comparison.
-
-The restored candidate and approved reference have the same shell proportions,
-blueprint-dark surface, information hierarchy, primary rail, five commercial dashboard
-tabs, sales command bar, pipeline sub-navigation, metrics, and filters. Any displayed
-records in the development-only preview remain fictional fixtures; production continues
-to use the live tenant's own data.
+The earlier comparison screenshots were removed from the active repository to prevent
+accidental fallback to a rejected or superseded direction. This markdown remains for
+historical rationale; use the canonical references above for implementation.
 
 ## Verification
 

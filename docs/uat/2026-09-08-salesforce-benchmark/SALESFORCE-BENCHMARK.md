@@ -105,8 +105,11 @@ physical units, pricing, reservations, construction progress, cost, and title tr
 
 ## Evidence
 
-1. `01-r4c-commercial-workspace.png` — R4C object-home/Kanban state.
-2. `02-r4c-split-workspace.png` — R4C list-plus-record state.
+The benchmark screenshots were removed from the active repository when the operator
+selected newer near-accepted references. The benchmark findings remain useful as
+capability guidance, but the canonical visual targets are now
+`docs/design-source/near-accepted-2026-09-08/01-opportunity-detail.jpg` and
+`docs/design-source/near-accepted-2026-09-08/02-opportunities-worklist.jpg`.
 
 ## Accessibility limits
 

@@ -14,9 +14,9 @@ This is an information-architecture and routing defect, not a missing build asse
 
 1. `01-production-commercial.png` — the production route is live but redirects an
    unauthenticated audit session to the current login page. No credential was submitted.
-2. `02-approved-design-preview.png` — the repository's approved KYNOX commercial design
-   at the same desktop viewport, including the governed shell, reporting navigation,
-   portfolio, customers, units, transfer, operations, and performance views.
+2. The former approved preview capture was superseded and removed from the active design
+   set. The current visual source of truth is
+   `docs/design-source/near-accepted-2026-09-08/`.
 
 ## Correction
 

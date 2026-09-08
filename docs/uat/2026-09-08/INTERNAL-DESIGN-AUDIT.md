@@ -3,7 +3,9 @@
 > **Acceptance outcome:** Rejected by the operator after production deployment. The
 > wider light-shell direction was not the previously agreed KYNOX internal design.
 > It is retained here only as an audit trail and is superseded by
-> `docs/uat/2026-09-08-approved-internal/RESTORATION-REPORT.md`.
+> `docs/uat/2026-09-08-approved-internal/RESTORATION-REPORT.md`. The current visual
+> source of truth is now the two references in
+> `docs/design-source/near-accepted-2026-09-08/`.
 
 ## Scope
 
@@ -25,9 +27,9 @@ Live, authenticated review of the Arabic R4C workspace at `r4c.kynox.io`, follow
 
 ## Evidence
 
-- `internal-design-before.png`: production before correction.
-- `internal-design-after.png`: development preview after correction, captured at the same desktop viewport.
-- `admin-users-before.png`: production administration route confirming the inconsistent route-level treatment and the two retained administrators.
+The former comparison captures were removed from the active repository after the operator
+supplied newer near-accepted references. This report remains as a narrative record of the
+rejected correction only.
 
 ## Verification
 
