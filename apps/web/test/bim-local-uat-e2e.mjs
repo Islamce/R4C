@@ -5,8 +5,8 @@ import path from "node:path";
 import test from "node:test";
 
 const apiBase = process.env.JOURNEY_API_URL ?? "http://127.0.0.1:4000/api/v1";
-const tenantCode = process.env.SEED_UAT_TENANT_CODE ?? "ALOMRAN";
-const email = process.env.SEED_UAT_ADMIN_EMAIL ?? "uat.admin@alomran.test";
+const tenantCode = process.env.SEED_UAT_TENANT_CODE ?? "UAT";
+const email = process.env.SEED_UAT_ADMIN_EMAIL ?? "uat.admin@r4c.test";
 const password = process.env.SEED_UAT_ADMIN_PASSWORD;
 const fixturePath = path.resolve(
   process.cwd(),
@@ -46,7 +46,7 @@ test("local BIM journey produces semantic data and renderable stored GLB", { tim
 
   const projects = await request("/projects", { token });
   assert.equal(projects.response.status, 200, JSON.stringify(projects.body));
-  assert.ok(projects.body.length, "Alomran seed must provide a project");
+  assert.ok(projects.body.length, "R4C UAT seed must provide a project");
   const project = projects.body[0];
 
   const suffix = Date.now().toString(36).toUpperCase();

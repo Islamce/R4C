@@ -85,9 +85,9 @@ export async function resolveTenantByCode(
 }
 
 export function tenantDisplayName(tenant: TenantLookupRecord, locale: Locale) {
-  const uatCode = normalizeTenantCode(process.env.SEED_UAT_TENANT_CODE ?? "ALOMRAN");
+  const uatCode = normalizeTenantCode(process.env.SEED_UAT_TENANT_CODE ?? "UAT");
   if (locale === "ar" && tenant.code === uatCode) {
-    return process.env.SEED_UAT_TENANT_NAME_AR?.trim() || "العمران للتطوير العقاري";
+    return process.env.SEED_UAT_TENANT_NAME_AR?.trim() || "مساحة اختبار R4C";
   }
   return tenant.name;
 }

@@ -64,9 +64,9 @@ jobs:
               'SMTP_PASSWORD=REPLACE_WITH_MAILBOX_PASSWORD': 'SMTP_PASSWORD=ci-local-smtp-password-not-used',
               'CADDYFILE=Caddyfile': 'CADDYFILE=Caddyfile.local',
               'NEXT_PUBLIC_API_URL=https://api.r4c.example.com/api/v1': 'NEXT_PUBLIC_API_URL=https://api.r4c.local/api/v1',
-              'CORS_ORIGINS=https://r4c.example.com,https://alomran.r4c.example.com': 'CORS_ORIGINS=https://r4c.local,https://alomran.r4c.local',
-              'SEED_UAT_ADMIN_EMAIL=uat.admin@alomran.example.com': 'SEED_UAT_ADMIN_EMAIL=uat.admin@alomran.local',
-              'SEED_UAT_SUBMIT_EMAIL=uat.submit@alomran.example.com': 'SEED_UAT_SUBMIT_EMAIL=uat.submit@alomran.local',
+              'CORS_ORIGINS=https://r4c.example.com,https://uat.r4c.example.com': 'CORS_ORIGINS=https://r4c.local,https://uat.r4c.local',
+              'SEED_UAT_ADMIN_EMAIL=uat.admin@r4c.example.com': 'SEED_UAT_ADMIN_EMAIL=uat.admin@uat.local',
+              'SEED_UAT_SUBMIT_EMAIL=uat.submit@r4c.example.com': 'SEED_UAT_SUBMIT_EMAIL=uat.submit@uat.local',
           }
           for old, new in replacements.items():
               if old not in text:
@@ -156,15 +156,15 @@ jobs:
           ! docker inspect r4c-bim-worker-1 >/dev/null 2>&1
           printf 'PHASE7_USERS api=%s web=%s bim=disabled\n' "$api_user" "$web_user" | tee phase7-users.txt
 
-      - name: Verify HTTPS routing and Alomran login
+      - name: Verify HTTPS routing and R4C UAT login
         run: |
           set -a
           source .env.production
           set +a
           curl -skf --resolve r4c.local:443:127.0.0.1 https://r4c.local/api/health > phase7-web-health.json
           curl -skf --resolve api.r4c.local:443:127.0.0.1 https://api.r4c.local/api/v1/health/ready > phase7-api-health.json
-          curl -skf --resolve alomran.r4c.local:443:127.0.0.1 https://alomran.r4c.local/login > phase7-alomran-login.html
-          grep -q 'Alomran Development' phase7-alomran-login.html
+          curl -skf --resolve uat.r4c.local:443:127.0.0.1 https://uat.r4c.local/login > phase7-uat-login.html
+          grep -q 'R4C UAT Workspace' phase7-uat-login.html
 
           python3 - <<'PY'
           import json, os
@@ -179,34 +179,34 @@ jobs:
           }))
           PY
 
-          admin_status=$(curl -sk --resolve alomran.r4c.local:443:127.0.0.1 \
+          admin_status=$(curl -sk --resolve uat.r4c.local:443:127.0.0.1 \
             -D phase7-admin-headers.txt -c phase7-admin-cookies.txt \
             -o phase7-admin-response.json -w '%{http_code}' \
             -H 'content-type: application/json' \
             --data-binary @phase7-admin-login.json \
-            https://alomran.r4c.local/api/session/login)
+            https://uat.r4c.local/api/session/login)
           test "$admin_status" = 201
 
-          submit_status=$(curl -sk --resolve alomran.r4c.local:443:127.0.0.1 \
+          submit_status=$(curl -sk --resolve uat.r4c.local:443:127.0.0.1 \
             -D phase7-submitter-headers.txt \
             -o phase7-submitter-response.json -w '%{http_code}' \
             -H 'content-type: application/json' \
             --data-binary @phase7-submitter-login.json \
-            https://alomran.r4c.local/api/session/login)
+            https://uat.r4c.local/api/session/login)
           test "$submit_status" = 201
 
           python3 - <<'PY'
           import json
           admin = json.load(open('phase7-admin-response.json'))['user']
           submitter = json.load(open('phase7-submitter-response.json'))['user']
-          assert admin['tenant']['code'] == 'ALOMRAN'
+          assert admin['tenant']['code'] == 'UAT'
           assert admin['role'] == 'ADMIN'
-          assert submitter['tenant']['code'] == 'ALOMRAN'
+          assert submitter['tenant']['code'] == 'UAT'
           assert submitter['role'] == 'PROGRESS_SUBMITTER'
           assert 'progress:submit' in submitter['permissions']
           assert 'progress:review' not in submitter['permissions']
           assert 'tenantId' not in admin and 'tenantId' not in submitter
-          print('PHASE7_LOGIN admin=201 tenant=ALOMRAN submitter=201 canSubmit=true canReview=false uuidExposed=false')
+          print('PHASE7_LOGIN admin=201 tenant=UAT submitter=201 canSubmit=true canReview=false uuidExposed=false')
           PY
           secure_count=$(grep -i '^set-cookie:' phase7-admin-headers.txt | grep -c 'Secure')
           test "$secure_count" -ge 4
@@ -236,7 +236,7 @@ jobs:
             test -f phase7-web-health.json && echo "PHASE7_WEB $(cat phase7-web-health.json)"
             test -f phase7-admin-response.json && node -e "const u=require('./phase7-admin-response.json').user; console.log('PHASE7_ADMIN role='+u.role+' tenant='+u.tenant.code)"
             test -f phase7-submitter-response.json && node -e "const u=require('./phase7-submitter-response.json').user; console.log('PHASE7_SUBMITTER role='+u.role+' submit='+u.permissions.includes('progress:submit')+' review='+u.permissions.includes('progress:review'))"
-            test -f phase7-https-login.ok && echo "PHASE7_TLS app=https://r4c.local api=https://api.r4c.local tenant=https://alomran.r4c.local secureCookies=true"
+            test -f phase7-https-login.ok && echo "PHASE7_TLS app=https://r4c.local api=https://api.r4c.local tenant=https://uat.r4c.local secureCookies=true"
             echo "PHASE7_SECRETS generated=true devDefaults=false committed=false"
             if test -f phase7-stack-healthy.ok && test -f phase7-seeds-idempotent.ok; then
               echo "PHASE7_COMPOSE commercialStack=true bim=disabled migrations=deploy seeds=bootstrap+uat-twice idempotent=true health=green"

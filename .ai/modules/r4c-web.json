@@ -1,18 +1,18 @@
 {
   "_meta": {
     "artifact": "modules/r4c-web.json",
-    "bodyDigest": "fdd083f66c6209f66c3784c4bae6904e7d7d7a369951b7c90da97e48f9622c44",
+    "bodyDigest": "fa625a42401423c872a2aef19e5da709550bc5492348a725dbd29b742dcbc334",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "dc54b617641cdc9a928241fbe30fa9d4510cec9b8a7fe1469132861b3b554b23",
+    "inputDigest": "921a028d5c0affc1c6d171a59573efd1e67f1c558f2cb28e110942aea7130a9e",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 68 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 69 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
   "dependedOnBy": [
@@ -64,6 +64,7 @@
       "apps/web/components/CustomerPortfolio.tsx",
       "apps/web/components/ForgotPasswordForm.tsx",
       "apps/web/components/I18nProvider.tsx",
+      "apps/web/components/LandingPage.tsx",
       "apps/web/components/LoginForm.tsx",
       "apps/web/components/ProgressWorkspace.tsx",
       "apps/web/components/ProjectDetail.tsx",
@@ -143,6 +144,7 @@
       "apps/web/components/CustomerPortfolio.tsx",
       "apps/web/components/ForgotPasswordForm.tsx",
       "apps/web/components/I18nProvider.tsx",
+      "apps/web/components/LandingPage.tsx",
       "apps/web/components/LoginForm.tsx",
       "apps/web/components/ProgressWorkspace.tsx",
       "apps/web/components/ProjectDetail.tsx",

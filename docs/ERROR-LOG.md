@@ -165,14 +165,14 @@ PR #33 (`feat/local-development-runtime`) added personal-computer bootstrap scri
 - Branch at failure: `main`
 - SHA: `cb663ce0ff3676359afb6d2cfab7302b44d15ca7`
 
-### Failure 1 — Alomran UAT seed cannot spawn pnpm on Windows
+### Failure 1 — R4C UAT seed cannot spawn pnpm on Windows
 
 - Command: `powershell -ExecutionPolicy Bypass -File scripts/local-setup.ps1`, failing at `pnpm --filter @r4c/api seed:uat`.
 - Exact error: `R4C UAT seed failed: spawn EINVAL` followed by `ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL`.
 - Earliest causal failure: `apps/api/prisma/seed-uat.ts` directly spawned `pnpm.cmd` on Windows without command-shell handling.
 - Classification: Product defect.
 - Fix: run the existing static `pnpm.cmd seed` command through `cmd.exe /d /s /c` only on Windows; Linux behavior is unchanged and no dynamic user input enters the command string.
-- Validation: rerun the Alomran UAT seed, then rerun the full setup and Windows verification gates.
+- Validation: rerun the R4C UAT seed, then rerun the full setup and Windows verification gates.
 - Recurrence prevention: exercise `seed:uat` on Windows and retain platform-specific child-process handling.
 
 ### Failure 2 — setup reports readiness after a failed required command
@@ -187,7 +187,7 @@ PR #33 (`feat/local-development-runtime`) added personal-computer bootstrap scri
 
 ### Failure 3 — local environment template omits the SoD submitter
 
-- Command: successful rerun of `scripts/local-setup.ps1`, at the Alomran UAT seed result.
+- Command: successful rerun of `scripts/local-setup.ps1`, at the R4C UAT seed result.
 - Exact error: `R4C UAT progress submitter skipped: SEED_UAT_SUBMIT_PASSWORD is not configured`.
 - Earliest causal failure: `.env.example` did not define `SEED_UAT_SUBMIT_EMAIL`, `SEED_UAT_SUBMIT_DISPLAY_NAME`, or `SEED_UAT_SUBMIT_PASSWORD`, although the production template and governed Local UAT require the separate submitter identity.
 - Classification: Documentation defect.
@@ -247,7 +247,7 @@ PR #33 (`feat/local-development-runtime`) added personal-computer bootstrap scri
 
 ### Failure 9 — successful project creation renders a false failure state
 
-- Command/workflow: manual Local UAT, Alomran administrator project creation through `/projects`.
+- Command/workflow: manual Local UAT, R4C UAT administrator project creation through `/projects`.
 - Exact error: the UI displayed `Project created and added to the portfolio.` and `The record could not be loaded` simultaneously after the API returned HTTP 201.
 - Earliest causal failure: `ProjectsJourney.createProject` dereferenced `event.currentTarget` after awaiting the API request; the async React event no longer guaranteed that `currentTarget` remained available, and the resulting reset error was caught as if the API operation had failed.
 - Classification: Product defect.
@@ -257,20 +257,20 @@ PR #33 (`feat/local-development-runtime`) added personal-computer bootstrap scri
 
 ### Failure 10 — progress journey hard-codes the submitter display name
 
-- Command/workflow: explicit local `test:progress-workspace` against the seeded Alomran runtime.
-- Exact error: submitted and approved history assertions expected `Phase 6 Submitter` but received the correctly configured `Alomran UAT Progress Submitter` after successful authentication, submission, and approval.
+- Command/workflow: explicit local `test:progress-workspace` against the seeded R4C UAT runtime.
+- Exact error: submitted and approved history assertions expected `Phase 6 Submitter` but received the correctly configured `R4C UAT Progress Submitter` after successful authentication, submission, and approval.
 - Earliest causal failure: the journey accepted configurable submitter email/password but asserted a fixed display name from its CI fixture.
 - Classification: Test defect.
 - Fix: add `JOURNEY_SUBMIT_DISPLAY_NAME` with the existing Phase 6 value as its default and assert the configured identity.
-- Validation: rerun the complete progress workspace journey with the Alomran submitter email, password, and display name.
+- Validation: rerun the complete progress workspace journey with the R4C UAT submitter email, password, and display name.
 - Recurrence prevention: all identity attributes asserted by environment-portable E2E journeys must derive from the same configurable fixture contract.
 
 ### Verification result
 
-- `scripts/local-setup.ps1`: PASS, including frozen install, migrations, bootstrap seed, Alomran administrator, and submit-only SoD identity.
+- `scripts/local-setup.ps1`: PASS, including frozen install, migrations, bootstrap seed, R4C UAT administrator, and submit-only SoD identity.
 - `pnpm local:verify:windows`: PASS from Docker/Prisma through lint, typecheck, standalone tests, production build, background runtime startup, and Web/API/MinIO readiness.
-- `test:cost-dashboard`: PASS against local Alomran runtime, including bilingual direction and populated/partial 5D states.
-- `test:progress-workspace`: PASS against local Alomran identities, including submit, HTTP 403 SoD enforcement, independent approval, EV `0.00` to `42500.00`, and conflict normalization.
+- `test:cost-dashboard`: PASS against local R4C UAT runtime, including bilingual direction and populated/partial 5D states.
+- `test:progress-workspace`: PASS against local R4C UAT identities, including submit, HTTP 403 SoD enforcement, independent approval, EV `0.00` to `42500.00`, and conflict normalization.
 - Manual non-BIM browser journeys: PASS for authentication, EN/LTR, AR/RTL, tenant identity, project create/list/detail, 5D, progress evidence, and logout.
 - BIM Local UAT: BLOCKED because local Compose defines no BIM worker and the repository contains no approved IFC fixture; no result is inferred from CI.
 

@@ -1,0 +1,33 @@
+@media (min-width: 981px) {
+  .landing-hero {
+    grid-template-columns: minmax(440px, 1fr) minmax(500px, 1.08fr);
+    gap: clamp(2rem, 4vw, 4rem);
+  }
+
+  .landing-hero-copy {
+    max-width: 640px;
+  }
+
+  .landing-hero-copy h1 {
+    font-size: clamp(3rem, 4vw, 4.8rem);
+  }
+}
+
+.hero-shot img {
+  width: 126%;
+  height: auto;
+  min-height: 100%;
+  max-width: none;
+  object-fit: cover;
+  transform: translate(-10%, -9%);
+}
+
+.demo-shot-frame {
+  aspect-ratio: 1.9;
+}
+
+.demo-shot-frame img {
+  height: 100%;
+  object-fit: cover;
+  object-position: center 72%;
+}

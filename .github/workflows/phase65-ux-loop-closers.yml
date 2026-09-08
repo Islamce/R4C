@@ -59,11 +59,11 @@ jobs:
       NEXT_PUBLIC_API_URL: http://127.0.0.1:4000/api/v1
       CORS_ORIGINS: http://127.0.0.1:3000
       TENANT_BASE_DOMAIN: r4c.local
-      TENANT_DEFAULT_CODE: ALOMRAN
-      SEED_UAT_TENANT_CODE: ALOMRAN
-      SEED_UAT_TENANT_NAME: Alomran Development
-      SEED_UAT_TENANT_NAME_AR: العمران للتطوير العقاري
-      SEED_UAT_ADMIN_EMAIL: uat.admin@alomran.test
+      TENANT_DEFAULT_CODE: UAT
+      SEED_UAT_TENANT_CODE: UAT
+      SEED_UAT_TENANT_NAME: R4C UAT Workspace
+      SEED_UAT_TENANT_NAME_AR: مساحة اختبار R4C
+      SEED_UAT_ADMIN_EMAIL: uat.admin@r4c.test
       SEED_UAT_ADMIN_PASSWORD: Phase65-${{ github.run_id }}-Correct-Horse-Battery-Staple
       RATE_LIMIT_GLOBAL_PER_MINUTE: 2000
       RATE_LIMIT_LOGIN_PER_MINUTE: 100
@@ -110,7 +110,7 @@ jobs:
           pnpm typecheck
           pnpm build
 
-      - name: Seed Alomran UAT tenant twice
+      - name: Seed R4C UAT tenant twice
         run: |
           pnpm --filter @r4c/api seed:uat > uat-seed-first.txt 2>&1
           cat uat-seed-first.txt
@@ -118,13 +118,13 @@ jobs:
           const { createPrismaClient } = require('./dist/prisma/client.js');
           const prisma = createPrismaClient();
           async function counts() {
-            const tenant = await prisma.tenant.findUnique({ where: { code: 'ALOMRAN' } });
-            if (!tenant) throw new Error('ALOMRAN tenant missing after first seed');
-            const user = await prisma.user.findUnique({ where: { email: 'uat.admin@alomran.test' } });
-            if (!user) throw new Error('Alomran UAT admin missing after first seed');
+            const tenant = await prisma.tenant.findUnique({ where: { code: 'UAT' } });
+            if (!tenant) throw new Error('UAT tenant missing after first seed');
+            const user = await prisma.user.findUnique({ where: { email: 'uat.admin@r4c.test' } });
+            if (!user) throw new Error('R4C UAT admin missing after first seed');
             const result = {
               tenantId: tenant.id,
-              tenants: await prisma.tenant.count({ where: { code: 'ALOMRAN' } }),
+              tenants: await prisma.tenant.count({ where: { code: 'UAT' } }),
               roles: await prisma.role.count({ where: { tenantId: tenant.id, code: { in: ['ADMIN', 'VIEWER'] } } }),
               memberships: await prisma.tenantMembership.count({ where: { tenantId: tenant.id, userId: user.id } }),
               rolePermissions: await prisma.rolePermission.count({ where: { role: { tenantId: tenant.id } } }),
@@ -143,20 +143,20 @@ jobs:
           async function verify() {
             const countsPath = path.join(process.env.GITHUB_WORKSPACE, 'uat-seed-first-counts.json');
             const first = JSON.parse(fs.readFileSync(countsPath, 'utf8'));
-            const tenant = await prisma.tenant.findUnique({ where: { code: 'ALOMRAN' } });
-            const user = await prisma.user.findUnique({ where: { email: 'uat.admin@alomran.test' } });
+            const tenant = await prisma.tenant.findUnique({ where: { code: 'UAT' } });
+            const user = await prisma.user.findUnique({ where: { email: 'uat.admin@r4c.test' } });
             if (!tenant || !user) throw new Error('UAT tenant or admin missing after second seed');
             const second = {
               tenantId: tenant.id,
-              tenants: await prisma.tenant.count({ where: { code: 'ALOMRAN' } }),
+              tenants: await prisma.tenant.count({ where: { code: 'UAT' } }),
               roles: await prisma.role.count({ where: { tenantId: tenant.id, code: { in: ['ADMIN', 'VIEWER'] } } }),
               memberships: await prisma.tenantMembership.count({ where: { tenantId: tenant.id, userId: user.id } }),
               rolePermissions: await prisma.rolePermission.count({ where: { role: { tenantId: tenant.id } } }),
             };
-            if (tenant.name !== 'Alomran Development' || tenant.status !== 'ACTIVE') throw new Error('UAT tenant identity mismatch');
+            if (tenant.name !== 'R4C UAT Workspace' || tenant.status !== 'ACTIVE') throw new Error('UAT tenant identity mismatch');
             if (second.tenants !== 1 || second.roles !== 2 || second.memberships !== 1 || second.rolePermissions < 1) throw new Error(`UAT structure mismatch: ${JSON.stringify(second)}`);
             if (JSON.stringify(first) !== JSON.stringify(second)) throw new Error(`Second seed changed counts: ${JSON.stringify({ first, second })}`);
-            console.log(`PHASE65_SEED tenant=ALOMRAN name=${tenant.name} status=${tenant.status} tenants=1 roles=2 memberships=1 idempotent=true`);
+            console.log(`PHASE65_SEED tenant=UAT name=${tenant.name} status=${tenant.status} tenants=1 roles=2 memberships=1 idempotent=true`);
           }
           verify().finally(() => prisma.$disconnect());
           NODE
@@ -171,7 +171,7 @@ jobs:
           pnpm --filter @r4c/web exec next start -p 3000 > phase65-web-runtime.log 2>&1 &
           echo $! > phase65-web-runtime.pid
           for attempt in {1..60}; do
-            if curl --fail --silent http://127.0.0.1:4000/api/v1/health/ready >/dev/null && curl --fail --silent -H 'X-Forwarded-Host: alomran.r4c.local' http://127.0.0.1:3000/login >/dev/null; then
+            if curl --fail --silent http://127.0.0.1:4000/api/v1/health/ready >/dev/null && curl --fail --silent -H 'X-Forwarded-Host: uat.r4c.local' http://127.0.0.1:3000/login >/dev/null; then
               exit 0
             fi
             sleep 1
