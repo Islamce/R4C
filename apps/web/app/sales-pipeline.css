@@ -46,7 +46,6 @@
 .customer-initial { width: 30px; height: 30px; font-size: .66rem; }
 .stage-records b { display: block; overflow: hidden; font-size: .65rem; text-overflow: ellipsis; white-space: nowrap; }
 .stage-records small { display: block; margin-top: .15rem; color: var(--steel); font-size: .54rem; }
-.stage-records small.stage-record-next { color: var(--survey-blue); font-weight: 700; }
 .stage-records time { color: var(--steel); font-size: .5rem; white-space: nowrap; }
 .stage-empty { padding: 1rem; color: var(--steel); font-size: .65rem; }
 .stage-view-all { width: 100%; min-height: 34px; border: 0; border-top: 1px solid var(--line); background: #f7fafb; color: var(--survey-blue); font-size: .6rem; font-weight: 700; cursor: pointer; }
@@ -90,52 +89,6 @@ button.ledger-row { width: 100%; cursor: pointer; }
 @media(max-width:1250px){.pipeline-commandbar{grid-template-columns:1fr 1fr}.pipeline-actions{grid-column:1/-1}.pipeline-stage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.customer-ledger-layout{grid-template-columns:1fr}.customer-intelligence{position:static}}
 @media(max-width:820px){.pipeline-commandbar,.project-context-bar{grid-template-columns:1fr}.portfolio-strip{grid-template-columns:repeat(2,1fr)}.project-stage-links{grid-template-columns:repeat(5,150px)}.pipeline-stage-grid{grid-template-columns:1fr}.suite-header-compact{align-items:stretch}.customer-intelligence dl{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.pipeline-commandbar{padding:.6rem}.pipeline-search{grid-row:2}.pipeline-actions{display:grid}.portfolio-strip{grid-template-columns:1fr 1fr}.portfolio-strip>div:last-child{grid-column:1/-1}.customer-intelligence dl{grid-template-columns:1fr}.suite-header-compact p:last-child{display:none}}
-
-/* Responsive sales workspace: keep the page inside the viewport and make dense records touch-friendly. */
-.app-stage:has(.commercial-suite) { min-width: 0; overflow-x: hidden; }
-.commercial-suite,
-.commercial-suite .kynox-pipeline,
-.commercial-suite .pipeline-commandbar,
-.commercial-suite .project-context-bar,
-.commercial-suite .pipeline-stage-grid,
-.commercial-suite .customer-ledger-layout { width: 100%; min-width: 0; max-width: 100%; }
-
-@media(max-width:720px){
-  .commercial-suite .pipeline-commandbar { grid-template-columns: minmax(0,1fr); align-items: stretch; gap: .6rem; }
-  .commercial-suite .pipeline-title { min-width: 0; }
-  .commercial-suite .pipeline-title h1 { overflow: hidden; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
-  .commercial-suite .pipeline-search { min-width: 0; width: 100%; }
-  .commercial-suite .pipeline-actions { display: grid; grid-template-columns: 1fr 1fr; min-width: 0; }
-  .commercial-suite .pipeline-actions .button { min-width: 0; padding-inline: .55rem; font-size: .62rem; }
-  .commercial-suite .project-context-bar { grid-template-columns: minmax(0,1fr); }
-  .commercial-suite .project-stage-links { display: flex; max-width: 100%; overflow-x: auto; }
-  .commercial-suite .project-stage-links button { flex: 0 0 132px; min-width: 132px; }
-  .commercial-suite .pipeline-stage-grid { display: flex; gap: .6rem; overflow-x: auto; padding-bottom: .25rem; scroll-snap-type: x mandatory; }
-  .commercial-suite .pipeline-stage { flex: 0 0 min(86vw, 360px); scroll-snap-align: start; }
-  .commercial-suite .stage-records > button { min-height: 64px; grid-template-columns: 34px minmax(0,1fr); padding: .55rem .65rem; }
-  .commercial-suite .stage-records > button time { display: none; }
-  .commercial-suite .stage-record-next { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .commercial-suite .customer-ledger-layout { display: block; }
-  .commercial-suite .ledger-table { overflow-x: hidden; }
-  .commercial-suite .ledger-row { min-width: 0; grid-template-columns: minmax(0,1fr) auto; gap: .35rem .65rem; padding: .75rem; font-size: .65rem; }
-  .commercial-suite .ledger-head { display: none; }
-  .commercial-suite button.ledger-row > span:nth-child(2),
-  .commercial-suite button.ledger-row > span:nth-child(4),
-  .commercial-suite button.ledger-row > span:nth-child(6) { display: none; }
-  .commercial-suite button.ledger-row > span:nth-child(1) { grid-column: 1; grid-row: 1; }
-  .commercial-suite button.ledger-row > span:nth-child(3) { grid-column: 1; grid-row: 2; }
-  .commercial-suite button.ledger-row > span:nth-child(5) { grid-column: 2; grid-row: 1; justify-self: end; }
-  .commercial-suite button.ledger-row > span:nth-child(7) { grid-column: 1; grid-row: 3; color: #9eb7c2; }
-  .commercial-suite button.ledger-row > span:nth-child(8) { grid-column: 2; grid-row: 3; justify-self: end; }
-  .commercial-suite .ledger-row small { font-size: .56rem; }
-  .commercial-suite .customer-intelligence { margin-top: .7rem; }
-}
-
-@media(min-width:721px) and (max-width:1050px){
-  .commercial-suite .pipeline-stage-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .commercial-suite .pipeline-commandbar { grid-template-columns: minmax(0,1fr) minmax(260px,1fr); }
-  .commercial-suite .pipeline-actions { grid-column: 1 / -1; justify-content: flex-start; }
-}
 
 /* Selected option 2: KYNOX blueprint-dark commercial command surface */
 .app-stage:has(.kynox-pipeline) { background: var(--kynox-night); }
@@ -265,7 +218,7 @@ button.ledger-row { width: 100%; cursor: pointer; }
 .commercial-suite .commercial-operator .page-heading p:last-child { color: #b8ccd5; }
 .commercial-suite .suite-metric strong { min-width: 0; overflow-wrap: normal; word-break: keep-all; line-height: 1.25; }
 @media(max-width:980px){.commercial-suite .suite-header-compact{min-height:64px;display:flex!important;align-items:center!important;flex-direction:row!important;margin-bottom:.65rem;padding:.55rem .75rem}.commercial-suite .suite-header-compact p:last-child,.commercial-suite .suite-header-actions{display:none}.commercial-suite .suite-header-compact h1{margin:0;font-size:1rem}.commercial-suite .suite-header-compact .eyebrow{margin-bottom:.2rem;font-size:.58rem}.commercial-suite .suite-metric small{display:none}.commercial-suite .suite-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:.65rem;overflow:visible}.commercial-suite .suite-tabs button{min-width:0;padding:.55rem .35rem;font-size:.65rem;white-space:normal}.commercial-suite .suite-metrics{gap:.5rem}}
-@media(max-width:820px){.app-shell:has(.commercial-suite){width:100%;max-width:100%;grid-template-columns:minmax(0,1fr);overflow-x:clip}.app-shell:has(.commercial-suite) .app-stage{padding-block-end:66px}.app-shell:has(.commercial-suite) .app-sidebar{position:fixed;z-index:80;inset:auto 0 0;width:100%;min-width:0;max-width:100%;height:66px;padding:.35rem max(.45rem,env(safe-area-inset-right)) max(.35rem,env(safe-area-inset-bottom)) max(.45rem,env(safe-area-inset-left));flex-direction:row;align-items:center;overflow:hidden;box-shadow:0 -8px 24px rgb(5 28 41 / 22%)}.app-shell:has(.commercial-suite) .brand-lockup{display:none}.app-shell:has(.commercial-suite) .app-nav{min-width:0;margin:0;display:block;overflow-x:auto}.app-shell:has(.commercial-suite) .nav-group{min-width:max-content;display:flex;flex:0 0 auto}.app-shell:has(.commercial-suite) .nav-link{min-width:86px;min-height:56px;display:grid;padding:.25rem .45rem}.app-shell:has(.commercial-suite) .kynox-sidebar-tools{display:none}.app-shell:has(.commercial-suite) .app-stage,.app-shell:has(.commercial-suite) .app-content,.app-shell:has(.commercial-suite) .commercial-suite{width:100%;min-width:0;max-width:100%}.app-stage:has(.commercial-suite) .app-header{min-height:72px;align-items:center;padding:.65rem .75rem}.commercial-suite .suite-tabs{display:flex;max-width:100%;overflow-x:auto}.commercial-suite .suite-tabs button{min-width:118px}.commercial-suite .suite-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.commercial-suite .suite-metric{min-width:0;padding:.75rem}.commercial-suite .suite-metric strong{font-size:1.25rem}.commercial-suite .suite-metric span,.commercial-suite .suite-metric small{font-size:.62rem}}
+@media(max-width:720px){.app-shell:has(.commercial-suite){width:100%;max-width:100%;grid-template-columns:minmax(0,1fr);overflow-x:clip}.app-shell:has(.commercial-suite) .app-stage{padding-block-end:66px}.app-shell:has(.commercial-suite) .app-sidebar{position:fixed;z-index:80;inset:auto 0 0;width:100%;min-width:0;max-width:100%;height:66px;padding:.35rem max(.45rem,env(safe-area-inset-right)) max(.35rem,env(safe-area-inset-bottom)) max(.45rem,env(safe-area-inset-left));flex-direction:row;align-items:center;overflow:hidden;box-shadow:0 -8px 24px rgb(5 28 41 / 22%)}.app-shell:has(.commercial-suite) .brand-lockup{display:none}.app-shell:has(.commercial-suite) .app-nav{min-width:0;margin:0;display:block;overflow-x:auto}.app-shell:has(.commercial-suite) .nav-group{min-width:max-content;display:flex;flex:0 0 auto}.app-shell:has(.commercial-suite) .nav-link{min-width:86px;min-height:56px;display:grid;padding:.25rem .45rem}.app-shell:has(.commercial-suite) .kynox-sidebar-tools{display:none}.app-shell:has(.commercial-suite) .app-stage,.app-shell:has(.commercial-suite) .app-content,.app-shell:has(.commercial-suite) .commercial-suite{width:100%;min-width:0;max-width:100%}.app-stage:has(.commercial-suite) .app-header{min-height:72px;align-items:center;padding:.65rem .75rem}.commercial-suite .suite-tabs{display:flex;max-width:100%;overflow-x:auto}.commercial-suite .suite-tabs button{min-width:118px}.commercial-suite .suite-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.commercial-suite .suite-metric{min-width:0;padding:.75rem}.commercial-suite .suite-metric strong{font-size:1.25rem}.commercial-suite .suite-metric span,.commercial-suite .suite-metric small{font-size:.62rem}}
 
 .customer-file-backdrop { position: fixed; z-index: 80; inset: 0; display: grid; place-items: start center; overflow-y: auto; overscroll-behavior: contain; padding: max(1rem,env(safe-area-inset-top)) max(1rem,env(safe-area-inset-right)) max(1rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left)); background: rgb(2 18 27 / 76%); backdrop-filter: blur(8px); }
 .customer-file-modal { width: min(840px,100%); max-height: calc(100dvh - 2rem); margin-block: 0; overflow-y: auto; border: 1px solid #43677a; border-radius: 12px; color: #eaf3f6; background: #0b2838; box-shadow: 0 28px 80px rgb(0 0 0 / 42%); }
