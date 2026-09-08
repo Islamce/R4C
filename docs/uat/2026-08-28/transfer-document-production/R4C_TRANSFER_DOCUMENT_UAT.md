@@ -89,10 +89,12 @@ Release PR #79 was approved, all required checks passed, and merge commit `f2605
 
 Post-deployment decision: **NO-GO for customer-portal launch and document/media acceptance.** Internal authenticated read workflows are available, but final acceptance requires a governed project publication transition, a configured browser-reachable object-storage endpoint with CORS, a successful media/transfer upload retest, and resolution or measured acceptance of the Hostinger resource-limit warning.
 
-## Storage remediation retest — 2026-09-01
+## Storage and permission remediation retest — 2026-09-01
 
-The production API environment was updated with the existing Cloudflare R2 endpoint, presign endpoint, and `auto` region. No access key, secret key, bucket, database, or application variable was replaced. Hostinger redeployed commit `f2605c02`; API health and the public portfolio endpoint both returned success after the new deployment became current.
+The first storage remediation attempt was invalid. The three endpoint/region values added to Hostinger were traced to the local MinIO development configuration, not to an independently verified Cloudflare R2 production service. The earlier conclusion that the missing-endpoint failure was resolved is therefore withdrawn. No production storage provider is currently qualified.
 
-The authenticated administrator upload was then repeated with the approved eight-unit floor-plan PNG. The browser could select the file and the application reached the governed upload-request endpoint, but the API returned `Insufficient permissions`. This proves the original missing-endpoint failure is resolved and exposes a separate production-data drift: the existing `ADMIN` role predates `commercial:media:manage` and was not backfilled because normal production migration deployment does not rerun the bootstrap seed.
+The upload attempt did expose a separate production-data drift: the existing `ADMIN` role predated `commercial:media:manage`. A forward-only migration was reviewed, merged in PR #80, applied to production without reset/reseed, and grants the permission to each tenant `ADMIN` role.
 
-A forward-only data migration now upserts `commercial:media:manage` and grants it to every tenant `ADMIN` role without resetting or reseeding production data. Final media acceptance remains pending deployment of that migration and a successful upload/confirm/download retest.
+After explicit operator confirmation, only `S3_ENDPOINT`, `S3_PRESIGN_ENDPOINT`, and `S3_REGION` were removed from Hostinger. Access-key, secret-key, bucket, database, JWT, and unrelated application variables were left unchanged. Hostinger completed the resulting deployment of `6c4d50a2` from `codex/kynox-users-access-release`; it became `Current`, and repeated API health checks returned HTTP 200 with `status: ok`. The web login route also returned HTTP 200 and the protected commercial route redirected to authentication as expected.
+
+Final media acceptance remains **NO-GO** until a real production object-storage service is provisioned, its endpoint/region/bucket/credentials and browser CORS contract are independently verified, and an authenticated upload/confirm/download/delete UAT passes. Placeholder credentials or local MinIO endpoints must not be treated as production evidence.
