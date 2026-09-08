@@ -151,7 +151,8 @@ test("authenticated routes share one KYNOX navigation system with real targets",
   }
   assert.match(shell, /app-nav kynox-unified-nav/);
   assert.doesNotMatch(shell, /kynox-sidebar-tools/);
-  assert.match(shellModern, /\.app-shell \{ grid-template-columns: 112px/);
+  assert.match(shellModern, /\.app-shell \{ grid-template-columns: 248px/);
+  assert.match(shellModern, /\.nav-link \{ min-height: 46px; display: flex/);
   assert.match(shellModern, /\.kynox-unified-nav button\.nav-link:hover/);
   assert.match(shell, /locale === "ar" \? "وضع المعاينة" : "Preview mode"/);
   assert.match(shell, /locale === "ar" && user\.role === "ADMIN" \? "مدير النظام" : user\.role/);

@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-runtime-entry.json",
-    "bodyDigest": "664fd62b97492f8f24e7a0bdfd3b0bfef76742a95c532068ab4691258b76e963",
+    "bodyDigest": "4cc535f971d3ea303b12cb4d7e068a5265de7395d0c0ff13ee25b698ab924e9d",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "921a028d5c0affc1c6d171a59573efd1e67f1c558f2cb28e110942aea7130a9e",
+    "inputDigest": "32cc95feb1afaad15b37799fadec69419f1a196b7a0cdae4f03c8f78f75c4435",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -116,6 +116,7 @@
       "docs/uat/2026-09-02/production-post-merge/UAT-REPORT.md",
       "docs/uat/2026-09-02/regenerated-uat/UAT-REPORT.md",
       "docs/uat/2026-09-07/UAT-REGENERATION.md",
+      "docs/uat/2026-09-08/INTERNAL-DESIGN-AUDIT.md",
       "docs/wafi-readiness.md",
       "docs/zatca-architecture.md",
       "hostinger-web-entry.cjs",
