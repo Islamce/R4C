@@ -1,4 +1,9 @@
-# Authenticated workspace design correction — 2026-09-08
+# Authenticated workspace design correction — 2026-09-08 (rejected)
+
+> **Acceptance outcome:** Rejected by the operator after production deployment. The
+> wider light-shell direction was not the previously agreed KYNOX internal design.
+> It is retained here only as an audit trail and is superseded by
+> `docs/uat/2026-09-08-approved-internal/RESTORATION-REPORT.md`.
 
 ## Scope
 
@@ -11,12 +16,12 @@ Live, authenticated review of the Arabic R4C workspace at `r4c.kynox.io`, follow
 - The independent sidebar and document scrollbars competed visually at desktop width.
 - Authentication and administration remained functional. The audit found both retained administrator accounts and did not alter users or application data.
 
-## Correction
+## Rejected correction
 
-- Expanded the desktop rail to 248 px, restored the KYNOX lockup and navigation-group label, and changed desktop navigation items to icon-plus-label rows.
-- Preserved a compact 104 px rail for tablet widths and the existing bottom navigation pattern below 720 px.
-- Restored the shared light workspace canvas and white content surfaces for commercial routes while retaining the dark KYNOX header, sidebar, command bar, and selected states.
-- Updated the commercial-workflow contract test to lock the corrected desktop navigation behavior.
+- Expanded the desktop rail to 248 px and changed desktop navigation items to icon-plus-label rows.
+- Changed the commercial workspace toward a light canvas.
+- These changes passed technical checks but failed visual acceptance because they
+  departed from the approved compact dark KYNOX workspace.
 
 ## Evidence
 
