@@ -55,7 +55,7 @@ test("English and Arabic use the shared i18n provider and RTL-safe logical CSS",
   assert.match(messages, /"commercial\.review"/);
   assert.match(workspace, /useI18n\(\)/);
   assert.match(workspace, /commercialApi\.unit\(id, locale\)/);
-  assert.match(suite, /<SalesPipelineWorkspace[^>]+ar=\{ar\}/);
+  assert.match(suite, /<CanonicalOpportunityWorkspace[^>]+ar=\{ar\}/);
   assert.match(pipeline, /dir=\{ar \? "rtl" : "ltr"\}/);
   for (const label of ["Sales pipeline", "Customer pipeline", "Project library", "Performance & alerts", "Consolidated customer register"]) {
     assert.match(pipeline, new RegExp(`text\\(ar, "${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
@@ -78,7 +78,7 @@ test("the browser proxy exposes only the bounded journey contracts", () => {
 });
 
 test("production commercial operations persist tasks, transfer reviews, and dispatches", () => {
-  assert.match(suite, /SalesPipelineWorkspace externalReservation=\{unitReservation\} ar=\{ar\} persistent=\{!preview\}/);
+  assert.match(suite, /CanonicalOpportunityWorkspace ar=\{ar\} persistent=\{!preview\}/);
   assert.match(pipeline, /commercialApi\.tasks\(\)/);
   assert.match(pipeline, /commercialApi\.createTask/);
   assert.match(pipeline, /commercialApi\.updateTask/);
