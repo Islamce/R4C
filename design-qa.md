@@ -1,3 +1,66 @@
+# Design QA — R4C responsive CRM enhancement
+
+## Source visual truth
+
+- Figma plot: `https://www.figma.com/design/rv5eY5OvwZz31wT72foaOv`
+- Figma page: `Responsive CRM enhancement`
+- The plot contains the corrected desktop and mobile captures plus implementation notes. The current codebase is the implementation source of truth for behavior.
+
+## Implementation evidence
+
+| State | CSS viewport | Browser screenshot | Captured pixels | Density |
+|---|---:|---|---:|---:|
+| Desktop | 1440×1000 | `docs/uat/2026-09-08-real-estate-crm-audit/06-web-desktop-1440-fixed.png` | 1425×860 | 1× browser capture |
+| Tablet | 1024×900 | `docs/uat/2026-09-08-real-estate-crm-audit/09-tablet-1024-fixed.png` | current-run capture | 1× browser capture |
+| Tablet | 768×900 | `docs/uat/2026-09-08-real-estate-crm-audit/08-tablet-768-fixed.png` | 753×852 | 1× browser capture |
+| Mobile | 375×900 | `docs/uat/2026-09-08-real-estate-crm-audit/05-mobile-375-fixed.png` | 360×834 | 1× browser capture |
+
+## State and interactions tested
+
+- Arabic RTL pipeline route with hypothetical fixture records.
+- Kanban view selected; search field, saved-view selector, display-mode controls, project scope, stage navigation, and add/log actions visible.
+- At 375px and 768px, the responsive shell, bottom navigation, action buttons, tabs, metrics, and lead-card content were inspected.
+- DOM snapshot confirms labelled navigation, comboboxes, textboxes, buttons, stage regions, and lead actions.
+- No browser console error was surfaced during the capture pass.
+
+## Findings
+
+### P1 — earlier mobile overflow
+
+- **Earlier evidence:** `02-mobile-375.png` showed a clipped desktop canvas with hidden controls and unusable horizontal composition.
+- **Fix:** added responsive containment, mobile command-bar stacking, bottom navigation at ≤820px, single-stage horizontal cards at ≤720px, and card-style ledger rows.
+- **Post-fix evidence:** `05-mobile-375-fixed.png` and `08-tablet-768-fixed.png` keep primary controls inside the viewport; the 768px shell now uses bottom navigation.
+
+### P2 — weak next-action visibility
+
+- **Earlier evidence:** stage cards only exposed unit/owner under the customer name.
+- **Fix:** stage cards now expose the next action as a labelled secondary line.
+- **Post-fix evidence:** DOM labels include actions such as “اتصال تأهيلي”, “زيارة الموقع”, and “متابعة التمويل”.
+
+## Required fidelity surfaces
+
+- **Fonts/typography:** preserved the existing Noto Sans Arabic / IBM Plex Sans Arabic CSS stack; Figma annotation text uses the available Noto Sans Arabic font. Dense utility labels remain intentionally compact, but 14px minimum body text should be enforced in the next accessibility pass.
+- **Spacing/layout rhythm:** desktop hierarchy and compact dark shell are preserved; tablet/mobile now stack actions and prevent page-level overflow.
+- **Colors/tokens:** preserved KYNOX night, cyan, survey-blue, permit-green, and amber semantic tokens; no new brand colors introduced.
+- **Image quality/assets:** this route uses the existing icon library and screenshot captures; no decorative image asset was introduced or replaced with CSS art.
+- **Copy/content:** Arabic RTL copy remains intact; next-action copy is now visible in stage cards.
+
+## Comparison history
+
+1. Initial audit found a critical 375px clipped-desktop failure and high width pressure at 768px/1024px.
+2. Implemented CSS containment, ≤820px bottom navigation, ≤720px card/slider behavior, and next-action labels.
+3. Re-captured all key states; P1 overflow is resolved in the audited path. Remaining P2 work is accessibility instrumentation and broader product workflow coverage, not a visual blocker in this pass.
+
+## Final result
+
+**passed**
+
+The corrected responsive pipeline has no remaining actionable P0/P1/P2 visual mismatch against the plotted target. Native mobile capabilities, external MLS/lead integrations, production performance, and full accessibility still require separate functional/device test plans.
+
+---
+
+## Preserved prior landing-page QA record
+
 **Comparison target**
 
 - Source visual truth: `docs/uat/2026-09-07/landing-page/selected-design.png`
