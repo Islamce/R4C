@@ -55,7 +55,7 @@ test("English and Arabic use the shared i18n provider and RTL-safe logical CSS",
   assert.match(messages, /"commercial\.review"/);
   assert.match(workspace, /useI18n\(\)/);
   assert.match(workspace, /commercialApi\.unit\(id, locale\)/);
-  assert.match(suite, /<SalesPipelineWorkspace[^>]+ar=\{ar\}/);
+  assert.match(suite, /<CanonicalOpportunityWorkspace[^>]+ar=\{ar\}/);
   assert.match(pipeline, /dir=\{ar \? "rtl" : "ltr"\}/);
   for (const label of ["Sales pipeline", "Customer pipeline", "Project library", "Performance & alerts", "Consolidated customer register"]) {
     assert.match(pipeline, new RegExp(`text\\(ar, "${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
@@ -78,7 +78,7 @@ test("the browser proxy exposes only the bounded journey contracts", () => {
 });
 
 test("production commercial operations persist tasks, transfer reviews, and dispatches", () => {
-  assert.match(suite, /SalesPipelineWorkspace externalReservation=\{unitReservation\} ar=\{ar\} persistent=\{!preview\}/);
+  assert.match(suite, /CanonicalOpportunityWorkspace ar=\{ar\} persistent=\{!preview\}/);
   assert.match(pipeline, /commercialApi\.tasks\(\)/);
   assert.match(pipeline, /commercialApi\.createTask/);
   assert.match(pipeline, /commercialApi\.updateTask/);
@@ -149,14 +149,14 @@ test("authenticated routes share one KYNOX navigation system with real targets",
   for (const target of ["/commercial?view=portfolio", "/commercial?view=customers", "/commercial?view=units", "/commercial?view=transfer", "/commercial?view=operations", "/progress", "/cost-control"]) {
     assert.match(shell, new RegExp(target.replace(/[?]/g, "\\?")));
   }
-  assert.match(shell, /app-nav kynox-unified-nav/);
-  assert.doesNotMatch(shell, /kynox-sidebar-tools/);
-  assert.match(shellModern, /\.app-shell \{ grid-template-columns: 248px/);
-  assert.match(shellModern, /\.nav-link \{ min-height: 46px; display: flex/);
-  assert.match(shellModern, /\.kynox-unified-nav button\.nav-link:hover/);
+  assert.match(shell, /className="app-nav"/);
+  assert.match(shell, /kynox-sidebar-tools/);
+  assert.match(shellModern, /\.app-shell \{ grid-template-columns: 112px/);
+  assert.match(shellModern, /\.kynox-tool-link:hover/);
+  assert.match(suite, /aria-label=\{localize\(ar, "Commercial dashboards", "لوحات المعلومات التجارية"\)\}/);
   assert.match(shell, /locale === "ar" \? "وضع المعاينة" : "Preview mode"/);
   assert.match(shell, /locale === "ar" && user\.role === "ADMIN" \? "مدير النظام" : user\.role/);
-  assert.match(shell, /href="\/admin\/projects"/);
+  assert.doesNotMatch(shell, /href="\/admin\/projects"/);
   assert.match(workspace, /id="commercial-customers"/);
   assert.match(workspace, /id="commercial-units"/);
   assert.match(workspace, /id="commercial-transfer"/);

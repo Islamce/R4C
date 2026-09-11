@@ -6,7 +6,8 @@ import { Cube, Eye, FileArrowUp, ImageSquare, PlugsConnected, ShieldCheck, Uploa
 import { CommercialOperatorWorkspace } from "./CommercialOperatorWorkspace";
 import { CommercialHero3D } from "./CommercialHero3D";
 import { useI18n } from "./I18nProvider";
-import { SalesPipelineWorkspace, type UnitReservationHandoff } from "./SalesPipelineWorkspace";
+import type { UnitReservationHandoff } from "./SalesPipelineWorkspace";
+import { CanonicalOpportunityWorkspace } from "./CanonicalOpportunityWorkspace";
 import { clientApi } from "../lib/client-api";
 import { commercialApi, type TransferCase, type TransferDocument } from "../lib/commercial-api";
 import type { BrowserSessionUser } from "../lib/types";
@@ -315,17 +316,42 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
 
   return (
     <div className="commercial-suite" dir={ar ? "rtl" : "ltr"}>
-      {tab !== "pipeline" ? <header className="suite-header suite-header-compact">
+      {tab !== "pipeline" ? <>
+      <header className="suite-header suite-header-compact">
         <div>
           <p className="eyebrow">{localize(ar, "Kynox portfolio · commercial", "محفظة KYNOX · القطاع التجاري")}</p>
           <h1>{localize(ar, "Commercial workspace", "مساحة العمل التجارية")}</h1>
+          <p>
+            {localize(ar, "Leads, interests, temporary reservations and confirmed bookings in one governed workspace.", "العملاء المحتملون والاهتمامات والحجوزات المؤقتة والحجوزات المؤكدة في مساحة عمل محكومة واحدة.")}
+          </p>
         </div>
         <div className="suite-header-actions">
           <button className="button button-secondary" type="button" onClick={() => window.print()}>
             {localize(ar, "Export report", "تصدير التقرير")}
           </button>
         </div>
-      </header> : null}
+      </header>
+      <nav className="suite-tabs" aria-label={localize(ar, "Commercial dashboards", "لوحات المعلومات التجارية")}>
+        {(
+          [
+            ["pipeline", localize(ar, "Sales pipeline", "مسار المبيعات")],
+            ["portfolio", localize(ar, "Executive overview", "النظرة التنفيذية")],
+            ["units", localize(ar, "Project & unit control", "إدارة المشروع والوحدات")],
+            ["transfer", localize(ar, "Title transfer file", "ملف الإفراغ العقاري")],
+            ["operations", localize(ar, "Sales operations", "عمليات المبيعات")],
+          ] as [Tab, string][]
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+      </> : null}
       {tab !== "pipeline" ? (
         <section className="commercial-project-switcher" aria-label={localize(ar, "Project selection", "اختيار المشروع")}>
           <div>
@@ -348,7 +374,7 @@ export function CommercialWorkspaceSuite({ preview = false }: { preview?: boolea
           </div>
         </section>
       ) : null}
-      {tab === "pipeline" ? <SalesPipelineWorkspace externalReservation={unitReservation} ar={ar} persistent={!preview} canManageMedia={isAdmin} canViewAllLeads={canViewAllLeads} /> : null}
+      {tab === "pipeline" ? <CanonicalOpportunityWorkspace ar={ar} persistent={!preview} canViewAllLeads={canViewAllLeads} /> : null}
       {tab === "portfolio" && projectsLoading ? <section className="suite-panel commercial-live-state" aria-busy="true">{localize(ar, "Loading live projects…", "جارٍ تحميل المشروعات الفعلية…")}</section> : null}
       {tab === "portfolio" && !projectsLoading && !workspaceProjects.length ? <section className="suite-panel commercial-live-state">{localize(ar, "No projects are available for this tenant.", "لا توجد مشروعات متاحة لهذه المنشأة.")}</section> : null}
       {tab === "portfolio" && workspaceProjects.length ? (

@@ -1,3 +1,38 @@
+# Canonical opportunity workspace QA
+
+## Comparison target
+
+- Source visual truth: `docs/design-source/near-accepted-2026-09-08/01-opportunity-detail.jpg`
+- Source visual truth: `docs/design-source/near-accepted-2026-09-08/02-opportunities-worklist.jpg`
+- Implementation: `CanonicalOpportunityWorkspace` in the local `/design-preview` route.
+- Visual review: Arabic RTL state in the in-app browser at the current desktop viewport.
+
+## Result
+
+- Worklist matches the supplied direction: dark navy shell, cyan emphasis, sparse KPI strip, search, dense opportunity table, stage badges, due dates, owners, and add-opportunity action.
+- Selecting a row opens a focused opportunity record with highlights, six-step guided stage path, Activity/Details/Notes tabs, timeline, next-action panel, and stage progression CTA.
+- The generic commercial header and dashboard tab strip are suppressed on the opportunity surface so the screen does not carry the rejected crowded chrome.
+- Mobile containment is handled with stacked panels, two-column highlights, horizontal table scrolling, and an overflow-safe stage path.
+
+## Interaction evidence
+
+- Search filters the opportunity table by customer, project, unit, owner, or next action.
+- Each opportunity row opens the record view; the back control returns to the worklist.
+- Activity, Details, and Notes tabs switch the record content.
+- Add opportunity, add activity, note submission, and next-stage actions provide visible feedback.
+- Production mode loads leads through `commercialApi.leads(...)`, loads the selected workspace through `commercialApi.leadWorkspace(...)`, and advances through `commercialApi.advanceLead(...)`; preview mode uses fictional fixture data only.
+- Browser DOM inspection confirmed Arabic labels, RTL direction, table semantics, named controls, and no missing core controls.
+
+## Accessibility and limits
+
+- Interactive controls have names, focus styles, and status feedback.
+- Color is paired with text labels for stages and status; no state relies on color alone.
+- A full keyboard traversal, screen-reader pass, and device-level performance audit still require a dedicated run outside the visual comparison.
+
+final result: passed
+
+---
+
 **Comparison target**
 
 - Source visual truth: `docs/uat/2026-09-07/landing-page/selected-design.png`

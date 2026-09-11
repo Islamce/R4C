@@ -1,12 +1,12 @@
 {
   "_meta": {
     "artifact": "modules/r4c-runtime-entry.json",
-    "bodyDigest": "4cc535f971d3ea303b12cb4d7e068a5265de7395d0c0ff13ee25b698ab924e9d",
+    "bodyDigest": "d031a88d73c0c796e22f715147431807c205086229224af55f6aa07833b1e19d",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "32cc95feb1afaad15b37799fadec69419f1a196b7a0cdae4f03c8f78f75c4435",
+    "inputDigest": "014059cee89881cd5b48da0b904ff5158cf17e8a25c5cc61c5ad818c42d3440f",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
@@ -81,6 +81,7 @@
       "docs/commissioning-handover.md",
       "docs/cost-5d.md",
       "docs/deployment-setup-checklist.md",
+      "docs/design-source/near-accepted-2026-09-08/README.md",
       "docs/development-freeze-register.md",
       "docs/frontend-foundation-design.md",
       "docs/frontend-recon.md",
@@ -116,6 +117,8 @@
       "docs/uat/2026-09-02/production-post-merge/UAT-REPORT.md",
       "docs/uat/2026-09-02/regenerated-uat/UAT-REPORT.md",
       "docs/uat/2026-09-07/UAT-REGENERATION.md",
+      "docs/uat/2026-09-08-approved-internal/RESTORATION-REPORT.md",
+      "docs/uat/2026-09-08-salesforce-benchmark/SALESFORCE-BENCHMARK.md",
       "docs/uat/2026-09-08/INTERNAL-DESIGN-AUDIT.md",
       "docs/wafi-readiness.md",
       "docs/zatca-architecture.md",
