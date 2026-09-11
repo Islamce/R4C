@@ -50,7 +50,7 @@ const stageLabels: Record<StageKey, { en: string; ar: string }> = {
   closed: { en: "Closed", ar: "إغلاق" },
 };
 
-const previewRows: OpportunityRow[] = [
+const previewRowsAr: OpportunityRow[] = [
   { id: "OP-2026-0177", name: "أحمد الغامدي", project: "مشروع المروج", unit: "البرج A · A-1203", stage: "proposal", action: "إرسال العرض التجاري", due: "2026-09-08", owner: "سارة الشهراني", value: "42,000,000 ر.س" },
   { id: "OP-2026-0176", name: "نورة القحطاني", project: "مشروع النخيل", unit: "العمارة B · B-0402", stage: "needs", action: "مكالمة متابعة", due: "2026-09-10", owner: "محمد العنزي", value: "28,000,000 ر.س" },
   { id: "OP-2026-0175", name: "عبدالله السبيعي", project: "مشروع اليانبيع", unit: "البرج C · C-0701", stage: "negotiation", action: "إرسال المستندات", due: "2026-09-12", owner: "خالد الشهري", value: "21,000,000 ر.س" },
@@ -58,7 +58,15 @@ const previewRows: OpportunityRow[] = [
   { id: "OP-2026-0173", name: "فهد الدوسري", project: "مشروع السدرة", unit: "البرج E · E-1108", stage: "needs", action: "مراجعة العقود", due: "2026-09-18", owner: "محمد العنزي", value: "16,000,000 ر.س" },
 ];
 
-const detailPreview: OpportunityRow = {
+const previewRowsEn: OpportunityRow[] = [
+  { id: "OP-2026-0177", name: "Ahmed Al-Ghamdi", project: "Al Muruj Project", unit: "Tower A · A-1203", stage: "proposal", action: "Send commercial proposal", due: "2026-09-08", owner: "Sarah Al-Shahrani", value: "SAR 42,000,000" },
+  { id: "OP-2026-0176", name: "Noura Al-Qahtani", project: "Al Nakheel Project", unit: "Building B · B-0402", stage: "needs", action: "Follow-up call", due: "2026-09-10", owner: "Mohammed Al-Enezi", value: "SAR 28,000,000" },
+  { id: "OP-2026-0175", name: "Abdullah Al-Subaie", project: "Al Yanabee Project", unit: "Tower C · C-0701", stage: "negotiation", action: "Send documents", due: "2026-09-12", owner: "Khalid Al-Shehri", value: "SAR 21,000,000" },
+  { id: "OP-2026-0174", name: "Reem Al-Otaibi", project: "Al Wadi Project", unit: "Building D · D-0505", stage: "proposal", action: "Customer meeting", due: "2026-09-15", owner: "Sarah Al-Shahrani", value: "SAR 19,000,000" },
+  { id: "OP-2026-0173", name: "Fahad Al-Dosari", project: "Al Sidra Project", unit: "Tower E · E-1108", stage: "needs", action: "Review contracts", due: "2026-09-18", owner: "Mohammed Al-Enezi", value: "SAR 16,000,000" },
+];
+
+const detailPreviewAr: OpportunityRow = {
   id: "OP-2026-0173",
   name: "مشروع واجهة الرمال السكني",
   project: "حي القيروان، الرياض",
@@ -70,11 +78,30 @@ const detailPreview: OpportunityRow = {
   value: "120,000,000 ر.س",
 };
 
-const previewActivities = [
+const detailPreviewEn: OpportunityRow = {
+  id: "OP-2026-0173",
+  name: "Rimal Facade Residential Project",
+  project: "Al Qirawan, Riyadh",
+  unit: "Dawrat Real Estate Development Company",
+  stage: "proposal",
+  action: "Follow up on customer feedback",
+  due: "2026-09-12",
+  owner: "Sarah Al-Shahrani",
+  value: "SAR 120,000,000",
+};
+
+const previewActivitiesAr = [
   { id: "a1", type: "CALL", title: "مناقشة الملاحظات على العرض الفني", detail: "مع أ. خالد مدني، من جانب العميل", date: "2026-09-08", time: "10:14 ص" },
   { id: "a2", type: "EMAIL", title: "تم إرسال عرض فني", detail: "إرسال النسخة المحدثة من العرض الفني بعد اجتماع اليوم", date: "2026-09-07", time: "04:32 م" },
   { id: "a3", type: "MEETING", title: "اجتماع مع العميل", detail: "عرض الحلول المقترحة ومناقشة الجدول الزمني للتنفيذ", date: "2026-09-03", time: "11:20 ص" },
   { id: "a4", type: "NOTE", title: "إضافة ملاحظة", detail: "العميل مهتم بشكل كبير ويطلب بعض التعديلات على المخطط العام.", date: "2026-08-30", time: "02:17 م" },
+];
+
+const previewActivitiesEn = [
+  { id: "a1", type: "CALL", title: "Discussed feedback on the technical proposal", detail: "With Mr. Khalid Madani from the customer team", date: "2026-09-08", time: "10:14 AM" },
+  { id: "a2", type: "EMAIL", title: "Technical proposal sent", detail: "Sent the revised proposal following today's meeting", date: "2026-09-07", time: "04:32 PM" },
+  { id: "a3", type: "MEETING", title: "Customer meeting", detail: "Presented the proposed solutions and reviewed the delivery schedule", date: "2026-09-03", time: "11:20 AM" },
+  { id: "a4", type: "NOTE", title: "Note added", detail: "The customer is highly interested and requested adjustments to the master plan.", date: "2026-08-30", time: "02:17 PM" },
 ];
 
 function stageForLead(status: CommercialLead["status"]): StageKey {
@@ -128,14 +155,20 @@ function activityIcon(type: string) {
 }
 
 export function CanonicalOpportunityWorkspace({ ar, persistent = false, canViewAllLeads = false }: { ar: boolean; persistent?: boolean; canViewAllLeads?: boolean }) {
-  const [rows, setRows] = useState<OpportunityRow[]>(previewRows);
-  const [selectedId, setSelectedId] = useState(detailPreview.id);
+  const localizedPreviewRows = ar ? previewRowsAr : previewRowsEn;
+  const localizedDetailPreview = ar ? detailPreviewAr : detailPreviewEn;
+  const [rows, setRows] = useState<OpportunityRow[]>(localizedPreviewRows);
+  const [selectedId, setSelectedId] = useState(localizedDetailPreview.id);
   const [view, setView] = useState<"list" | "record">("list");
   const [query, setQuery] = useState("");
   const [selectedTab, setSelectedTab] = useState<"activity" | "details" | "notes">("activity");
   const [workspace, setWorkspace] = useState<LeadWorkspace | null>(null);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(persistent);
+
+  useEffect(() => {
+    if (!persistent) setRows(localizedPreviewRows);
+  }, [ar, persistent]);
 
   useEffect(() => {
     if (!persistent) return;
@@ -156,7 +189,7 @@ export function CanonicalOpportunityWorkspace({ ar, persistent = false, canViewA
     return rows.filter((row) => [row.name, row.project, row.unit, row.owner, row.action].some((value) => value.toLocaleLowerCase().includes(needle)));
   }, [query, rows]);
 
-  const selected = useMemo(() => rows.find((row) => row.id === selectedId) ?? rows[0] ?? detailPreview, [rows, selectedId]);
+  const selected = useMemo(() => rows.find((row) => row.id === selectedId) ?? rows[0] ?? localizedDetailPreview, [rows, selectedId, localizedDetailPreview]);
 
   useEffect(() => {
     if (!persistent || !selected.lead) {
@@ -188,10 +221,10 @@ export function CanonicalOpportunityWorkspace({ ar, persistent = false, canViewA
     }).catch(() => setNotice(text(ar, "The stage could not be updated.", "تعذر تحديث مرحلة الفرصة.")));
   }
 
-  const detail = selected.lead ? selected : selected.id === detailPreview.id ? detailPreview : selected;
+  const detail = selected.lead ? selected : selected.id === localizedDetailPreview.id ? localizedDetailPreview : selected;
   const activities: Array<{ id: string; type: string; title: string; detail: string; date: string; time: string }> = workspace?.activities.length
     ? workspace.activities.map((item: SalesActivity) => ({ id: item.id, type: item.type, title: item.notes, detail: item.actor.displayName, date: item.createdAt.slice(0, 10), time: new Date(item.createdAt).toLocaleTimeString(ar ? "ar-SA" : "en-GB", { hour: "2-digit", minute: "2-digit" }) }))
-    : previewActivities;
+    : ar ? previewActivitiesAr : previewActivitiesEn;
 
   return (
     <main className="canonical-opportunity" dir={ar ? "rtl" : "ltr"} aria-label={text(ar, "Opportunities workspace", "مساحة عمل الفرص")}>
@@ -212,7 +245,7 @@ export function CanonicalOpportunityWorkspace({ ar, persistent = false, canViewA
         <section className="canonical-kpis" aria-label={text(ar, "Opportunity KPIs", "مؤشرات الفرص")}>
           <div><Target size={22} /><strong>{persistent ? rows.length : 5}</strong><span>{text(ar, "Active opportunities", "فرص نشطة")}</span></div>
           <div><CalendarBlank size={22} /><strong>{persistent ? Math.min(rows.length, 3) : 3}</strong><span>{text(ar, "Action due soon", "مطلوبة إجراء قريب")}</span></div>
-          <div><CurrencyCircleDollar size={22} /><strong>{persistent ? "—" : "126 M ر.س"}</strong><span>{text(ar, "Pipeline value", "قيمة الفرص النشطة")}</span></div>
+          <div><CurrencyCircleDollar size={22} /><strong>{persistent ? "—" : text(ar, "SAR 126M", "126 مليون ر.س")}</strong><span>{text(ar, "Pipeline value", "قيمة الفرص النشطة")}</span></div>
         </section>
         <div className="canonical-table-wrap" role="region" aria-label={text(ar, "My opportunities table", "جدول فرصي")}>
           <table className="canonical-table">
