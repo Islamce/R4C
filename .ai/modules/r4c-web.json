@@ -1,18 +1,18 @@
 {
   "_meta": {
     "artifact": "modules/r4c-web.json",
-    "bodyDigest": "fa625a42401423c872a2aef19e5da709550bc5492348a725dbd29b742dcbc334",
+    "bodyDigest": "79912a18fce3158df0a356c396de0033cc2374dc9edd5e6facf046bd41548b6a",
     "confidence": "verified",
     "doNotEdit": true,
     "generator": "kaaf",
     "generatorVersion": "0.7.0",
-    "inputDigest": "b3db4e55c569293f80d8951941de61ea4b55db6aa4a7ceb61078d12bce31a151",
+    "inputDigest": "014059cee89881cd5b48da0b904ff5158cf17e8a25c5cc61c5ad818c42d3440f",
     "provenanceNote": "Generated from the declared kaaf.repo.json and kaaf.module.json manifests. No wall-clock time or commit SHA is embedded: both would break byte-identical regeneration. Use git history for when and from which commit.",
     "schemaVersion": "1.0.0"
   },
   "apis": [],
   "confidence": "verified",
-  "confidenceReason": "Declared and corroborated by 69 discovered code file(s).",
+  "confidenceReason": "Declared and corroborated by 70 discovered code file(s).",
   "declared": true,
   "declaredConfidence": "verified",
   "dependedOnBy": [
@@ -56,6 +56,7 @@
       "apps/web/app/reset-password/page.tsx",
       "apps/web/components/AppShell.tsx",
       "apps/web/components/BimViewer.tsx",
+      "apps/web/components/CanonicalOpportunityWorkspace.tsx",
       "apps/web/components/CommercialHero3D.tsx",
       "apps/web/components/CommercialInventory.tsx",
       "apps/web/components/CommercialOperatorWorkspace.tsx",
@@ -136,6 +137,7 @@
       "apps/web/app/reset-password/page.tsx",
       "apps/web/components/AppShell.tsx",
       "apps/web/components/BimViewer.tsx",
+      "apps/web/components/CanonicalOpportunityWorkspace.tsx",
       "apps/web/components/CommercialHero3D.tsx",
       "apps/web/components/CommercialInventory.tsx",
       "apps/web/components/CommercialOperatorWorkspace.tsx",
